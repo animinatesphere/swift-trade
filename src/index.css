@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+:root {
+  --primary: #0ECB81;
+  --secondary: #F5A623;
+  --bg: #080808;
+  --surface: #111111;
+  --border: #1E1E1E;
+  --text-primary: #FFFFFF;
+  --text-muted: #888888;
+  --negative: #F6465D;
+  --accent-glow: rgba(14, 203, 129, 0.2);
+  --amber-glow: rgba(245, 166, 35, 0.2);
+
+  --sans: 'Inter', system-ui, -apple-system, sans-serif;
+  
+  color-scheme: dark;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  overflow-x: hidden;
+}
