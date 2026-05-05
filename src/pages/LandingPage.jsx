@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { useTheme } from "../hooks/useTheme";
 import { colors, fonts } from "../theme/tokens";
 
@@ -190,9 +191,9 @@ export default function LandingPage() {
         ) : (
           <div style={{ display: "flex", gap: 32, alignItems: "center" }}>
             {["Exchange", "Gift Cards", "Rates", "About"].map(item => (
-              <a key={item} href="#" className="nav-link" style={{ 
+              <Link key={item} to={item === "Gift Cards" ? "/gift-cards" : "#"} className="nav-link" style={{ 
                 color: colors.muted, textDecoration: "none", fontSize: 14, fontWeight: 500, transition: "0.2s" 
-              }}>{item}</a>
+              }}>{item}</Link>
             ))}
             <button className="btn" style={{
               background: colors.green, color: "#000", border: "none", padding: "10px 24px",
@@ -208,9 +209,9 @@ export default function LandingPage() {
             background: colors.bg, display: "flex", flexDirection: "column", padding: 40, gap: 24
           }}>
             {["Exchange", "Gift Cards", "Rates", "About"].map(item => (
-              <a key={item} href="#" onClick={() => setMenuOpen(false)} style={{ 
+              <Link key={item} to={item === "Gift Cards" ? "/gift-cards" : "#"} onClick={() => setMenuOpen(false)} style={{ 
                 color: colors.text, textDecoration: "none", fontSize: 24, fontWeight: 600, fontFamily: fonts.display 
-              }}>{item.toUpperCase()}</a>
+              }}>{item.toUpperCase()}</Link>
             ))}
             <button className="btn" style={{
               background: colors.green, color: "#000", border: "none", padding: "16px",
@@ -327,9 +328,9 @@ export default function LandingPage() {
                 }}>{svc.icon}</div>
                 <h3 style={{ fontSize: 20, marginBottom: 16 }}>{svc.title}</h3>
                 <p style={{ color: colors.muted, lineHeight: 1.6, marginBottom: 32, fontSize: 14 }}>{svc.desc}</p>
-                <a href="#" style={{ color: colors.green, textDecoration: "none", fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
+                <Link to={svc.title === "Gift Card Exchange" ? "/gift-cards" : "#"} style={{ color: colors.green, textDecoration: "none", fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
                   {svc.link} <span>→</span>
-                </a>
+                </Link>
               </div>
             </FadeIn>
           ))}
@@ -468,10 +469,11 @@ export default function LandingPage() {
             <p style={{ color: colors.muted, fontSize: isMobile ? 15 : 18, lineHeight: 1.6, marginBottom: 40, maxWidth: 460 }}>
               Got unused cards from Amazon, Steam, or iTunes? Convert them to cash instantly at the highest rates in Nigeria.
             </p>
-            <button className="btn" style={{ 
+            <Link to="/gift-cards" className="btn" style={{ 
               background: colors.green, color: "#000", border: "none", padding: "16px 32px", 
-              borderRadius: radius.lg, fontWeight: 600, width: isMobile ? "100%" : "auto"
-            }}>Check Gift Card Rates →</button>
+              borderRadius: radius.lg, fontWeight: 600, width: isMobile ? "100%" : "auto",
+              display: "inline-block", textDecoration: "none"
+            }}>Check Gift Card Rates →</Link>
           </div>
           <div style={{ 
             display: "grid", 
