@@ -112,10 +112,10 @@ function Nav() {
     }}>
       <Link to="/" style={{ cursor:"pointer" }}><Logo /></Link>
       <ul style={{ display:"flex", gap:36, listStyle:"none" }}>
-        <li><Link to="/" className="nav-link-item" style={{ color: C.muted, fontSize:14, letterSpacing:"0.3px", transition:"color 0.2s" }}>Exchange</Link></li>
+        <li><Link to="/exchange" className="nav-link-item" style={{ color: C.muted, fontSize:14, letterSpacing:"0.3px", transition:"color 0.2s" }}>Exchange</Link></li>
         <li><Link to="/gift-cards" className="nav-link-item" style={{ color: C.green, fontSize:14, letterSpacing:"0.3px", transition:"color 0.2s", borderBottom: `1px solid ${C.green}`, paddingBottom: 2 }}>Gift Cards</Link></li>
-        <li><a href="#" className="nav-link-item" style={{ color: C.muted, fontSize:14, letterSpacing:"0.3px", transition:"color 0.2s" }}>Rates</a></li>
-        <li><a href="#" className="nav-link-item" style={{ color: C.muted, fontSize:14, letterSpacing:"0.3px", transition:"color 0.2s" }}>About</a></li>
+        <li><Link to="/rates" className="nav-link-item" style={{ color: C.muted, fontSize:14, letterSpacing:"0.3px", transition:"color 0.2s" }}>Rates</Link></li>
+        <li><Link to="/about" className="nav-link-item" style={{ color: C.muted, fontSize:14, letterSpacing:"0.3px", transition:"color 0.2s" }}>About</Link></li>
       </ul>
       <Link to="/signup" className="nav-cta" style={{
         background:C.green, color:"#000", fontWeight:600, fontSize:13,
@@ -712,6 +712,53 @@ export default function GiftCardsPage() {
 
       {/* Sell drawer */}
       {sellingCard && <SellDrawer card={sellingCard} onClose={() => setSellingCard(null)} />}
+      
+      <Footer />
     </div>
+  );
+}
+
+// ─── FOOTER ───────────────────────────────────────────────
+function Footer() {
+  const cols = {
+    Products: ["Crypto Exchange", "Crypto Conversion", "Gift Cards", "Live Rates"],
+    Company: ["About Us", "Our Story", "Careers", "Press"],
+    Legal: ["Privacy Policy", "Terms of Service", "AML Policy", "Cookie Policy"],
+  };
+  return (
+    <footer style={{ padding:"100px 64px 40px", background:C.surface, borderTop:`1px solid ${C.border}` }}>
+      <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr", gap:48, marginBottom:80 }}>
+        <div>
+          <Logo />
+          <p style={{ color:C.muted, marginTop:24, maxWidth:280, fontSize:14, lineHeight:1.6 }}>
+            Nigeria's fastest crypto exchange and gift card platform. Convert digital assets to naira instantly.
+          </p>
+        </div>
+        {Object.entries(cols).map(([title, links]) => (
+          <div key={title}>
+            <h5 style={{ color:"#fff", fontSize:14, fontWeight:600, marginBottom:24 }}>{title}</h5>
+            <ul style={{ listStyle:"none", display:"flex", flexDirection:"column", gap:12 }}>
+              {links.map(l => (
+                <li key={l}>
+                  <Link key={l} to={l === "About Us" ? "/about" : l === "Gift Cards" ? "/gift-cards" : l === "Crypto Exchange" ? "/exchange" : l === "Live Rates" ? "/rates" : "#"} style={{ color:"#444", fontSize:14, transition:"color 0.2s" }}
+                    onMouseEnter={e => e.target.style.color="#fff"}
+                    onMouseLeave={e => e.target.style.color="#444"}>{l}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <div style={{ paddingTop:32, borderTop:`1px solid ${C.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+        <div style={{ color:C.muted2, fontSize:12 }}>© 2025 Swift Trade. All rights reserved.</div>
+        <div style={{ display:"flex", gap:24 }}>
+          {["Twitter", "Instagram", "LinkedIn"].map(s => (
+            <a key={s} href="#" style={{ color:C.muted2, fontSize:12, textDecoration:"none", transition:"color 0.2s" }}
+              onMouseEnter={e => e.target.style.color="#fff"}
+              onMouseLeave={e => e.target.style.color=C.muted2}>{s}</a>
+          ))}
+        </div>
+      </div>
+    </footer>
   );
 }

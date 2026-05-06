@@ -191,7 +191,7 @@ export default function LandingPage() {
         ) : (
           <div style={{ display: "flex", gap: 32, alignItems: "center" }}>
             {["Exchange", "Gift Cards", "Rates", "About"].map(item => (
-              <Link key={item} to={item === "Gift Cards" ? "/gift-cards" : "#"} className="nav-link" style={{ 
+              <Link key={item} to={item === "Exchange" ? "/exchange" : item === "Gift Cards" ? "/gift-cards" : item === "Rates" ? "/rates" : item === "About" ? "/about" : "#"} className="nav-link" style={{ 
                 color: colors.muted, textDecoration: "none", fontSize: 14, fontWeight: 500, transition: "0.2s" 
               }}>{item}</Link>
             ))}
@@ -209,7 +209,7 @@ export default function LandingPage() {
             background: colors.bg, display: "flex", flexDirection: "column", padding: 40, gap: 24
           }}>
             {["Exchange", "Gift Cards", "Rates", "About"].map(item => (
-              <Link key={item} to={item === "Gift Cards" ? "/gift-cards" : "#"} onClick={() => setMenuOpen(false)} style={{ 
+              <Link key={item} to={item === "Exchange" ? "/exchange" : item === "Gift Cards" ? "/gift-cards" : item === "Rates" ? "/rates" : item === "About" ? "/about" : "#"} onClick={() => setMenuOpen(false)} style={{ 
                 color: colors.text, textDecoration: "none", fontSize: 24, fontWeight: 600, fontFamily: fonts.display 
               }}>{item.toUpperCase()}</Link>
             ))}
@@ -567,7 +567,7 @@ export default function LandingPage() {
               <h5 style={{ color: colors.text, fontSize: 14, fontWeight: 600, marginBottom: 20 }}>{title}</h5>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {links.map(link => (
-                  <a key={link} href="#" style={{ color: colors.muted, fontSize: 13, textDecoration: "none" }}>{link}</a>
+                  <Link key={link} to={link === "About Us" ? "/about" : link === "Gift Cards" ? "/gift-cards" : link === "Crypto Exchange" ? "/exchange" : link === "Live Rates" ? "/rates" : "#"} style={{ color: colors.muted, fontSize: 13, textDecoration: "none" }}>{link}</Link>
                 ))}
               </div>
             </div>

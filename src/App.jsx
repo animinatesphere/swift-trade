@@ -3,6 +3,9 @@ import { Routes, Route } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import Signup from './pages/signup/Signup'
 import GiftCards from './pages/GiftCards'
+import About from './pages/About'
+import Exchange from './pages/Exchange'
+import Rates from './pages/Rates'
 
 const App = () => {
   return (
@@ -11,6 +14,9 @@ const App = () => {
     <Route path="/" element={<LandingPage />} />
     <Route path="/signup" element={<Signup />} />
     <Route path="/gift-cards" element={<GiftCards />} />
+    <Route path="/about" element={<About />} />
+    <Route path="/exchange" element={<Exchange />} />
+    <Route path="/rates" element={<Rates />} />
    </Routes>
     </>
   )
