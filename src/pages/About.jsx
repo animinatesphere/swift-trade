@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import Navbar, { Logo } from "../components/Navbar";
 
 // ─── TOKENS ───────────────────────────────────────────────
 const C = {
@@ -54,15 +55,21 @@ const GLOBAL_CSS = `
     
     .grid-2 { grid-template-columns: 1fr !important; gap: 40px !important; }
     .grid-3 { grid-template-columns: 1fr !important; gap: 20px !important; }
-    .grid-stats { grid-template-columns: 1fr !important; }
+    .grid-stats { grid-template-columns: 1fr 1fr !important; }
     
-    .nav-items { display: none !important; }
     .section-padding { padding: 80px 20px !important; }
     
     .timeline-spine { left: 20px !important; }
     .timeline-item { grid-template-columns: 40px 1fr !important; gap: 20px !important; }
     .timeline-year { text-align: left !important; padding-right: 0 !important; font-size: 10px !important; }
     .tl-dot { left: -7px !important; right: auto !important; }
+  }
+
+  @media (max-width: 640px) {
+    .hero-container h1 { font-size: 44px !important; }
+    .hero-stats { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 20px !important; width: 100% !important; }
+    .grid-stats { grid-template-columns: 1fr !important; }
+    .footer-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
   }
 `;
 
@@ -101,67 +108,6 @@ function Eyebrow({ children, color = C.green }) {
   );
 }
 
-// ─── LOGO ─────────────────────────────────────────────────
-function Logo() {
-  return (
-    <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-      <svg width={40} height={40} viewBox="0 0 64 64" style={{ display:"block" }}>
-        <path d="M 32,52 C 26,40 16,24 8,8" stroke={C.green} strokeWidth="3.8" strokeLinecap="round" fill="none" />
-        <path d="M 32,52 C 38,40 48,24 56,8" stroke={C.amber} strokeWidth="3.8" strokeLinecap="round" fill="none" />
-        <circle cx="32" cy="52" r="3.5" fill="white"/>
-      </svg>
-      <div style={{ display:"flex", flexDirection:"column" }}>
-        <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:"#fff", letterSpacing:2, lineHeight:1 }}>SWIFT</span>
-        <span style={{ fontSize:8, fontWeight:400, color:C.amber, letterSpacing:5, marginTop:2 }}>TRADE</span>
-      </div>
-    </div>
-  );
-}
-
-// ─── NAV ──────────────────────────────────────────────────
-function Nav() {
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", fn);
-    return () => window.removeEventListener("scroll", fn);
-  }, []);
-  return (
-    <nav style={{
-      position:"fixed", top:0, left:0, right:0, zIndex:100,
-      display:"flex", alignItems:"center", justifyContent:"space-between",
-      padding:"0 48px", height:72,
-      background: scrolled ? "rgba(8,8,8,0.92)" : "transparent",
-      borderBottom: scrolled ? `1px solid ${C.border}` : "1px solid transparent",
-      backdropFilter: scrolled ? "blur(20px)" : "none",
-      transition:"all 0.4s",
-    }}>
-      <Link to="/"><Logo /></Link>
-      <ul className="nav-items" style={{ display:"flex", gap:36, listStyle:"none" }}>
-        {[
-          { label:"Exchange", path:"/exchange" },
-          { label:"Gift Cards", path:"/gift-cards" },
-          { label:"Rates", path:"/rates" },
-          { label:"About", path:"/about", active:true },
-        ].map(l => (
-          <li key={l.label}>
-            <Link to={l.path} className="nav-link-item" style={{
-              color: l.active ? C.green : C.muted, fontSize:14, letterSpacing:"0.3px",
-              transition:"color 0.2s",
-              borderBottom: l.active ? `1px solid ${C.green}` : "none",
-              paddingBottom: l.active ? 2 : 0,
-            }}>{l.label}</Link>
-          </li>
-        ))}
-      </ul>
-      <button className="nav-cta" style={{
-        background:C.green, color:"#000", fontWeight:600, fontSize:13,
-        padding:"10px 24px", borderRadius:8, border:"none",
-        letterSpacing:"0.5px", transition:"all 0.2s",
-      }}>Get Started</button>
-    </nav>
-  );
-}
 
 // ─── SECTIONS ─────────────────────────────────────────────
 
@@ -325,7 +271,7 @@ function Values() {
 function Footer() {
   return (
     <footer className="section-padding" style={{ background:C.bg, borderTop:`1px solid ${C.border}`, padding:"80px 64px 40px" }}>
-      <div className="grid-3" style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr", gap:64, marginBottom:64 }}>
+      <div className="footer-grid grid-3" style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr", gap:64, marginBottom:64 }}>
         <div><Logo /><p style={{ color:C.muted, fontSize:14, marginTop:20, maxWidth:280 }}>Nigeria's fastest crypto exchange and gift card platform.</p></div>
         <div>
           <h5 style={{ fontSize:12, letterSpacing:2, color:C.muted, textTransform:"uppercase", marginBottom:20 }}>Links</h5>
@@ -349,7 +295,7 @@ export default function AboutPage() {
 
   return (
     <div style={{ background:C.bg, color:C.text }}>
-      <Nav />
+      <Navbar />
       <Hero />
       <MarqueeBand />
       <Mission />

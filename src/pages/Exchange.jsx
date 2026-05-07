@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
+import Navbar from "../components/Navbar";
 
 // ─── TOKENS ───────────────────────────────────────────────
 const C = {
@@ -40,13 +41,22 @@ const GLOBAL_CSS = `
   .network-pill.active  { background: rgba(14,203,129,0.1) !important; border-color: rgba(14,203,129,0.3) !important; color: #0ECB81 !important; }
 
   @media (max-width: 1024px) {
-    .exchange-grid { flex-direction: column !important; }
+    .exchange-grid { flex-direction: column !important; gap: 40px !important; }
     .side-panel { width: 100% !important; order: 2 !important; }
-    .widget-container { width: 100% !important; order: 1 !important; margin-bottom: 40px !important; }
+    .widget-container { width: 100% !important; order: 1 !important; margin-bottom: 20px !important; }
     .hero-flex { flex-direction: column !important; align-items: flex-start !important; gap: 24px !important; }
-    .stat-chips { justify-content: flex-start !important; }
-    .nav-items { display: none !important; }
+    .stat-chips { justify-content: flex-start !important; width: 100% !important; }
     .main-wrapper { padding: 40px 20px !important; }
+    .hero-padding { padding: 44px 20px 0 !important; }
+  }
+
+  @media (max-width: 640px) {
+    .hero-flex h1 { fontSize: 36px !important; }
+    .stat-chips { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+    .stat-chips > div { padding: 8px 12px !important; }
+    .main-wrapper { padding: 24px 16px !important; }
+    .widget-container { max-width: 100% !important; }
+    .side-panel-desktop { display: none !important; }
   }
 `;
 
@@ -71,67 +81,6 @@ const RECENT_TRADES = [
   { type:"sell", asset:"ETH",  amount:"0.5",    ngn:"1,704,600",time:"1h ago",  status:"completed" },
   { type:"sell", asset:"USDC", amount:"200",    ngn:"316,440",  time:"3h ago",  status:"completed" },
 ];
-
-// ─── LOGO ─────────────────────────────────────────────────
-function Logo() {
-  return (
-    <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-      <svg width={36} height={36} viewBox="0 0 64 64" style={{ display:"block" }}>
-        <path d="M 32,52 C 26,40 16,24 8,8" stroke={C.green} strokeWidth="3.8" strokeLinecap="round" fill="none" />
-        <path d="M 32,52 C 38,40 48,24 56,8" stroke={C.amber} strokeWidth="3.8" strokeLinecap="round" fill="none" />
-        <circle cx="32" cy="52" r="3.5" fill="white"/>
-      </svg>
-      <div>
-        <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:20, color:"#fff", letterSpacing:2, lineHeight:1 }}>SWIFT</div>
-        <div style={{ fontSize:7, color:C.amber, letterSpacing:5, marginTop:1 }}>TRADE</div>
-      </div>
-    </div>
-  );
-}
-
-// ─── NAV ──────────────────────────────────────────────────
-function Nav() {
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", fn);
-    return () => window.removeEventListener("scroll", fn);
-  }, []);
-  return (
-    <nav style={{
-      position:"fixed", top:0, left:0, right:0, zIndex:100,
-      display:"flex", alignItems:"center", justifyContent:"space-between",
-      padding:"0 48px", height:68,
-      background: scrolled ? "rgba(8,8,8,0.95)" : "rgba(8,8,8,0.8)",
-      borderBottom:`1px solid ${scrolled ? C.border : "transparent"}`,
-      backdropFilter:"blur(20px)", transition:"all 0.3s",
-    }}>
-      <Link to="/"><Logo /></Link>
-      <ul className="nav-items" style={{ display:"flex", gap:32, listStyle:"none" }}>
-        {[
-          {l:"Exchange",path:"/exchange",active:true},
-          {l:"Gift Cards",path:"/gift-cards"},
-          {l:"Rates",path:"/rates"},
-          {l:"About",path:"/about"}
-        ].map(({l,path,active})=>(
-          <li key={l}>
-            <Link to={path} className="nav-link-item" style={{
-              color: active ? C.green : C.muted, fontSize:13, letterSpacing:"0.3px",
-              transition:"color 0.2s", borderBottom: active ? `1px solid ${C.green}` : "none",
-              paddingBottom: active ? 2 : 0,
-            }}>{l}</Link>
-          </li>
-        ))}
-      </ul>
-      <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-        <button className="nav-cta" style={{
-          background:C.green, color:"#000", fontWeight:600, fontSize:13,
-          padding:"9px 22px", borderRadius:8, border:"none", transition:"all 0.2s",
-        }}>Dashboard</button>
-      </div>
-    </nav>
-  );
-}
 
 // ─── COMPONENTS ───────────────────────────────────────────
 
@@ -440,7 +389,7 @@ export default function ExchangePage() {
 
   return (
     <div style={{ minHeight:"100vh", background:C.bg, color:C.text }}>
-      <Nav />
+      <Navbar />
       <div style={{ paddingTop:68, background:C.surface, borderBottom:`1px solid ${C.border}` }}>
         <div style={{ maxWidth:1200, margin:"0 auto", padding:"40px 48px 0" }}>
           <div className="hero-flex" style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginBottom:28 }}>
@@ -466,7 +415,7 @@ export default function ExchangePage() {
         <div className="exchange-grid" style={{ display:"flex", gap:28, alignItems:"flex-start" }}>
           <MarketSidebar />
           <div style={{ flex:1, display:"flex", justifyContent:"center" }}><ExchangeWidget /></div>
-          <div className="side-panel" style={{ width:280, flexShrink:0 }}>
+          <div className="side-panel side-panel-desktop" style={{ width:280, flexShrink:0 }}>
             <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:"20px", marginBottom:16 }}>
               <div style={{ fontSize:12, fontWeight:600, letterSpacing:1, marginBottom:16 }}>WHY SWIFT TRADE</div>
               {[{ icon:"⚡", title:"Instant Quotes", sub:"Rate locked for 60 seconds" },{ icon:"🔒", title:"Secure Platform", sub:"2FA + encrypted wallets" },{ icon:"💸", title:"Best Rates", sub:"4% spread, zero hidden fees"},{ icon:"⏱", title:"Fast Payouts", sub:"NGN in 2–5 minutes" }].map(b => (

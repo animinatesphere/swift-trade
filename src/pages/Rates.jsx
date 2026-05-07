@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
+import Navbar from "../components/Navbar";
 
 // ─── TOKENS ───────────────────────────────────────────────
 const C = {
@@ -42,13 +43,19 @@ const GLOBAL_CSS = `
   @media (max-width: 1024px) {
     .rates-header { flex-direction: column !important; align-items: flex-start !important; gap: 24px !important; }
     .rates-layout { grid-template-columns: 1fr !important; }
-    .rates-table-container { overflow-x: auto !important; }
-    .rates-table { min-width: 900px !important; }
+    .rates-table-container { overflow-x: auto !important; margin: 0 -20px !important; padding: 0 20px !important; }
+    .rates-table { min-width: 800px !important; }
     .calc-panel { position: static !important; width: 100% !important; margin-top: 40px !important; }
-    .nav-items { display: none !important; }
     .main-wrapper { padding: 40px 20px !important; }
     .hero-padding { padding: 44px 20px 0 !important; }
+    .info-grid { grid-template-columns: 1fr 1fr !important; }
+  }
+
+  @media (max-width: 640px) {
+    .rates-header h1 { font-size: 32px !important; }
     .info-grid { grid-template-columns: 1fr !important; }
+    .tab-pill { padding: 8px 16px !important; fontSize: 12px !important; }
+    .footer-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
   }
 `;
 
@@ -85,61 +92,6 @@ function genSpark(base, len = 24) {
   return out;
 }
 
-// ─── LOGO ─────────────────────────────────────────────────
-function Logo() {
-  return (
-    <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-      <svg width={36} height={36} viewBox="0 0 64 64" style={{ display:"block" }}>
-        <path d="M 32,52 C 26,40 16,24 8,8" stroke={C.green} strokeWidth="3.8" strokeLinecap="round" fill="none" />
-        <path d="M 32,52 C 38,40 48,24 56,8" stroke={C.amber} strokeWidth="3.8" strokeLinecap="round" fill="none" />
-        <circle cx="32" cy="52" r="3.5" fill="white"/>
-      </svg>
-      <div>
-        <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:20, color:"#fff", letterSpacing:2, lineHeight:1 }}>SWIFT</div>
-        <div style={{ fontSize:7, color:C.amber, letterSpacing:5, marginTop:1 }}>TRADE</div>
-      </div>
-    </div>
-  );
-}
-
-// ─── NAV ──────────────────────────────────────────────────
-function Nav() {
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", fn);
-    return () => window.removeEventListener("scroll", fn);
-  }, []);
-  return (
-    <nav style={{
-      position:"fixed", top:0, left:0, right:0, zIndex:100,
-      display:"flex", alignItems:"center", justifyContent:"space-between",
-      padding:"0 48px", height:68,
-      background: scrolled ? "rgba(8,8,8,0.95)" : "rgba(8,8,8,0.8)",
-      borderBottom:`1px solid ${scrolled ? C.border : "transparent"}`,
-      backdropFilter:"blur(20px)", transition:"all 0.3s",
-    }}>
-      <Link to="/"><Logo /></Link>
-      <ul className="nav-items" style={{ display:"flex", gap:32, listStyle:"none" }}>
-        {[{l:"Exchange",path:"/exchange"},{l:"Gift Cards",path:"/gift-cards"},{l:"Rates",path:"/rates",active:true},{l:"About",path:"/about"}].map(({l,path,active})=>(
-          <li key={l}>
-            <Link to={path} className="nav-link-item" style={{
-              color:active ? C.green : C.muted, fontSize:13, letterSpacing:"0.3px",
-              transition:"color 0.2s", borderBottom:active?`1px solid ${C.green}`:"none",
-              paddingBottom:active?2:0,
-            }}>{l}</Link>
-          </li>
-        ))}
-      </ul>
-      <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-        <button className="nav-cta" style={{
-          background:C.green, color:"#000", fontWeight:600, fontSize:13,
-          padding:"9px 22px", borderRadius:8, border:"none", transition:"all 0.2s",
-        }}>Trade Now</button>
-      </div>
-    </nav>
-  );
-}
 
 // ─── SPARKLINE ────────────────────────────────────────────
 function Sparkline({ data, color, width=80, height=32 }) {
@@ -263,7 +215,7 @@ export default function RatesPage() {
 
   return (
     <div style={{ background:C.bg, minHeight:"100vh" }}>
-      <Nav />
+      <Navbar />
       
       <div style={{ paddingTop:68, background:C.surface, borderBottom:`1px solid ${C.border}` }}>
         <div className="hero-padding" style={{ maxWidth:1280, margin:"0 auto", padding:"44px 48px 0" }}>
@@ -379,6 +331,30 @@ export default function RatesPage() {
           </div>
         )}
       </div>
+      <Footer />
     </div>
+  );
+}
+
+function Footer() {
+  return (
+    <footer style={{ padding:"80px 64px 40px", background:C.surface, borderTop:`1px solid ${C.border}`, marginTop:80 }}>
+      <div className="footer-grid" style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr", gap:64, marginBottom:64 }}>
+        <div>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20 }}>
+            <div style={{ width:32, height:32, borderRadius:8, background:C.green }} />
+            <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:20, letterSpacing:1 }}>SWIFT TRADE</span>
+          </div>
+          <p style={{ color:C.muted, fontSize:14, maxWidth:280, lineHeight:1.6 }}>Nigeria's fastest crypto exchange and gift card platform. Convert digital assets to naira instantly.</p>
+        </div>
+        <div>
+          <h5 style={{ fontSize:12, letterSpacing:2, color:C.muted, textTransform:"uppercase", marginBottom:20 }}>Links</h5>
+          <ul style={{ listStyle:"none", display:"flex", flexDirection:"column", gap:12 }}>
+            {["Exchange","Gift Cards","Rates","About"].map(l => <li key={l}><Link to={l==='About'?'/about':'#'} style={{ color:C.muted, fontSize:14 }}>{l}</Link></li>)}
+          </ul>
+        </div>
+      </div>
+      <div style={{ paddingTop:32, borderTop:`1px solid ${C.border}`, textAlign:"center", fontSize:12, color:C.muted2 }}>© 2025 Swift Trade. All rights reserved.</div>
+    </footer>
   );
 }

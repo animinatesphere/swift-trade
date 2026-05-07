@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import Navbar, { Logo } from "../components/Navbar";
 import heroTrader from "../assets/hero_trader.png";
 import lifestyleGiftcard from "../assets/lifestyle_giftcard.png";
 
@@ -62,69 +63,31 @@ const GLOBAL_CSS = `
 
   .drawer-overlay { animation: scaleIn 0.2s ease; }
   .sell-drawer    { animation: slideIn 0.3s ease; }
+
+  @media (max-width: 1024px) {
+    .hero-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
+    .hero-text { text-align: center !important; }
+    .hero-text p { margin-left: auto !important; margin-right: auto !important; }
+    .hero-stats { justify-content: center !important; gap: 32px !important; }
+    .hero-image { order: -1 !important; max-width: 500px !important; margin: 0 auto !important; }
+    .how-it-works-grid { grid-template-columns: 1fr !important; gap: 60px !important; }
+    .footer-grid { grid-template-columns: 1fr 1fr !important; gap: 40px !important; }
+  }
+
+  @media (max-width: 768px) {
+    .section-padding { padding: 60px 24px !important; }
+    .hero-padding { padding: 120px 24px 60px !important; }
+    .filters-bar { padding: 16px 20px !important; flex-direction: column !important; gap: 16px !important; align-items: flex-start !important; top: 60px !important; }
+    .filters-scroll { width: 100% !important; overflow-x: auto !important; padding-bottom: 8px !important; }
+    .search-input { width: 100% !important; }
+    .sell-drawer { width: 100% !important; padding: 24px 20px 40px !important; }
+    .footer-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
+    .footer-bottom { flex-direction: column !important; align-items: flex-start !important; gap: 24px !important; }
+    .hero-stats { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 20px !important; width: 100% !important; }
+    .hero-stats > div { text-align: center !important; }
+  }
 `;
 
-// ─── LOGO ─────────────────────────────────────────────────
-function LogoMark({ size = 40 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 64 64" style={{ display:"block" }}>
-      <defs>
-        <filter id="lg2"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        <filter id="la2"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      </defs>
-      <path d="M 32,52 C 26,40 16,24 8,8" stroke={C.green} strokeWidth="3.8" strokeLinecap="round" fill="none" filter="url(#lg2)"/>
-      <g transform="translate(8,8) rotate(-27)"><polygon points="0,-6 -3.5,3.5 3.5,3.5" fill={C.green} filter="url(#lg2)"/></g>
-      <path d="M 32,52 C 38,40 48,24 56,8" stroke={C.amber} strokeWidth="3.8" strokeLinecap="round" fill="none" filter="url(#la2)"/>
-      <g transform="translate(56,8) rotate(27)"><polygon points="0,-6 -3.5,3.5 3.5,3.5" fill={C.amber} filter="url(#la2)"/></g>
-      <circle cx="32" cy="52" r="3.5" fill="white"/>
-    </svg>
-  );
-}
-function Logo() {
-  return (
-    <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-      <LogoMark size={40} />
-      <div style={{ display:"flex", flexDirection:"column" }}>
-        <span style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:"#fff", letterSpacing:2, lineHeight:1 }}>SWIFT</span>
-        <span style={{ fontSize:8, fontWeight:400, color:C.amber, letterSpacing:5, marginTop:2 }}>TRADE</span>
-      </div>
-    </div>
-  );
-}
-
-// ─── NAV ──────────────────────────────────────────────────
-function Nav() {
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", fn);
-    return () => window.removeEventListener("scroll", fn);
-  }, []);
-  return (
-    <nav style={{
-      position:"fixed", top:0, left:0, right:0, zIndex:100,
-      display:"flex", alignItems:"center", justifyContent:"space-between",
-      padding:"0 64px", height:72,
-      background: scrolled ? "rgba(8,8,8,0.92)" : "transparent",
-      borderBottom: scrolled ? `1px solid ${C.border}` : "1px solid transparent",
-      backdropFilter: scrolled ? "blur(20px)" : "none",
-      transition:"all 0.4s",
-    }}>
-      <Link to="/" style={{ cursor:"pointer" }}><Logo /></Link>
-      <ul style={{ display:"flex", gap:36, listStyle:"none" }}>
-        <li><Link to="/exchange" className="nav-link-item" style={{ color: C.muted, fontSize:14, letterSpacing:"0.3px", transition:"color 0.2s" }}>Exchange</Link></li>
-        <li><Link to="/gift-cards" className="nav-link-item" style={{ color: C.green, fontSize:14, letterSpacing:"0.3px", transition:"color 0.2s", borderBottom: `1px solid ${C.green}`, paddingBottom: 2 }}>Gift Cards</Link></li>
-        <li><Link to="/rates" className="nav-link-item" style={{ color: C.muted, fontSize:14, letterSpacing:"0.3px", transition:"color 0.2s" }}>Rates</Link></li>
-        <li><Link to="/about" className="nav-link-item" style={{ color: C.muted, fontSize:14, letterSpacing:"0.3px", transition:"color 0.2s" }}>About</Link></li>
-      </ul>
-      <Link to="/signup" className="nav-cta" style={{
-        background:C.green, color:"#000", fontWeight:600, fontSize:13,
-        padding:"10px 24px", borderRadius:8, border:"none",
-        letterSpacing:"0.5px", transition:"all 0.2s", textAlign: "center"
-      }}>Get Started</Link>
-    </nav>
-  );
-}
 
 // ─── GIFT CARD DATA ───────────────────────────────────────
 const CATEGORIES = ["All", "Amazon", "Steam", "iTunes", "Google Play", "Netflix", "Visa", "Xbox"];
@@ -503,10 +466,10 @@ export default function GiftCardsPage() {
 
   return (
     <div style={{ background:C.bg, minHeight:"100vh", color: C.text, fontFamily: "'Outfit', sans-serif" }}>
-      <Nav />
+      <Navbar />
       
       {/* Page hero */}
-      <div style={{
+      <div className="hero-padding" style={{
         padding:"140px 64px 80px", position:"relative", overflow:"hidden",
         borderBottom:`1px solid ${C.border}`,
       }}>
@@ -522,10 +485,10 @@ export default function GiftCardsPage() {
           borderRadius:"50%", filter:"blur(60px)", pointerEvents:"none",
         }} />
 
-        <div style={{ 
+        <div className="hero-grid" style={{ 
           position:"relative", display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: 60, alignItems: "center"
         }}>
-          <div>
+          <div className="hero-text">
             <div style={{ display:"inline-flex", alignItems:"center", gap:8,
               background:"rgba(245,166,35,0.08)", border:"1px solid rgba(245,166,35,0.2)",
               borderRadius:100, padding:"6px 14px", fontSize:11, color:C.amber,
@@ -546,7 +509,7 @@ export default function GiftCardsPage() {
             </p>
 
             {/* Quick stats */}
-            <div style={{ display:"flex", gap:48 }}>
+            <div className="hero-stats" style={{ display:"flex", gap:48 }}>
               {[
                 { val:"₦1,380+", label:"Best USD rate" },
                 { val:"5 min",   label:"Avg. payout"   },
@@ -562,7 +525,7 @@ export default function GiftCardsPage() {
           </div>
 
           {/* Hero Image */}
-          <div style={{ position: "relative", animation: "fadeUp 1s ease" }}>
+          <div className="hero-image" style={{ position: "relative", animation: "fadeUp 1s ease" }}>
             <div style={{
               position: "absolute", inset: -20, background: `linear-gradient(45deg, ${C.green}20, ${C.amber}20)`,
               filter: "blur(40px)", borderRadius: "30% 70% 70% 30% / 30% 30% 70% 70%"
@@ -577,7 +540,7 @@ export default function GiftCardsPage() {
       </div>
 
       {/* Sign-in Notice */}
-      <div style={{
+      <div className="section-padding" style={{
         padding: "16px 64px",
         background: "rgba(14, 203, 129, 0.05)",
         borderBottom: `1px solid ${C.border}`,
@@ -594,13 +557,13 @@ export default function GiftCardsPage() {
       </div>
 
       {/* Filters + search */}
-      <div style={{
+      <div className="filters-bar" style={{
         padding:"28px 64px", borderBottom:`1px solid ${C.border}`,
         display:"flex", justifyContent:"space-between", alignItems:"center",
         position:"sticky", top:72, zIndex:50,
         background:"rgba(8,8,8,0.95)", backdropFilter:"blur(16px)",
       }}>
-        <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+        <div className="filters-scroll" style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
           {CATEGORIES.map(cat => (
             <button key={cat} className="category-pill" onClick={() => setActiveCategory(cat)} style={{
               background: activeCategory === cat ? "rgba(14,203,129,0.1)" : "transparent",
@@ -615,7 +578,7 @@ export default function GiftCardsPage() {
         <div style={{ position:"relative" }}>
           <span style={{ position:"absolute", left:14, top:"50%", transform:"translateY(-50%)",
             color:C.muted, fontSize:14 }}>🔍</span>
-          <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+          <input className="search-input" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search cards..."
             style={{
               background:C.card, border:`1px solid ${C.border2}`, borderRadius:10,
@@ -626,7 +589,7 @@ export default function GiftCardsPage() {
       </div>
 
       {/* Cards grid */}
-      <div style={{ padding:"48px 64px" }}>
+      <div className="section-padding" style={{ padding:"48px 64px" }}>
         {filtered.length === 0 ? (
           <div style={{ textAlign:"center", padding:"80px 0", color:C.muted }}>
             <div style={{ fontSize:48, marginBottom:16 }}>🃏</div>
@@ -642,8 +605,8 @@ export default function GiftCardsPage() {
       </div>
 
       {/* How it works */}
-      <div style={{ padding:"100px 64px", borderTop:`1px solid ${C.border}`, background:C.surface }}>
-        <div style={{ 
+      <div className="section-padding" style={{ padding:"100px 64px", borderTop:`1px solid ${C.border}`, background:C.surface }}>
+        <div className="how-it-works-grid" style={{ 
           display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: 80, alignItems: "center"
         }}>
           {/* Lifestyle Image */}
@@ -726,8 +689,8 @@ function Footer() {
     Legal: ["Privacy Policy", "Terms of Service", "AML Policy", "Cookie Policy"],
   };
   return (
-    <footer style={{ padding:"100px 64px 40px", background:C.surface, borderTop:`1px solid ${C.border}` }}>
-      <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr", gap:48, marginBottom:80 }}>
+    <footer className="section-padding" style={{ padding:"100px 64px 40px", background:C.surface, borderTop:`1px solid ${C.border}` }}>
+      <div className="footer-grid" style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr", gap:48, marginBottom:80 }}>
         <div>
           <Logo />
           <p style={{ color:C.muted, marginTop:24, maxWidth:280, fontSize:14, lineHeight:1.6 }}>
@@ -749,7 +712,7 @@ function Footer() {
           </div>
         ))}
       </div>
-      <div style={{ paddingTop:32, borderTop:`1px solid ${C.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+      <div className="footer-bottom" style={{ paddingTop:32, borderTop:`1px solid ${C.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
         <div style={{ color:C.muted2, fontSize:12 }}>© 2025 Swift Trade. All rights reserved.</div>
         <div style={{ display:"flex", gap:24 }}>
           {["Twitter", "Instagram", "LinkedIn"].map(s => (

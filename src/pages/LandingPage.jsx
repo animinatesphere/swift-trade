@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../hooks/useTheme";
 import { colors, fonts } from "../theme/tokens";
+import Navbar, { Logo } from "../components/Navbar";
 
 // ─── DATA ──────────────────────────────────────────────────
 const TICKER_ITEMS = [
@@ -122,23 +123,6 @@ function FadeIn({ children, delay = 0 }) {
   return <div ref={ref} className="fade-in" style={{ transitionDelay: `${delay}ms` }}>{children}</div>;
 }
 
-function Logo() {
-  const { colors, fonts } = useTheme();
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-      <svg width="32" height="32" viewBox="0 0 64 64">
-        <path d="M32 52C26 40 16 24 8 8" stroke={colors.green} strokeWidth="4" fill="none" />
-        <path d="M32 52C38 40 48 24 56 8" stroke={colors.amber} strokeWidth="4" fill="none" />
-        <circle cx="32" cy="52" r="4" fill="white" />
-      </svg>
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        <span style={{ fontFamily: fonts.display, fontSize: 20, lineHeight: 1, letterSpacing: 1 }}>SWIFT</span>
-        <span style={{ color: colors.amber, fontSize: 8, letterSpacing: 4, fontWeight: 600 }}>TRADE</span>
-      </div>
-    </div>
-  );
-}
-
 // ─── MAIN PAGE ──────────────────────────────────────────────
 
 export default function LandingPage() {
@@ -171,55 +155,7 @@ export default function LandingPage() {
 
   return (
     <div style={{ background: colors.bg }}>
-      {/* 1. Nav */}
-      <nav style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000,
-        height: isMobile ? 64 : 72, display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: isMobile ? "0 20px" : "0 64px", transition: "all 0.3s",
-        background: scrolled || menuOpen ? "rgba(8, 8, 8, 0.95)" : "transparent",
-        backdropFilter: scrolled || menuOpen ? "blur(12px)" : "none",
-        borderBottom: (scrolled || menuOpen) ? `1px solid ${colors.border}` : "none"
-      }}>
-        <Logo />
-        
-        {isMobile ? (
-          <button onClick={() => setMenuOpen(!menuOpen)} style={{ 
-            background: "none", border: "none", color: "#fff", fontSize: 24, cursor: "pointer" 
-          }}>
-            {menuOpen ? "✕" : "☰"}
-          </button>
-        ) : (
-          <div style={{ display: "flex", gap: 32, alignItems: "center" }}>
-            {["Exchange", "Gift Cards", "Rates", "About"].map(item => (
-              <Link key={item} to={item === "Exchange" ? "/exchange" : item === "Gift Cards" ? "/gift-cards" : item === "Rates" ? "/rates" : item === "About" ? "/about" : "#"} className="nav-link" style={{ 
-                color: colors.muted, textDecoration: "none", fontSize: 14, fontWeight: 500, transition: "0.2s" 
-              }}>{item}</Link>
-            ))}
-            <button className="btn" style={{
-              background: colors.green, color: "#000", border: "none", padding: "10px 24px",
-              borderRadius: radius.md, fontWeight: 600, cursor: "pointer", transition: "0.2s"
-            }}>Get Started</button>
-          </div>
-        )}
-
-        {/* Mobile Menu Overlay */}
-        {isMobile && menuOpen && (
-          <div style={{
-            position: "absolute", top: 64, left: 0, right: 0, height: "100vh",
-            background: colors.bg, display: "flex", flexDirection: "column", padding: 40, gap: 24
-          }}>
-            {["Exchange", "Gift Cards", "Rates", "About"].map(item => (
-              <Link key={item} to={item === "Exchange" ? "/exchange" : item === "Gift Cards" ? "/gift-cards" : item === "Rates" ? "/rates" : item === "About" ? "/about" : "#"} onClick={() => setMenuOpen(false)} style={{ 
-                color: colors.text, textDecoration: "none", fontSize: 24, fontWeight: 600, fontFamily: fonts.display 
-              }}>{item.toUpperCase()}</Link>
-            ))}
-            <button className="btn" style={{
-              background: colors.green, color: "#000", border: "none", padding: "16px",
-              borderRadius: radius.md, fontWeight: 600, fontSize: 18, marginTop: 20
-            }}>Get Started</button>
-          </div>
-        )}
-      </nav>
+      <Navbar />
 
       {/* 2. Hero */}
       <section style={{ 
@@ -263,10 +199,11 @@ export default function LandingPage() {
           </p>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", marginBottom: isMobile ? 60 : 80 }}>
-            <button className="btn" style={{ 
+            <Link to="/signup" className="btn" style={{ 
               background: colors.green, color: "#000", border: "none", padding: isMobile ? "14px 24px" : "16px 32px", 
-              borderRadius: radius.lg, fontWeight: 600, fontSize: isMobile ? 14 : 16, width: isMobile ? "100%" : "auto"
-            }}>Start Trading →</button>
+              borderRadius: radius.lg, fontWeight: 600, fontSize: isMobile ? 14 : 16, width: isMobile ? "100%" : "auto",
+              textDecoration: "none", display: "inline-block"
+            }}>Start Trading →</Link>
             <button className="btn" style={{ 
               background: "transparent", color: "#fff", border: `1px solid ${colors.border2}`, padding: isMobile ? "14px 24px" : "16px 32px", 
               borderRadius: radius.lg, fontWeight: 600, fontSize: isMobile ? 14 : 16, width: isMobile ? "100%" : "auto"
@@ -537,10 +474,10 @@ export default function LandingPage() {
             Join 50,000+ Nigerians already using Swift Trade for crypto exchange and gift cards.
           </p>
           <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 16, justifyContent: "center" }}>
-            <button className="btn" style={{ 
+            <Link to="/signup" className="btn" style={{ 
               background: colors.green, color: "#000", border: "none", padding: "16px 32px", 
-              borderRadius: radius.lg, fontWeight: 600 
-            }}>Create Free Account</button>
+              borderRadius: radius.lg, fontWeight: 600, textDecoration: "none", display: "inline-block"
+            }}>Create Free Account</Link>
             <button className="btn" style={{ 
               background: "transparent", color: "#fff", border: `1px solid ${colors.border2}`, padding: "16px 32px", 
               borderRadius: radius.lg, fontWeight: 600 
