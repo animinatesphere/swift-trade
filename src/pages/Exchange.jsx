@@ -1,6 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import {
+  ArrowLeft,
+  ChevronRight,
+  Wallet,
+  CreditCard,
+  Landmark,
+  ShieldCheck,
+  Info,
+  CheckCircle2,
+  Lock,
+} from "lucide-react";
 
 // ─── TOKENS ───────────────────────────────────────────────
 const C = {
@@ -191,7 +202,7 @@ function ExchangeWidget() {
   useEffect(() => () => clearInterval(timerRef.current), []);
 
   const handleGetQuote = () => { setStep("quote"); startTimer(); };
-  const handleConfirm = () => { clearInterval(timerRef.current); setStep("success"); };
+  const handleConfirm = () => { clearInterval(timerRef.current); setStep("payment_method"); };
   const handleReset = () => { setStep("form"); setCryptoAmount(""); setNgnAmount(""); setQuoteTimer(QUOTE_DURATION); };
 
   const isValid = parseFloat(cryptoAmount) > 0 && parseFloat(ngnAmount) > 0;

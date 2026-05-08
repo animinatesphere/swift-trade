@@ -88,7 +88,7 @@ export default function Navbar() {
                 </li>
               ))}
             </ul>
-            <Link to="/signup" className="nav-cta" style={{
+            <Link to="/login" className="nav-cta" style={{
               background: C.green, color: "#000", fontWeight: 600, fontSize: 13,
               padding: "9px 22px", borderRadius: 8, border: "none", transition: "all 0.2s",
               textDecoration: "none"
@@ -110,7 +110,7 @@ export default function Navbar() {
                 letterSpacing: 2
               }}>{link.label.toUpperCase()}</Link>
             ))}
-            <Link to="/signup" onClick={() => setMenuOpen(false)} style={{
+            <Link to="/login" onClick={() => setMenuOpen(false)} style={{
               background: C.green, color: "#000", border: "none", padding: "16px",
               borderRadius: 8, fontWeight: 600, fontSize: 18, marginTop: 20,
               textDecoration: "none", textAlign: "center"

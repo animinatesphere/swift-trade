@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { C } from "../constants";
 import { Logo } from "./Logo";
+import { Link } from "react-router-dom";
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -33,11 +34,12 @@ export function Nav() {
           </li>
         ))}
       </ul>
-      <button className="nav-cta"
+      <Link to="/login" className="nav-cta"
         style={{ background:C.green, color:"#000", fontFamily:"'Outfit',sans-serif", fontWeight:600,
-          fontSize:13, padding:"10px 24px", borderRadius:8, border:"none", letterSpacing:"0.5px", transition:"all 0.2s" }}>
+          fontSize:13, padding:"10px 24px", borderRadius:8, border:"none", letterSpacing:"0.5px", transition:"all 0.2s",
+          textDecoration:"none", display:"inline-block" }}>
         Get Started
-      </button>
+      </Link>
     </nav>
   );
 }

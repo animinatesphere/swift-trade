@@ -167,7 +167,7 @@ function SellDrawer({ card, onClose }) {
           <div style={{ fontWeight: 700, marginBottom: 4, display: "flex", alignItems: "center", gap: 8 }}>
             <span>⚠️</span> DEMO MODE
           </div>
-          This is a demonstration of the trading flow. To perform actual trades, you must <Link to="/signup" style={{ color: C.amber, fontWeight: 700, textDecoration: "underline" }}>sign in</Link> to your Swift Trade account.
+          This is a demonstration of the trading flow. To perform actual trades, you must <Link to="/login" style={{ color: C.amber, fontWeight: 700, textDecoration: "underline" }}>sign in</Link> to your Swift Trade account.
         </div>
 
         {/* Steps indicator */}
@@ -552,7 +552,7 @@ export default function GiftCardsPage() {
       }}>
         <span style={{ fontSize: 18 }}>💡</span>
         <span>
-          Note: To securely trade or purchase gift cards, you are required to <Link to="/signup" style={{ color: C.green, fontWeight: 600, textDecoration: "underline" }}>sign in</Link> to your Swift Trade account. The trading flow below is for demonstration purposes.
+          Note: To securely trade or purchase gift cards, you are required to <Link to="/login" style={{ color: C.green, fontWeight: 600, textDecoration: "underline" }}>sign in</Link> to your Swift Trade account. The trading flow below is for demonstration purposes.
         </span>
       </div>
 

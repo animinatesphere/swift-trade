@@ -1,5 +1,6 @@
 import { C } from "../constants";
 import { FadeIn } from "./FadeIn";
+import { Link } from "react-router-dom";
 import { Eyebrow } from "./Eyebrow";
 
 const SERVICES = [
@@ -52,10 +53,10 @@ export function Services() {
               </div>
               <h3 style={{ fontSize:20, fontWeight:600, marginBottom:14, letterSpacing:"-0.2px" }}>{s.title}</h3>
               <p style={{ color:C.muted, fontSize:14, lineHeight:1.7, fontWeight:300, marginBottom:32 }}>{s.desc}</p>
-              <a href="#" style={{ display:"inline-flex", alignItems:"center", gap:8,
-                color:C.green, fontSize:13, fontWeight:500, letterSpacing:"0.3px", transition:"gap 0.2s" }}>
+              <Link to="/login" style={{ display:"inline-flex", alignItems:"center", gap:8,
+                color:C.green, fontSize:13, fontWeight:500, letterSpacing:"0.3px", transition:"gap 0.2s", textDecoration:"none" }}>
                 {s.link} <span className="svc-link-arrow" style={{ marginLeft:0, transition:"margin 0.2s" }}>→</span>
-              </a>
+              </Link>
             </div>
           </FadeIn>
         ))}

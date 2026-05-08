@@ -199,7 +199,7 @@ export default function LandingPage() {
           </p>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", marginBottom: isMobile ? 60 : 80 }}>
-            <Link to="/signup" className="btn" style={{ 
+            <Link to="/login" className="btn" style={{ 
               background: colors.green, color: "#000", border: "none", padding: isMobile ? "14px 24px" : "16px 32px", 
               borderRadius: radius.lg, fontWeight: 600, fontSize: isMobile ? 14 : 16, width: isMobile ? "100%" : "auto",
               textDecoration: "none", display: "inline-block"
@@ -265,7 +265,7 @@ export default function LandingPage() {
                 }}>{svc.icon}</div>
                 <h3 style={{ fontSize: 20, marginBottom: 16 }}>{svc.title}</h3>
                 <p style={{ color: colors.muted, lineHeight: 1.6, marginBottom: 32, fontSize: 14 }}>{svc.desc}</p>
-                <Link to={svc.title === "Gift Card Exchange" ? "/gift-cards" : "#"} style={{ color: colors.green, textDecoration: "none", fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
+                <Link to={svc.title === "Gift Card Exchange" ? "/gift-cards" : "/login"} style={{ color: colors.green, textDecoration: "none", fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}>
                   {svc.link} <span>→</span>
                 </Link>
               </div>

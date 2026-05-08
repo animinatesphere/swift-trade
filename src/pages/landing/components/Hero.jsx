@@ -1,5 +1,6 @@
 import { C } from "../constants";
 import { Ticker } from "./Ticker";
+import { Link } from "react-router-dom";
 
 export function Hero() {
   return (
@@ -51,11 +52,12 @@ export function Hero() {
 
       {/* Actions */}
       <div className="hero-actions" style={{ display:"flex", gap:16, alignItems:"center", marginBottom:72 }}>
-        <button className="btn-primary" style={{ background:C.green, color:"#000",
+        <Link to="/login" className="btn-primary" style={{ background:C.green, color:"#000",
           fontFamily:"'Outfit',sans-serif", fontWeight:600, fontSize:15,
-          padding:"14px 32px", borderRadius:10, border:"none", letterSpacing:"0.3px", transition:"all 0.2s" }}>
+          padding:"14px 32px", borderRadius:10, border:"none", letterSpacing:"0.3px", transition:"all 0.2s",
+          textDecoration:"none", display:"inline-block" }}>
           Start Trading →
-        </button>
+        </Link>
         <button className="btn-secondary" style={{ background:"transparent", color:"#fff",
           fontFamily:"'Outfit',sans-serif", fontWeight:500, fontSize:15,
           padding:"14px 32px", borderRadius:10, border:`1px solid ${C.border2}`, transition:"all 0.2s" }}>
