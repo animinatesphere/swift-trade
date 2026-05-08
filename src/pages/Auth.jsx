@@ -218,14 +218,19 @@ function LeftPanel({ page }) {
 }
 
 // ─── SHARED COMPONENTS ────────────────────────────────────
-function Field({ label, type="text", value, onChange, placeholder, error, success, hint, rightEl, autoFocus }) {
+function Field({ label, type="text", value, onChange, placeholder, error, success, hint, rightEl, autoFocus, small }) {
   const [focused, setFocused] = useState(false);
   const cls = ["input-field", error?"error":"", success&&!error?"success":""].filter(Boolean).join(" ");
+  
+  const verticalPadding = small ? "10px" : "13px";
+  const horizontalPadding = "16px";
+  const fontSize = small ? "14px" : "15px";
+
   return (
     <div style={{ marginBottom: error ? 6 : 18 }}>
       <label style={{ display:"block", fontSize:11, color: focused ? C.green : error ? C.red : C.muted, letterSpacing:2, marginBottom:7, transition:"color 0.2s", userSelect:"none" }}>{label}</label>
       <div style={{ position:"relative" }}>
-        <input className={cls} type={type} value={value} onChange={onChange} placeholder={placeholder} autoFocus={autoFocus} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} style={{ width:"100%", background:C.card, border:`1px solid ${C.border2}`, borderRadius:10, padding: rightEl ? "13px 46px 13px 16px" : "13px 16px", color:"#fff", fontSize:15, outline:"none" }} />
+        <input className={cls} type={type} value={value} onChange={onChange} placeholder={placeholder} autoFocus={autoFocus} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} style={{ width:"100%", background:C.card, border:`1px solid ${C.border2}`, borderRadius:10, padding: rightEl ? `${verticalPadding} 46px ${verticalPadding} ${horizontalPadding}` : `${verticalPadding} ${horizontalPadding}`, color:"#fff", fontSize, outline:"none" }} />
         {rightEl && <div style={{ position:"absolute", right:14, top:"50%", transform:"translateY(-50%)" }}>{rightEl}</div>}
       </div>
       {error && <div style={{ fontSize:11, color:C.red, marginTop:5, letterSpacing:"0.3px" }}>⚠ {error}</div>}
@@ -348,9 +353,9 @@ function OTPScreen({ email, onSuccess, onBack }) {
         </p>
       </div>
 
-      <div style={{ display:"flex", gap:8, marginBottom:12 }}>
+      <div style={{ display:"flex", gap:6, marginBottom:12 }}>
         {digits.map((d, i) => (
-          <input key={i} ref={el => refs.current[i] = el} className={`otp-box${d?" filled":""}`} maxLength={1} value={d} type="text" inputMode="numeric" onChange={e => handleDigit(i, e.target.value)} onKeyDown={e => handleKeyDown(i, e)} style={{ flex:1, height:64, background: d ? "rgba(14,203,129,0.04)" : C.card, border:`1px solid ${d?"rgba(14,203,129,0.35)":C.border2}`, borderRadius:12, textAlign:"center", fontFamily:"'DM Mono',monospace", fontSize:26, fontWeight:500, color:C.green, outline:"none", transition:"all 0.2s" }} />
+          <input key={i} ref={el => refs.current[i] = el} className={`otp-box${d?" filled":""}`} maxLength={1} value={d} type="text" inputMode="numeric" onChange={e => handleDigit(i, e.target.value)} onKeyDown={e => handleKeyDown(i, e)} style={{ flex:1, height:50, maxWidth:46, background: d ? "rgba(14,203,129,0.04)" : C.card, border:`1px solid ${d?"rgba(14,203,129,0.35)":C.border2}`, borderRadius:12, textAlign:"center", fontFamily:"'DM Mono',monospace", fontSize:20, fontWeight:500, color:C.green, outline:"none", transition:"all 0.2s" }} />
         ))}
       </div>
 
@@ -468,12 +473,12 @@ function RegisterForm({ onSwitch }) {
         <p style={{ color:C.muted, fontSize:14, fontWeight:300 }}>Takes under 2 minutes. No hidden fees, ever.</p>
       </div>
 
-      <Field label="FULL NAME" value={form.fullName} onChange={e => setForm({...form, fullName:e.target.value})} placeholder="Adewale Obi" error={errors.fullName} autoFocus />
-      <Field label="EMAIL ADDRESS" type="email" value={form.email} onChange={e => setForm({...form, email:e.target.value})} placeholder="you@example.com" error={errors.email} />
-      <Field label="PHONE NUMBER" type="tel" value={form.phone} onChange={e => setForm({...form, phone:e.target.value})} placeholder="08012345678" error={errors.phone} />
-      <Field label="PASSWORD" type={showPass?"text":"password"} value={form.password} onChange={e => setForm({...form, password:e.target.value})} placeholder="Min. 8 characters" error={errors.password} rightEl={<EyeToggle show={showPass} onToggle={() => setShowPass(!showPass)} />} />
+      <Field small label="FULL NAME" value={form.fullName} onChange={e => setForm({...form, fullName:e.target.value})} placeholder="Adewale Obi" error={errors.fullName} autoFocus />
+      <Field small label="EMAIL ADDRESS" type="email" value={form.email} onChange={e => setForm({...form, email:e.target.value})} placeholder="you@example.com" error={errors.email} />
+      <Field small label="PHONE NUMBER" type="tel" value={form.phone} onChange={e => setForm({...form, phone:e.target.value})} placeholder="08012345678" error={errors.phone} />
+      <Field small label="PASSWORD" type={showPass?"text":"password"} value={form.password} onChange={e => setForm({...form, password:e.target.value})} placeholder="Min. 8 characters" error={errors.password} rightEl={<EyeToggle show={showPass} onToggle={() => setShowPass(!showPass)} />} />
       <PasswordStrength password={form.password} />
-      <Field label="CONFIRM PASSWORD" type={showConfirm?"text":"password"} value={form.confirm} onChange={e => setForm({...form, confirm:e.target.value})} placeholder="Repeat your password" error={errors.confirm} success={form.confirm && form.confirm === form.password} rightEl={<EyeToggle show={showConfirm} onToggle={() => setShowConfirm(!showConfirm)} />} />
+      <Field small label="CONFIRM PASSWORD" type={showConfirm?"text":"password"} value={form.confirm} onChange={e => setForm({...form, confirm:e.target.value})} placeholder="Repeat your password" error={errors.confirm} success={form.confirm && form.confirm === form.password} rightEl={<EyeToggle show={showConfirm} onToggle={() => setShowConfirm(!showConfirm)} />} />
 
       <div style={{ marginBottom: 22 }}><Checkbox checked={agreed} onChange={setAgreed}>I agree to Swift Trade's Terms and Privacy Policy.</Checkbox></div>
       <button onClick={handleSubmit} disabled={loading} className="submit-btn" style={{ width:"100%", background:C.green, color:"#000", fontWeight:700, fontSize:15, padding:"15px", borderRadius:12, border:"none", marginBottom:20, display:"flex", alignItems:"center", justifyContent:"center", gap:10 }}>
