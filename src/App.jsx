@@ -6,6 +6,7 @@ import GiftCards from './pages/GiftCards'
 import About from './pages/About'
 import Exchange from './pages/Exchange'
 import Rates from './pages/Rates'
+import ForgotPassword from './pages/ForgotPassword'
 
 const App = () => {
   return (
@@ -18,6 +19,7 @@ const App = () => {
     <Route path="/about" element={<About />} />
     <Route path="/exchange" element={<Exchange />} />
     <Route path="/rates" element={<Rates />} /> 
+    <Route path="/forgot-password" element={<ForgotPassword />} />
    </Routes>
     </>
   )

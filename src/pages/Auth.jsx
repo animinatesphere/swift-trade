@@ -427,6 +427,10 @@ function LoginForm({ onSwitch }) {
 
       <Field label="EMAIL ADDRESS" type="email" value={form.email} onChange={e => setForm({...form, email:e.target.value})} placeholder="you@example.com" error={errors.email} autoFocus />
       <Field label="PASSWORD" type={showPass?"text":"password"} value={form.password} onChange={e => setForm({...form, password:e.target.value})} placeholder="Enter your password" error={errors.password} rightEl={<EyeToggle show={showPass} onToggle={() => setShowPass(!showPass)} />} />
+      
+      <div style={{ textAlign:"right", marginBottom:24, marginTop:-8 }}>
+        <Link to="/forgot-password" style={{ color:C.amber, fontSize:13, textDecoration:"none", fontWeight:500, transition:"opacity 0.2s" }} onMouseOver={e => e.target.style.opacity = 0.8} onMouseOut={e => e.target.style.opacity = 1}>Forgot password?</Link>
+      </div>
 
       <button onClick={handleSubmit} disabled={loading} className="submit-btn" style={{ width:"100%", background:C.green, color:"#000", fontWeight:700, fontSize:15, padding:"15px", borderRadius:12, border:"none", marginBottom:24, display:"flex", alignItems:"center", justifyContent:"center", gap:10 }}>
         {loading ? <><div style={{ width:18, height:18, borderRadius:"50%", border:"2px solid rgba(0,0,0,0.3)", borderTopColor:"#000", animation:"spin 0.8s linear infinite" }} />Logging in...</> : "Log In →"}
