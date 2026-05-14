@@ -1,0 +1,1087 @@
+import React, { useState, useEffect } from "react";
+import { useOutletContext } from "react-router-dom";
+
+// ─── TOKENS ───────────────────────────────────────────────
+const C = {
+  green:"#0ECB81", amber:"#F5A623", red:"#F6465D",
+  bg:"#080808", surface:"#0c0c0c", card:"#101010", card2:"#141414",
+  border:"#1a1a1a", border2:"#222222",
+  text:"#ffffff", muted:"#555555", muted2:"#2e2e2e",
+};
+
+const SPREAD   = 0.04;
+const RATE_TTL = 60;
+const PAY_TTL  = 1800; // 30 min
+
+const CSS = `
+  @keyframes fadeUp   { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeIn   { from{opacity:0} to{opacity:1} }
+  @keyframes slideIn  { from{opacity:0;transform:translateX(22px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes pulse    { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.75)} }
+  @keyframes spin     { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  @keyframes popIn    { 0%{transform:scale(0.7);opacity:0} 70%{transform:scale(1.08)} 100%{transform:scale(1);opacity:1} }
+  @keyframes successIn{ 0%{transform:scale(0.5);opacity:0} 65%{transform:scale(1.06)} 100%{transform:scale(1);opacity:1} }
+  @keyframes checkDraw{ from{stroke-dashoffset:70} to{stroke-dashoffset:0} }
+  @keyframes ripple   { 0%{transform:scale(1);opacity:0.6} 100%{transform:scale(2.8);opacity:0} }
+  @keyframes ticketLine { from{opacity:0;transform:translateX(-6px)} to{opacity:1;transform:translateX(0)} }
+
+  .step-form   { animation:slideIn 0.32s ease; }
+  .pri-btn     { transition:all 0.2s; }
+  .pri-btn:hover:not(:disabled) { background:#0fdf8e !important; transform:translateY(-2px); box-shadow:0 10px 28px rgba(14,203,129,0.32) !important; }
+  .pri-btn:disabled { opacity:0.35 !important; cursor:not-allowed !important; }
+  .ghost-btn   { transition:all 0.18s; }
+  .ghost-btn:hover:not(:disabled) { border-color:#444 !important; color:#ccc !important; }
+  .coin-card   { transition:all 0.18s; }
+  .coin-card:hover  { border-color:rgba(14,203,129,0.3) !important; background:#181818 !important; transform:translateY(-2px); }
+  .coin-card.sel    { border-color:rgba(14,203,129,0.5) !important; background:rgba(14,203,129,0.06) !important; }
+  .net-btn     { transition:all 0.18s; }
+  .net-btn:hover    { border-color:#555 !important; }
+  .net-btn.sel      { background:rgba(14,203,129,0.08) !important; border-color:rgba(14,203,129,0.4) !important; color:#0ECB81 !important; }
+  .bank-card   { transition:all 0.18s; }
+  .bank-card:hover  { border-color:#444 !important; background:#181818 !important; }
+  .bank-card.sel    { border-color:rgba(14,203,129,0.4) !important; background:rgba(14,203,129,0.05) !important; }
+  .copy-btn:hover   { color:#0ECB81 !important; }
+  .copy-btn    { transition:color 0.15s; }
+  .back-btn:hover   { color:#fff !important; }
+  .back-btn    { transition:color 0.15s; }
+  .amt-toggle:hover { background:rgba(255,255,255,0.06) !important; }
+  .amt-toggle  { transition:background 0.15s; }
+  .st-input:focus   { border-color:rgba(14,203,129,0.5) !important; box-shadow:0 0 0 3px rgba(14,203,129,0.07) !important; outline:none; }
+  .st-input    { transition:border-color 0.2s, box-shadow 0.2s; }
+
+  .sell-crypto-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .left-panel {
+    width: 320px;
+    background: #060606;
+    border-right: 1px solid #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    flex-shrink: 0;
+    padding: 28px 24px;
+    position: relative;
+    overflow-y: auto;
+  }
+
+  .form-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px 48px 40px;
+  }
+  
+  .coins-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  @media (max-width: 1024px) {
+    .sell-crypto-container {
+      flex-direction: column;
+    }
+    .left-panel {
+      width: 100%;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid #1a1a1a;
+      padding: 20px;
+    }
+    .left-panel-ambient, .left-panel-logo, .left-panel-title {
+      display: none !important;
+    }
+    .form-area {
+      padding: 24px 20px 40px;
+    }
+    .top-bar {
+      display: none !important;
+    }
+    .coins-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .coins-grid {
+      grid-template-columns: 1fr;
+    }
+    .form-area {
+      padding: 20px 16px 40px;
+    }
+    h2 {
+      font-size: 32px !important;
+    }
+  }
+`;
+
+// ─── DATA ─────────────────────────────────────────────────
+const COINS = [
+  { id:"USDT", name:"Tether",   icon:"₮", color:"#26A17B", bg:"rgba(38,161,123,0.15)",  rate:1592,     networks:["TRC20","ERC20"] },
+  { id:"BTC",  name:"Bitcoin",  icon:"₿", color:"#F7931A", bg:"rgba(247,147,26,0.15)",  rate:98240000, networks:["Bitcoin"]       },
+  { id:"ETH",  name:"Ethereum", icon:"Ξ", color:"#627EEA", bg:"rgba(98,126,234,0.15)",  rate:3420000,  networks:["ERC20"]         },
+  { id:"USDC", name:"USD Coin", icon:"◎", color:"#0072FF", bg:"rgba(0,114,255,0.15)",   rate:1590,     networks:["ERC20","SOL"]   },
+  { id:"BNB",  name:"BNB",      icon:"⬡", color:"#F3BA2F", bg:"rgba(243,186,47,0.15)",  rate:920000,   networks:["BEP20"]         },
+  { id:"SOL",  name:"Solana",   icon:"◎", color:"#9945FF", bg:"rgba(153,69,255,0.15)",  rate:218400,   networks:["SOL"]           },
+];
+
+const NET_WALLETS = {
+  "TRC20":   "TQn9Y7tgsJgxnBt7K8aVHJp5mEkRdCPLsW",
+  "ERC20":   "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
+  "Bitcoin": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+  "BEP20":   "bnb1grpf0955h0ykzq3ar5nmum7y6gdfl6lxfn46h2",
+  "SOL":     "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+};
+
+const BANKS = [
+  { id:"b1", name:"GTBank",    number:"4521", account:"0123454521", type:"Savings" },
+  { id:"b2", name:"Access Bank", number:"8812", account:"0198778812", type:"Current" },
+  { id:"b3", name:"Zenith Bank", number:"2230", account:"2012782230", type:"Savings" },
+];
+
+function genTradeId() {
+  return "TRD-" + Math.floor(1000 + Math.random()*9000);
+}
+
+// ─── COPY BUTTON ──────────────────────────────────────────
+function Copy({ text }) {
+  const [ok, setOk] = useState(false);
+  return (
+    <button onClick={()=>{ navigator.clipboard?.writeText(text); setOk(true); setTimeout(()=>setOk(false),2000); }}
+      className="copy-btn"
+      style={{ background:"none",border:"none",cursor:"pointer",padding:0,
+        fontSize:11,fontFamily:"'Outfit',sans-serif",fontWeight:500,
+        color:ok?C.green:C.muted,display:"flex",alignItems:"center",gap:4 }}>
+      {ok
+        ? <><svg width={11} height={11} viewBox="0 0 11 11" fill="none"><path d="M1.5 5.5l2.5 3L9.5 2" stroke={C.green} strokeWidth={1.5} strokeLinecap="round"/></svg>Copied</>
+        : <><svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy</>}
+    </button>
+  );
+}
+
+// ─── PROGRESS BAR ─────────────────────────────────────────
+function ProgressBar({ step, hasNetwork }) {
+  const visibleSteps = hasNetwork
+    ? ["coin","network","amount","bank","review","send"]
+    : ["coin","amount","bank","review","send"];
+
+  const labels = {
+    coin:"Coin", network:"Network", amount:"Amount",
+    bank:"Bank", review:"Review", send:"Send",
+  };
+
+  const current = visibleSteps.indexOf(step);
+
+  return (
+    <div style={{ display:"flex", alignItems:"flex-start", gap:0, marginBottom:32, overflowX:"auto", paddingBottom:10 }}>
+      {visibleSteps.map((s, i) => {
+        const done   = i < current;
+        const active = i === current;
+        return (
+          <div key={s} style={{ display:"flex", alignItems:"center", flex: i < visibleSteps.length-1 ? 1 : "none", minWidth: 60 }}>
+            <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:5 }}>
+              <div style={{
+                width:24, height:24, borderRadius:"50%",
+                display:"flex", alignItems:"center", justifyContent:"center",
+                background: done ? C.green : active ? "rgba(14,203,129,0.12)" : C.border2,
+                border: active ? `1px solid ${C.green}55` : "none",
+                boxShadow: active ? `0 0 0 4px rgba(14,203,129,0.06)` : "none",
+                transition:"all 0.3s",
+              }}>
+                {done
+                  ? <svg width={11} height={11} viewBox="0 0 11 11" fill="none"><path d="M1.5 5.5l2.5 3L9.5 2" stroke="#000" strokeWidth={1.5} strokeLinecap="round"/></svg>
+                  : <span style={{ fontSize:10, fontWeight:700, color:active?C.green:C.muted }}>{i+1}</span>}
+              </div>
+              <span style={{ fontSize:9, letterSpacing:"0.5px", textTransform:"uppercase",
+                color:done?C.green:active?C.green:C.muted, whiteSpace:"nowrap" }}>
+                {labels[s]}
+              </span>
+            </div>
+            {i < visibleSteps.length-1 && (
+              <div style={{ flex:1, height:1, margin:"0 8px 16px", minWidth: 20,
+                background: i < current
+                  ? `linear-gradient(90deg,${C.green},rgba(14,203,129,0.3))`
+                  : C.border,
+                transition:"background 0.4s" }} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── LEFT PANEL ───────────────────────────────────────────
+function LeftPanel({ trade }) {
+  const fmtNGN = n => n > 0 ? "₦" + n.toLocaleString("en-NG",{maximumFractionDigits:0}) : "—";
+  const showTicket = trade.coin !== null;
+
+  const rows = [
+    { label:"Coin",      val: trade.coin   ? `${trade.coin.id} — ${trade.coin.name}` : null      },
+    { label:"Network",   val: trade.network ? trade.network                            : null      },
+    { label:"You Send",  val: trade.amount  ? `${trade.amount} ${trade.coin?.id}`     : null      },
+    { label:"Rate",      val: trade.coin    ? `₦${(trade.coin.rate*(1-SPREAD)).toLocaleString("en-NG",{maximumFractionDigits:0})}` : null },
+    { label:"You Receive", val: trade.ngnAmount > 0 ? fmtNGN(trade.ngnAmount)         : null, green:true },
+    { label:"Bank",      val: trade.bank   ? `${trade.bank.name} ••${trade.bank.number}` : null  },
+  ];
+
+  return (
+    <div className="left-panel">
+      {/* Ambient */}
+      <div className="left-panel-ambient" style={{ position:"absolute", top:-60, left:-60, width:300, height:300,
+        borderRadius:"50%", background:`radial-gradient(circle,rgba(14,203,129,0.07),transparent 60%)`,
+        filter:"blur(50px)", pointerEvents:"none" }} />
+
+      <div className="left-panel-title" style={{ fontSize:10, color:C.muted, letterSpacing:3, marginBottom:18 }}>NEW TRADE</div>
+      <div className="left-panel-title" style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:34,
+        letterSpacing:1, lineHeight:0.9, marginBottom:28, color:"#fff" }}>
+        CRYPTO <span style={{ color:C.green }}>TO</span><br/>NAIRA
+      </div>
+
+      {/* Trade ticket */}
+      <div style={{ flex:1 }}>
+        {showTicket ? (
+          <div style={{ background:C.card, border:`1px solid ${C.border}`,
+            borderRadius:14, overflow:"hidden" }}>
+            <div style={{ padding:"12px 16px", borderBottom:`1px solid ${C.border}`,
+              display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <span style={{ fontSize:10, color:C.muted, letterSpacing:2 }}>TRADE SUMMARY</span>
+              {trade.tradeId && (
+                <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10,
+                  color:C.green }}>{trade.tradeId}</span>
+              )}
+            </div>
+            <div style={{ padding:"14px 16px" }}>
+              {rows.map((r, i) => (
+                r.val ? (
+                  <div key={r.label} style={{ display:"flex", justifyContent:"space-between",
+                    alignItems:"center", padding:"7px 0",
+                    borderBottom:`1px solid ${C.border}`,
+                    animation:`ticketLine 0.3s ${i*0.06}s ease both` }}>
+                    <span style={{ fontSize:11, color:C.muted }}>{r.label}</span>
+                    <span style={{ fontFamily:"'DM Mono',monospace", fontSize:12,
+                      color: r.green ? C.green : "#ccc",
+                      fontWeight: r.green ? 600 : 400 }}>{r.val}</span>
+                  </div>
+                ) : (
+                  <div key={r.label} style={{ display:"flex", justifyContent:"space-between",
+                    alignItems:"center", padding:"7px 0", borderBottom:`1px solid ${C.border}` }}>
+                    <span style={{ fontSize:11, color:C.muted2 }}>{r.label}</span>
+                    <span style={{ fontSize:11, color:C.muted2 }}>—</span>
+                  </div>
+                )
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div style={{ borderRadius:14, border:`1px dashed ${C.muted2}`,
+            padding:"28px 20px", textAlign:"center" }}>
+            <div style={{ fontSize:28, marginBottom:10 }}>🔄</div>
+            <div style={{ fontSize:13, color:C.muted, lineHeight:1.6 }}>
+              Select a coin to start building your trade
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Bottom trust */}
+      <div className="left-panel-title" style={{ marginTop:24, display:"flex", flexDirection:"column", gap:8 }}>
+        {[
+          { icon:"⚡", text:"NGN paid within minutes" },
+          { icon:"🔒", text:"Secured wallet generation" },
+          { icon:"💯", text:"Rate locked for 60 seconds" },
+        ].map(t=>(
+          <div key={t.text} style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <span style={{ fontSize:13 }}>{t.icon}</span>
+            <span style={{ fontSize:11, color:C.muted }}>{t.text}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── STEPS ──────────────────────────────────────────────
+function StepCoin({ selected, onSelect }) {
+  return (
+    <div className="step-form">
+      <div style={{ fontSize:10, color:C.muted, letterSpacing:3, marginBottom:10 }}>STEP 1</div>
+      <h2 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:40,
+        letterSpacing:1, lineHeight:1, marginBottom:6 }}>
+        WHICH COIN ARE<br/>YOU TRADING?
+      </h2>
+      <p style={{ color:C.muted, fontSize:14, fontWeight:300,
+        lineHeight:1.6, marginBottom:28 }}>
+        Select the cryptocurrency you want to convert to naira.
+      </p>
+
+      <div className="coins-grid">
+        {COINS.map(c=>(
+          <button key={c.id} className={`coin-card${selected?.id===c.id?" sel":""}`}
+            onClick={()=>onSelect(c)}
+            style={{ background:C.card, border:`1px solid ${C.border}`,
+              borderRadius:14, padding:"18px 14px",
+              cursor:"pointer", textAlign:"left", display:"flex",
+              flexDirection:"column", gap:10 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+              <div style={{ width:38, height:38, borderRadius:"50%", background:c.bg,
+                display:"flex", alignItems:"center", justifyContent:"center",
+                fontSize:16, fontWeight:700, color:c.color }}>{c.icon}</div>
+              {selected?.id===c.id && (
+                <div style={{ width:16, height:16, borderRadius:"50%",
+                  background:C.green, display:"flex", alignItems:"center",
+                  justifyContent:"center", animation:"popIn 0.2s ease" }}>
+                  <svg width={8} height={8} viewBox="0 0 8 8" fill="none">
+                    <path d="M1 4l2 2.5L7 1.5" stroke="#000" strokeWidth={1.2} strokeLinecap="round"/>
+                  </svg>
+                </div>
+              )}
+            </div>
+            <div>
+              <div style={{ fontSize:14, fontWeight:600, marginBottom:2 }}>{c.id}</div>
+              <div style={{ fontSize:11, color:C.muted }}>{c.name}</div>
+            </div>
+            <div style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:C.green }}>
+              ₦{(c.rate*(1-SPREAD)).toLocaleString("en-NG",{maximumFractionDigits:0})}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StepNetwork({ coin, selected, onSelect }) {
+  return (
+    <div className="step-form">
+      <div style={{ fontSize:10, color:C.muted, letterSpacing:3, marginBottom:10 }}>STEP 2</div>
+      <h2 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:40,
+        letterSpacing:1, lineHeight:1, marginBottom:6 }}>
+        WHICH NETWORK?
+      </h2>
+      <p style={{ color:C.muted, fontSize:14, fontWeight:300,
+        lineHeight:1.6, marginBottom:28 }}>
+        Select the network you'll use to send <span style={{ color:coin.color }}>{coin.id}</span>. Make sure it matches your exchange or wallet.
+      </p>
+
+      <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+        {coin.networks.map(n=>(
+          <button key={n} className={`net-btn${selected===n?" sel":""}`}
+            onClick={()=>onSelect(n)}
+            style={{ background:C.card, border:`1px solid ${C.border}`,
+              borderRadius:12, padding:"16px 20px", cursor:"pointer",
+              display:"flex", justifyContent:"space-between", alignItems:"center",
+              color:selected===n?C.green:"#ccc",
+              fontFamily:"'Outfit',sans-serif", fontWeight:600 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+              <div style={{ width:36, height:36, borderRadius:"50%", background:coin.bg,
+                display:"flex", alignItems:"center", justifyContent:"center",
+                fontSize:14, fontWeight:700, color:coin.color }}>{coin.icon}</div>
+              <div style={{ textAlign:"left" }}>
+                <div style={{ fontSize:15, fontWeight:600 }}>{coin.id} · {n}</div>
+                <div style={{ fontSize:11, color:C.muted, fontWeight:400, marginTop:2 }}>
+                  {n==="TRC20"?"Tron network · Low fees"
+                   :n==="ERC20"?"Ethereum network · Higher fees"
+                   :n==="BEP20"?"BNB Smart Chain · Low fees"
+                   :n==="SOL"?"Solana network · Very low fees"
+                   :n==="Bitcoin"?"Bitcoin mainnet"
+                   :""}
+                </div>
+              </div>
+            </div>
+            {selected===n
+              ? <div style={{ width:18, height:18, borderRadius:"50%",
+                  background:C.green, display:"flex", alignItems:"center",
+                  justifyContent:"center" }}>
+                  <svg width={9} height={9} viewBox="0 0 9 9" fill="none">
+                    <path d="M1.5 4.5l2 2.5L7.5 2" stroke="#000" strokeWidth={1.2} strokeLinecap="round"/>
+                  </svg>
+                </div>
+              : <div style={{ width:18, height:18, borderRadius:"50%",
+                  border:`1px solid ${C.border2}` }} />}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ marginTop:20, display:"flex", gap:8, alignItems:"flex-start",
+        background:"rgba(245,166,35,0.06)", border:"1px solid rgba(245,166,35,0.15)",
+        borderRadius:10, padding:"12px 14px" }}>
+        <span style={{ flexShrink:0, fontSize:13 }}>⚠</span>
+        <span style={{ fontSize:12, color:C.amber, lineHeight:1.6 }}>
+          Sending on the wrong network will result in permanent loss of funds. Double-check with your exchange before proceeding.
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function StepAmount({ coin, network, amount, setAmount, ngnAmount, setNgnAmount }) {
+  const [mode, setMode]     = useState("crypto");
+  const [rateTimer, setRateTimer] = useState(RATE_TTL);
+  const [liveRate, setLiveRate]   = useState(coin.rate*(1-SPREAD));
+
+  useEffect(()=>{
+    const iv=setInterval(()=>setRateTimer(t=>{
+      if(t<=1){ setLiveRate(r=>r*(1+(Math.random()-0.5)*0.002)); return RATE_TTL; }
+      return t-1;
+    }),1000);
+    return ()=>clearInterval(iv);
+  },[]);
+
+  const handleCrypto = v => {
+    setAmount(v);
+    const n = parseFloat(v);
+    setNgnAmount(!isNaN(n)&&n>0 ? n*liveRate : 0);
+  };
+
+  const handleNGN = v => {
+    setNgnAmount(parseFloat(v)||0);
+    const n = parseFloat(v);
+    setAmount(!isNaN(n)&&n>0 ? (n/liveRate).toFixed(8) : "");
+  };
+
+  const timerColor = rateTimer>30?C.green:rateTimer>10?C.amber:C.red;
+  const pct = (rateTimer/RATE_TTL)*100;
+  const minNGN = 5000;
+  const tooLow = ngnAmount>0 && ngnAmount<minNGN;
+
+  return (
+    <div className="step-form">
+      <div style={{ fontSize:10, color:C.muted, letterSpacing:3, marginBottom:10 }}>
+        STEP {coin.networks.length>1?"3":"2"}
+      </div>
+      <h2 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:40,
+        letterSpacing:1, lineHeight:1, marginBottom:6 }}>
+        HOW MUCH ARE<br/>YOU SENDING?
+      </h2>
+      <p style={{ color:C.muted, fontSize:14, fontWeight:300,
+        lineHeight:1.6, marginBottom:24 }}>
+        Enter the amount of <span style={{ color:coin.color, fontWeight:500 }}>{coin.id}</span>
+        {network ? <span style={{ color:C.muted }}> ({network})</span> : ""} you want to trade.
+      </p>
+
+      <div style={{ display:"flex", background:C.card2,
+        border:`1px solid ${C.border}`, borderRadius:10,
+        padding:3, gap:3, marginBottom:16, width:"fit-content" }}>
+        {[{v:"crypto",l:`Enter ${coin.id}`},{v:"ngn",l:"Enter NGN"}].map(m=>(
+          <button key={m.v} className="amt-toggle" onClick={()=>setMode(m.v)}
+            style={{ padding:"6px 16px", borderRadius:8, border:"none",
+              fontSize:12, fontWeight:600, cursor:"pointer",
+              background:mode===m.v?C.card:"transparent",
+              color:mode===m.v?"#fff":C.muted,
+              boxShadow:mode===m.v?"0 1px 4px rgba(0,0,0,0.3)":"none",
+              fontFamily:"'Outfit',sans-serif" }}>
+            {m.l}
+          </button>
+        ))}
+      </div>
+
+      {mode==="crypto" ? (
+        <div style={{ position:"relative", marginBottom:12 }}>
+          <input className="st-input" type="number" value={amount}
+            onChange={e=>handleCrypto(e.target.value)}
+            autoFocus placeholder="0.00"
+            style={{ width:"100%", background:"#0a0a0a",
+              border:`1px solid ${C.border2}`, borderRadius:12,
+              padding:"16px 72px 16px 16px", color:"#fff",
+              fontSize:24, fontFamily:"'DM Mono',monospace" }}/>
+          <div style={{ position:"absolute", right:16, top:"50%",
+            transform:"translateY(-50%)", display:"flex", alignItems:"center", gap:6 }}>
+            <div style={{ width:24, height:24, borderRadius:"50%", background:coin.bg,
+              display:"flex", alignItems:"center", justifyContent:"center",
+              fontSize:11, fontWeight:700, color:coin.color }}>{coin.icon}</div>
+            <span style={{ fontFamily:"'DM Mono',monospace", fontSize:14,
+              color:coin.color, fontWeight:500 }}>{coin.id}</span>
+          </div>
+        </div>
+      ) : (
+        <div style={{ position:"relative", marginBottom:12 }}>
+          <input className="st-input" type="number"
+            value={ngnAmount||""}
+            onChange={e=>handleNGN(e.target.value)}
+            autoFocus placeholder="0"
+            style={{ width:"100%", background:"#0a0a0a",
+              border:`1px solid ${C.border2}`, borderRadius:12,
+              padding:"16px 60px 16px 16px", color:"#fff",
+              fontSize:24, fontFamily:"'DM Mono',monospace" }}/>
+          <div style={{ position:"absolute", right:16, top:"50%",
+            transform:"translateY(-50%)",
+            fontFamily:"'DM Mono',monospace", fontSize:14,
+            color:"#888", fontWeight:500 }}>NGN</div>
+        </div>
+      )}
+
+      {ngnAmount>0 && mode==="crypto" && (
+        <div style={{ background:"rgba(14,203,129,0.05)",
+          border:"1px solid rgba(14,203,129,0.15)",
+          borderRadius:10, padding:"10px 14px", marginBottom:12,
+          animation:"fadeIn 0.2s ease" }}>
+          <div style={{ display:"flex", justifyContent:"space-between" }}>
+            <span style={{ fontSize:12, color:C.muted }}>You receive</span>
+            <span style={{ fontFamily:"'DM Mono',monospace", fontSize:16,
+              color:C.green, fontWeight:600 }}>
+              ₦{ngnAmount.toLocaleString("en-NG",{maximumFractionDigits:0})}
+            </span>
+          </div>
+        </div>
+      )}
+      {amount && mode==="ngn" && (
+        <div style={{ background:"rgba(14,203,129,0.05)",
+          border:"1px solid rgba(14,203,129,0.15)",
+          borderRadius:10, padding:"10px 14px", marginBottom:12,
+          animation:"fadeIn 0.2s ease" }}>
+          <div style={{ display:"flex", justifyContent:"space-between" }}>
+            <span style={{ fontSize:12, color:C.muted }}>You send</span>
+            <span style={{ fontFamily:"'DM Mono',monospace", fontSize:15,
+              color:coin.color, fontWeight:500 }}>
+              {parseFloat(amount).toFixed(coin.id==="BTC"?6:2)} {coin.id}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {tooLow && (
+        <div style={{ display:"flex", gap:6, alignItems:"center", marginBottom:12,
+          fontSize:12, color:C.red, animation:"fadeIn 0.2s ease" }}>
+          <svg width={12} height={12} viewBox="0 0 12 12"><circle cx={6} cy={6} r={6} fill={C.red}/><path d="M6 3.5v3M6 7.5h.01" stroke="#000" strokeWidth={1.1} strokeLinecap="round"/></svg>
+          Minimum trade is ₦5,000
+        </div>
+      )}
+
+      <div style={{ background:C.card, border:`1px solid ${C.border}`,
+        borderRadius:12, padding:"14px 16px" }}>
+        <div style={{ display:"flex", justifyContent:"space-between",
+          alignItems:"center", marginBottom:10 }}>
+          <span style={{ fontSize:11, color:C.muted }}>Live Rate</span>
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <div style={{ width:40, height:2, background:C.border, borderRadius:1, overflow:"hidden" }}>
+              <div style={{ height:"100%", width:`${pct}%`, borderRadius:1,
+                background:timerColor, transition:"width 1s linear, background 0.5s" }} />
+            </div>
+            <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10,
+              color:timerColor }}>{rateTimer}s</span>
+          </div>
+        </div>
+        {[
+          ["Rate",   `₦${liveRate.toLocaleString("en-NG",{maximumFractionDigits:0})} / ${coin.id}`],
+          ["Spread", "4.00%"],
+          ["Payout", "To your bank account"],
+        ].map(([k,v])=>(
+          <div key={k} style={{ display:"flex", justifyContent:"space-between",
+            padding:"5px 0", borderTop:`1px solid ${C.border}` }}>
+            <span style={{ fontSize:11, color:C.muted }}>{k}</span>
+            <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:"#aaa" }}>{v}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StepBank({ selected, onSelect }) {
+  return (
+    <div className="step-form">
+      <div style={{ fontSize:10, color:C.muted, letterSpacing:3, marginBottom:10 }}>STEP 4</div>
+      <h2 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:40,
+        letterSpacing:1, lineHeight:1, marginBottom:6 }}>
+        WHERE DO WE<br/>SEND YOUR NAIRA?
+      </h2>
+      <p style={{ color:C.muted, fontSize:14, fontWeight:300,
+        lineHeight:1.6, marginBottom:28 }}>
+        Select the bank account you want to receive your NGN payout.
+      </p>
+
+      <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:20 }}>
+        {BANKS.map(b=>(
+          <button key={b.id} className={`bank-card${selected?.id===b.id?" sel":""}`}
+            onClick={()=>onSelect(b)}
+            style={{ background:C.card, border:`1px solid ${C.border}`,
+              borderRadius:12, padding:"16px 20px", cursor:"pointer",
+              display:"flex", justifyContent:"space-between", alignItems:"center",
+              fontFamily:"'Outfit',sans-serif" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+              <div style={{ width:36, height:36, borderRadius:9, background:"#1a1a1a",
+                border:`1px solid ${C.border}`, display:"flex", alignItems:"center",
+                justifyContent:"center", fontSize:14 }}>🏦</div>
+              <div style={{ textAlign:"left" }}>
+                <div style={{ fontSize:14, fontWeight:600, color:selected?.id===b.id?C.green:"#fff" }}>
+                  {b.name}
+                </div>
+                <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>
+                  ••••{b.number} · {b.type}
+                </div>
+              </div>
+            </div>
+            {selected?.id===b.id
+              ? <div style={{ width:20, height:20, borderRadius:"50%",
+                  background:C.green, display:"flex", alignItems:"center",
+                  justifyContent:"center", animation:"popIn 0.2s ease" }}>
+                  <svg width={10} height={10} viewBox="0 0 10 10" fill="none">
+                    <path d="M1.5 5l2.5 3L8.5 2" stroke="#000" strokeWidth={1.2} strokeLinecap="round"/>
+                  </svg>
+                </div>
+              : <div style={{ width:20, height:20, borderRadius:"50%",
+                  border:`1px solid ${C.border2}` }} />}
+          </button>
+        ))}
+      </div>
+
+      <button className="ghost-btn"
+        style={{ width:"100%", background:"transparent",
+          border:`1px dashed ${C.muted2}`, color:C.muted,
+          fontSize:13, fontWeight:500, padding:"13px",
+          borderRadius:12, cursor:"pointer",
+          fontFamily:"'Outfit',sans-serif",
+          display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
+        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add New Bank Account
+      </button>
+    </div>
+  );
+}
+
+function StepReview({ trade }) {
+  const rows = [
+    ["Coin",            `${trade.coin.name} (${trade.coin.id})`],
+    ["Network",         trade.network || trade.coin.networks[0]],
+    ["You Send",        `${trade.amount} ${trade.coin.id}`],
+    ["Exchange Rate",   `₦${(trade.coin.rate*(1-SPREAD)).toLocaleString("en-NG",{maximumFractionDigits:0})} / ${trade.coin.id}`],
+    ["Spread",          "4%"],
+    ["You Receive",     `₦${trade.ngnAmount.toLocaleString("en-NG",{maximumFractionDigits:0})}`],
+    ["Bank Account",    `${trade.bank.name} ••${trade.bank.number}`],
+  ];
+  return (
+    <div className="step-form">
+      <div style={{ fontSize:10, color:C.muted, letterSpacing:3, marginBottom:10 }}>STEP 5</div>
+      <h2 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:40,
+        letterSpacing:1, lineHeight:1, marginBottom:6 }}>
+        REVIEW YOUR<br/>TRADE
+      </h2>
+      <p style={{ color:C.muted, fontSize:14, fontWeight:300,
+        lineHeight:1.6, marginBottom:24 }}>
+        Check everything looks right before generating your wallet address.
+      </p>
+
+      <div style={{ background:C.card, border:`1px solid ${C.border}`,
+        borderRadius:14, overflow:"hidden", marginBottom:20 }}>
+        {rows.map(([k,v],i)=>(
+          <div key={k} style={{ display:"flex", justifyContent:"space-between",
+            alignItems:"center", padding:"13px 18px",
+            borderBottom:`1px solid ${C.border}`,
+            background: k==="You Receive"?"rgba(14,203,129,0.04)":"transparent" }}>
+            <span style={{ fontSize:13, color: k==="You Receive"?C.green:C.muted }}>{k}</span>
+            <span style={{ fontFamily:"'DM Mono',monospace", fontSize:13,
+              color: k==="You Receive"?C.green:k==="You Send"?trade.coin.color:"#ccc",
+              fontWeight: k==="You Receive"?600:400 }}>{v}</span>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display:"flex", gap:8, alignItems:"flex-start",
+        background:"rgba(14,203,129,0.04)", border:"1px solid rgba(14,203,129,0.12)",
+        borderRadius:10, padding:"12px 14px" }}>
+        <svg width={14} height={14} viewBox="0 0 24 24" fill="none"
+          stroke={C.green} strokeWidth={2} strokeLinecap="round" style={{ flexShrink:0, marginTop:1 }}>
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span style={{ fontSize:12, color:C.muted, lineHeight:1.6 }}>
+          A wallet address will be generated for this trade. You'll have <span style={{ color:"#ccc" }}>30 minutes</span> to send your {trade.coin.id} after confirming.
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function StepSend({ trade, onPaid }) {
+  const [timer, setTimer]   = useState(PAY_TTL);
+  const [loading, setLoading] = useState(false);
+  const wallet = NET_WALLETS[trade.network||trade.coin.networks[0]] || NET_WALLETS["ERC20"];
+
+  useEffect(()=>{
+    const iv=setInterval(()=>setTimer(t=>Math.max(0,t-1)),1000);
+    return ()=>clearInterval(iv);
+  },[]);
+
+  const fmt = s => {
+    const m=Math.floor(s/60), sec=s%60;
+    return `${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
+  };
+
+  const pct  = (timer/PAY_TTL)*100;
+  const tcol = timer>600?C.green:timer>120?C.amber:C.red;
+  const r    = 20, circ = 2*Math.PI*r;
+  const net  = trade.network||trade.coin.networks[0];
+
+  const handlePaid = () => {
+    setLoading(true);
+    setTimeout(()=>{ setLoading(false); onPaid(); }, 1400);
+  };
+
+  return (
+    <div className="step-form">
+      <div style={{ fontSize:10, color:C.muted, letterSpacing:3, marginBottom:10 }}>STEP 6</div>
+      <h2 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:40,
+        letterSpacing:1, lineHeight:1, marginBottom:6 }}>
+        SEND YOUR<br/><span style={{ color:trade.coin.color }}>{trade.coin.id}</span>
+      </h2>
+      <p style={{ color:C.muted, fontSize:14, fontWeight:300,
+        lineHeight:1.6, marginBottom:22 }}>
+        Send exactly the amount below to the wallet address. Then click "I've Paid".
+      </p>
+
+      <div style={{ background:`${trade.coin.bg}`, border:`1px solid ${trade.coin.color}33`,
+        borderRadius:12, padding:"16px 20px", marginBottom:14,
+        display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+        <div>
+          <div style={{ fontSize:10, color:trade.coin.color, letterSpacing:2, marginBottom:4 }}>
+            SEND EXACTLY
+          </div>
+          <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:32,
+            color:"#fff", letterSpacing:1 }}>
+            {trade.amount} {trade.coin.id}
+          </div>
+          <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>
+            via {net} network
+          </div>
+        </div>
+        <div style={{ width:44, height:44, borderRadius:"50%",
+          background:`rgba(0,0,0,0.3)`,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          fontSize:20, fontWeight:700, color:trade.coin.color }}>
+          {trade.coin.icon}
+        </div>
+      </div>
+
+      <div style={{ background:"#0a0a0a", border:`1px solid ${C.border}`,
+        borderRadius:12, padding:"14px 16px", marginBottom:14 }}>
+        <div style={{ display:"flex", justifyContent:"space-between",
+          alignItems:"center", marginBottom:8 }}>
+          <span style={{ fontSize:9, color:C.muted, letterSpacing:2 }}>
+            {trade.coin.id} WALLET ADDRESS · {net}
+          </span>
+          <Copy text={wallet}/>
+        </div>
+        <div style={{ fontFamily:"'DM Mono',monospace", fontSize:12,
+          color:C.green, wordBreak:"break-all", lineHeight:1.6 }}>
+          {wallet}
+        </div>
+      </div>
+
+      <div style={{ display:"flex", gap:8, alignItems:"flex-start",
+        background:"rgba(246,70,93,0.05)", border:"1px solid rgba(246,70,93,0.2)",
+        borderRadius:10, padding:"11px 14px", marginBottom:14 }}>
+        <span style={{ flexShrink:0, fontSize:13 }}>⚠</span>
+        <span style={{ fontSize:12, color:"#e88", lineHeight:1.6 }}>
+          Only send <strong style={{ color:"#fff" }}>{trade.coin.id}</strong> on the <strong style={{ color:"#fff" }}>{net}</strong> network. Sending the wrong coin or wrong network = permanent loss.
+        </span>
+      </div>
+
+      <div style={{ background:C.card, border:`1px solid ${C.border}`,
+        borderRadius:12, padding:"14px 16px", marginBottom:16 }}>
+        <div style={{ display:"flex", justifyContent:"space-between",
+          alignItems:"center", marginBottom:10 }}>
+          <div>
+            <div style={{ fontSize:11, fontWeight:600, marginBottom:2 }}>Time remaining to pay</div>
+            <div style={{ fontSize:11, color:C.muted, fontWeight:300 }}>
+              {timer===0?"Trade expired — please start again":`This trade expires in ${fmt(timer)}`}
+            </div>
+          </div>
+          <div style={{ position:"relative", width:52, height:52 }}>
+            <svg width={52} height={52} viewBox="0 0 52 52"
+              style={{ transform:"rotate(-90deg)", display:"block" }}>
+              <circle cx={26} cy={26} r={r} fill="none" stroke={C.border2} strokeWidth={4}/>
+              <circle cx={26} cy={26} r={r} fill="none" stroke={tcol} strokeWidth={4}
+                strokeDasharray={circ} strokeDashoffset={circ*(1-timer/PAY_TTL)}
+                strokeLinecap="round" style={{ transition:"stroke-dashoffset 1s linear, stroke 0.5s" }}/>
+            </svg>
+            <div style={{ position:"absolute", inset:0, display:"flex",
+              flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
+              <span style={{ fontFamily:"'DM Mono',monospace", fontSize:9,
+                color:tcol, lineHeight:1 }}>{String(Math.floor(timer/60)).padStart(2,"0")}</span>
+              <span style={{ fontSize:8, color:C.muted, lineHeight:1 }}>min</span>
+            </div>
+          </div>
+        </div>
+        <div style={{ height:2, background:C.border, borderRadius:1, overflow:"hidden" }}>
+          <div style={{ height:"100%", width:`${pct}%`, borderRadius:1,
+            background:tcol, transition:"width 1s linear, background 0.5s" }} />
+        </div>
+      </div>
+
+      <button onClick={handlePaid} disabled={loading||timer===0}
+        className="pri-btn"
+        style={{ width:"100%", background:timer===0?C.border:C.green,
+          color:timer===0?C.muted:"#000", fontWeight:700, fontSize:15,
+          padding:"15px", borderRadius:12, border:"none",
+          fontFamily:"'Outfit',sans-serif",
+          display:"flex", alignItems:"center", justifyContent:"center", gap:10 }}>
+        {loading
+          ? <><div style={{ width:18,height:18,borderRadius:"50%",
+              border:"2.5px solid rgba(0,0,0,0.2)",borderTopColor:"#000",
+              animation:"spin 0.8s linear infinite" }}/>Submitting...</>
+          : "I've Sent the Payment ✓"}
+      </button>
+
+      <p style={{ textAlign:"center", fontSize:11, color:C.muted2,
+        marginTop:12, letterSpacing:"0.3px" }}>
+        Trade ID: <span style={{ fontFamily:"'DM Mono',monospace",
+          color:C.muted }}>{trade.tradeId}</span>
+      </p>
+    </div>
+  );
+}
+
+function StepDone({ trade }) {
+  return (
+    <div className="step-form" style={{ textAlign:"center", padding:"20px 0" }}>
+      <div style={{ position:"relative", width:96, height:96, margin:"0 auto 28px" }}>
+        <div style={{ position:"absolute", inset:-8, borderRadius:"50%",
+          border:`2px solid rgba(14,203,129,0.4)`, animation:"ripple 1s ease-out" }} />
+        <div style={{ position:"absolute", inset:-8, borderRadius:"50%",
+          border:`2px solid rgba(14,203,129,0.2)`, animation:"ripple 1s 0.25s ease-out" }} />
+        <div style={{ width:96, height:96, borderRadius:"50%",
+          background:"rgba(14,203,129,0.1)", border:`2px solid ${C.green}`,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          animation:"successIn 0.5s ease",
+          boxShadow:`0 0 40px rgba(14,203,129,0.2)` }}>
+          <svg width={40} height={40} viewBox="0 0 40 40" fill="none">
+            <path d="M8 20l8 9L32 12" stroke={C.green} strokeWidth={3}
+              strokeLinecap="round" strokeLinejoin="round"
+              strokeDasharray={70}
+              style={{ animation:"checkDraw 0.5s 0.3s ease forwards", strokeDashoffset:70 }}/>
+          </svg>
+        </div>
+      </div>
+
+      <div style={{ display:"inline-flex", alignItems:"center", gap:7,
+        background:"rgba(14,203,129,0.08)", border:"1px solid rgba(14,203,129,0.2)",
+        borderRadius:100, padding:"4px 14px", fontSize:10, color:C.green,
+        letterSpacing:3, marginBottom:18 }}>
+        TRADE SUBMITTED
+      </div>
+
+      <h2 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:46,
+        letterSpacing:1, lineHeight:0.9, marginBottom:12 }}>
+        PAYMENT RECEIVED.<br/>
+        <span style={{ color:C.green }}>NGN INCOMING.</span>
+      </h2>
+
+      <p style={{ color:C.muted, fontSize:14, lineHeight:1.7,
+        maxWidth:360, margin:"0 auto 28px" }}>
+        Your {trade.coin.id} payment has been flagged for review. Once our team confirms the deposit, <span style={{ color:C.green, fontWeight:500 }}>₦{trade.ngnAmount.toLocaleString("en-NG",{maximumFractionDigits:0})}</span> will be sent to your {trade.bank.name} account.
+      </p>
+
+      <div style={{ background:C.card, border:`1px solid ${C.border}`,
+        borderRadius:14, padding:"18px 20px", marginBottom:24, textAlign:"left" }}>
+        <div style={{ fontSize:9, color:C.muted, letterSpacing:2, marginBottom:12 }}>
+          TRADE REFERENCE
+        </div>
+        <div style={{ display:"flex", justifyContent:"space-between",
+          alignItems:"center", marginBottom:4 }}>
+          <span style={{ fontFamily:"'DM Mono',monospace", fontSize:20,
+            color:C.green, fontWeight:500 }}>{trade.tradeId}</span>
+          <Copy text={trade.tradeId}/>
+        </div>
+        <div style={{ fontSize:11, color:C.muted }}>
+          Save this ID to track your trade status
+        </div>
+
+        <div style={{ height:1, background:C.border, margin:"14px 0" }} />
+
+        {[
+          ["You Sent",       `${trade.amount} ${trade.coin.id}`],
+          ["Network",        trade.network||trade.coin.networks[0]],
+          ["Expected Payout",`₦${trade.ngnAmount.toLocaleString("en-NG",{maximumFractionDigits:0})}`],
+          ["Bank",           `${trade.bank.name} ••${trade.bank.number}`],
+          ["Est. Time",      "5–15 minutes"],
+        ].map(([k,v])=>(
+          <div key={k} style={{ display:"flex", justifyContent:"space-between",
+            padding:"6px 0", borderBottom:`1px solid ${C.border}` }}>
+            <span style={{ fontSize:12, color:C.muted }}>{k}</span>
+            <span style={{ fontFamily:"'DM Mono',monospace", fontSize:12,
+              color:k==="Expected Payout"?C.green:"#ccc" }}>{v}</span>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+        <button className="pri-btn"
+          style={{ background:C.green, color:"#000", fontWeight:700,
+            fontSize:14, padding:"13px", borderRadius:11,
+            border:"none", fontFamily:"'Outfit',sans-serif", cursor:"pointer" }}>
+          Track Trade
+        </button>
+        <button className="ghost-btn"
+          style={{ background:"transparent", color:C.muted,
+            fontWeight:500, fontSize:14, padding:"13px", borderRadius:11,
+            border:`1px solid ${C.border2}`, fontFamily:"'Outfit',sans-serif",
+            cursor:"pointer" }}>
+          Dashboard →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── MAIN ─────────────────────────────────────────────────
+export default function SellCrypto() {
+  const [step, setStep] = useState("coin");
+  const [trade, setTrade] = useState({
+    coin:null, network:null, amount:"", ngnAmount:0, bank:null, tradeId:null,
+  });
+
+  useEffect(()=>{
+    const s=document.createElement("style"); s.textContent=CSS;
+    document.head.appendChild(s); return ()=>document.head.removeChild(s);
+  },[]);
+
+  const hasNetwork = trade.coin?.networks.length > 1;
+
+  const update = patch => setTrade(t=>({...t,...patch}));
+
+  const next = () => {
+    const order = hasNetwork
+      ? ["coin","network","amount","bank","review","send","done"]
+      : ["coin","amount","bank","review","send","done"];
+    const i = order.indexOf(step);
+    if(i < order.length-1) setStep(order[i+1]);
+  };
+
+  const back = () => {
+    const order = hasNetwork
+      ? ["coin","network","amount","bank","review","send","done"]
+      : ["coin","amount","bank","review","send","done"];
+    const i = order.indexOf(step);
+    if(i > 0) setStep(order[i-1]);
+  };
+
+  const canNext = () => {
+    if(step==="coin")    return !!trade.coin;
+    if(step==="network") return !!trade.network;
+    if(step==="amount")  return !!trade.amount && parseFloat(trade.amount)>0 && trade.ngnAmount>=5000;
+    if(step==="bank")    return !!trade.bank;
+    if(step==="review")  return true;
+    return false;
+  };
+
+  const nextLabel = () => {
+    if(step==="review") return "Generate Wallet Address →";
+    if(step==="send")   return null;
+    if(step==="done")   return null;
+    return "Continue →";
+  };
+
+  const handleNextClick = () => {
+    if(step==="review") {
+      const id = genTradeId();
+      update({ tradeId:id });
+    }
+    next();
+  };
+
+  const handleCoinSelect = c => {
+    update({ coin:c, network:c.networks.length===1?c.networks[0]:null });
+  };
+
+  return (
+    <div className="sell-crypto-container">
+      <LeftPanel trade={trade} step={step}/>
+
+      <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+        <div className="top-bar" style={{ height:54, display:"flex", alignItems:"center",
+          justifyContent:"space-between", padding:"0 32px",
+          borderBottom:`1px solid ${C.border}`,
+          background:"rgba(8,8,8,0.95)", backdropFilter:"blur(12px)",
+          flexShrink:0 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            {step!=="coin" && step!=="done" && (
+              <button className="back-btn" onClick={back}
+                style={{ background:"none",border:"none",color:C.muted,
+                  fontSize:12,cursor:"pointer",display:"flex",
+                  alignItems:"center",gap:5,padding:0,fontFamily:"'Outfit',sans-serif" }}>
+                <svg width={14} height={14} viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                  <path d="M19 12H5M12 5l-7 7 7 7"/>
+                </svg>
+                Back
+              </button>
+            )}
+          </div>
+          <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+            <span style={{ width:5,height:5,borderRadius:"50%",background:C.green,
+              animation:"pulse 2s infinite",display:"inline-block" }} />
+            <span style={{ fontFamily:"'DM Mono',monospace",fontSize:9,color:C.green }}>LIVE RATES</span>
+          </div>
+        </div>
+
+        <div className="form-area">
+          <div style={{ maxWidth:560, margin:"0 auto" }}>
+            
+            {/* Mobile back button inside form area */}
+            <div className="mobile-only-back" style={{ display: 'none', marginBottom: 20 }}>
+               {step!=="coin" && step!=="done" && (
+                  <button className="back-btn" onClick={back}
+                    style={{ background:"none",border:"none",color:C.muted,
+                      fontSize:12,cursor:"pointer",display:"flex",
+                      alignItems:"center",gap:5,padding:0,fontFamily:"'Outfit',sans-serif" }}>
+                    <svg width={14} height={14} viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                      <path d="M19 12H5M12 5l-7 7 7 7"/>
+                    </svg>
+                    Back
+                  </button>
+                )}
+            </div>
+
+            <style>{`
+              @media (max-width: 1024px) {
+                .mobile-only-back { display: block !important; }
+              }
+            `}</style>
+
+            {step!=="done" && (
+              <ProgressBar step={step} hasNetwork={hasNetwork}/>
+            )}
+
+            {step==="coin" && (
+              <StepCoin selected={trade.coin} onSelect={c=>{
+                handleCoinSelect(c);
+              }}/>
+            )}
+            {step==="network" && (
+              <StepNetwork coin={trade.coin} selected={trade.network}
+                onSelect={n=>update({network:n})}/>
+            )}
+            {step==="amount" && (
+              <StepAmount coin={trade.coin} network={trade.network}
+                amount={trade.amount} setAmount={v=>update({amount:v})}
+                ngnAmount={trade.ngnAmount} setNgnAmount={v=>update({ngnAmount:v})}/>
+            )}
+            {step==="bank" && (
+              <StepBank selected={trade.bank} onSelect={b=>update({bank:b})}/>
+            )}
+            {step==="review" && <StepReview trade={trade}/>}
+            {step==="send"   && <StepSend trade={trade} onPaid={next}/>}
+            {step==="done"   && <StepDone trade={trade}/>}
+
+            {nextLabel() && (
+              <div style={{ marginTop:24 }}>
+                <button disabled={!canNext()} onClick={handleNextClick}
+                  className="pri-btn"
+                  style={{ width:"100%", background:canNext()?C.green:C.border,
+                    color:canNext()?"#000":C.muted, fontWeight:700,
+                    fontSize:15, padding:"15px", borderRadius:12,
+                    border:"none", fontFamily:"'Outfit',sans-serif" }}>
+                  {nextLabel()}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

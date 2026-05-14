@@ -377,7 +377,7 @@ function OTPScreen({ email, onSuccess, onBack }) {
 function SuccessView() {
   const navigate = useNavigate();
   useEffect(() => {
-    const t = setTimeout(() => navigate("/exchange"), 2500);
+    const t = setTimeout(() => navigate("/dashboard"), 2500);
     return () => clearTimeout(t);
   }, [navigate]);
 
