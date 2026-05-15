@@ -13,6 +13,7 @@ import DashboardLayout from './pages/dashboard/DashboardLayout'
 import TransactionHistory from './pages/dashboard/TransactionHistory'
 import SellCrypto from './pages/dashboard/SellCrypto'
 import DashboardOverview from './pages/dashboard/DashboardOverview'
+import BankAccounts from './pages/dashboard/BankAccounts'
 
 const App = () => {
   return (
@@ -31,6 +32,7 @@ const App = () => {
       <Route index element={<DashboardOverview />} />
       <Route path="txn" element={<TransactionHistory />} />
       <Route path="trade" element={<SellCrypto />} />
+      <Route path="bank" element={<BankAccounts />} />
     </Route>
    </Routes>
     </>
