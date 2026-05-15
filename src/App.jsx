@@ -12,6 +12,7 @@ import ForgotPassword from './pages/ForgotPassword'
 import DashboardLayout from './pages/dashboard/DashboardLayout'
 import TransactionHistory from './pages/dashboard/TransactionHistory'
 import SellCrypto from './pages/dashboard/SellCrypto'
+import DashboardOverview from './pages/dashboard/DashboardOverview'
 
 const App = () => {
   return (
@@ -27,7 +28,7 @@ const App = () => {
     <Route path="/forgot-password" element={<ForgotPassword />} />
     
     <Route path="/dashboard" element={<DashboardLayout />}>
-      <Route index element={<Navigate to="/dashboard/txn" replace />} />
+      <Route index element={<DashboardOverview />} />
       <Route path="txn" element={<TransactionHistory />} />
       <Route path="trade" element={<SellCrypto />} />
     </Route>

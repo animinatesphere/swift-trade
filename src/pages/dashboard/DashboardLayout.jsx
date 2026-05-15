@@ -41,9 +41,10 @@ const CSS = `
       left: 0;
       top: 0;
       bottom: 0;
-      z-index: 50;
+      z-index: 100;
       transform: translateX(-100%);
-      transition: transform 0.3s ease;
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 20px 0 50px rgba(0,0,0,0.5);
     }
     .sidebar-container.open {
       transform: translateX(0);
@@ -58,13 +59,16 @@ const CSS = `
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 40;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 90;
+      animation: fadeIn 0.3s ease;
     }
     .sidebar-overlay.open {
       display: block;
     }
   }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 `;
 
 // ─── LOGO ───────────────────────────────────────────────
