@@ -91,6 +91,7 @@ function Mark({ size=32 }) {
 const NAV = [
   { id:"dashboard",    path: "/dashboard",        label:"Dashboard",            icon:<svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> },
   { id:"trade",        path: "/dashboard/trade",  label:"New Trade",            highlight:true, icon:<svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> },
+  { id:"withdraw",     path: "/dashboard/withdraw",label:"Withdraw",            highlight2:true, icon:<svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/><line x1="5" y1="19" x2="19" y2="19"/></svg> },
   { id:"txn",          path: "/dashboard/txn",    label:"Transaction History",  icon:<svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> },
   { id:"giftcards",    path: "/dashboard/giftcards",label:"Gift Cards",         soon:true, icon:<svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" rx="1"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg> },
   { id:"bills",        path: "/dashboard/bills",  label:"Bills Payment",        soon:true, icon:<svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> },
@@ -142,25 +143,30 @@ export default function DashboardLayout() {
               className={`nav-item${activeId===item.id?" act":""}${item.soon?" soon":""}`}
               style={{ width:"100%", display:"flex", alignItems:"center", gap:10,
                 padding:"9px 10px", borderRadius:"0 8px 8px 0", marginBottom:1,
-                background: item.highlight&&activeId!==item.id ? "rgba(245,166,35,0.05)" : "transparent",
+                background: item.highlight&&activeId!==item.id ? "rgba(245,166,35,0.05)"
+                           : item.highlight2&&activeId!==item.id ? "rgba(14,203,129,0.05)" : "transparent",
                 border:"none", borderLeft:"2px solid transparent",
-                color: item.highlight&&activeId!==item.id ? C.amber : activeId===item.id ? C.green : C.muted,
+                color: item.highlight&&activeId!==item.id ? C.amber
+                     : item.highlight2&&activeId!==item.id ? C.green
+                     : activeId===item.id ? C.green : C.muted,
                 fontSize:13, fontFamily:"'Outfit',sans-serif", fontWeight:500,
                 cursor:"pointer", textAlign:"left" }}>
               <span style={{ flexShrink:0, display:"flex" }}>{item.icon}</span>
               <span style={{ flex:1 }}>{item.label}</span>
               {item.soon && <span style={{ fontSize:8, padding:"2px 6px", borderRadius:4, background:C.muted2, color:"#555", letterSpacing:1 }}>SOON</span>}
               {item.highlight&&activeId!==item.id && <span style={{ width:6,height:6,borderRadius:"50%",background:C.amber,animation:"pulse 2s infinite",flexShrink:0 }}/>}
+              {item.highlight2&&activeId!==item.id && <span style={{ width:6,height:6,borderRadius:"50%",background:C.green,animation:"pulse 2s infinite",flexShrink:0 }}/>}
             </Link>
           ))}
         </nav>
         <div style={{ padding:"8px", borderTop:`1px solid ${C.border}` }}>
-          {[{ label:"Settings", path:"#" },{ label:"Log Out", path:"/" }].map(b=>(
-            <Link key={b.label} to={b.path} className="nav-item"
+          {[{ label:"Settings", path:"/dashboard/settings" },{ label:"Log Out", path:"/" }].map(b=>(
+            <Link key={b.label} to={b.path}
+              className={`nav-item${location.pathname===b.path?" act":""}`}
               style={{ width:"100%", display:"flex", alignItems:"center", gap:10,
                 padding:"8px 10px", borderRadius:"0 8px 8px 0", marginBottom:1,
                 background:"transparent", border:"none", borderLeft:"2px solid transparent",
-                color:C.muted, fontSize:13, fontFamily:"'Outfit',sans-serif",
+                color:location.pathname===b.path?C.green:C.muted, fontSize:13, fontFamily:"'Outfit',sans-serif",
                 fontWeight:500, cursor:"pointer", textAlign:"left" }}>
               {b.label}
             </Link>

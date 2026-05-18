@@ -15,6 +15,8 @@ import SellCrypto from './pages/dashboard/SellCrypto'
 import DashboardOverview from './pages/dashboard/DashboardOverview'
 import BankAccounts from './pages/dashboard/BankAccounts'
 import Support from './pages/dashboard/Support'
+import Withdraw from './pages/dashboard/Withdraw'
+import Settings from './pages/dashboard/Settings'
 
 const App = () => {
   return (
@@ -33,8 +35,10 @@ const App = () => {
       <Route index element={<DashboardOverview />} />
       <Route path="txn" element={<TransactionHistory />} />
       <Route path="trade" element={<SellCrypto />} />
+      <Route path="withdraw" element={<Withdraw />} />
       <Route path="bank" element={<BankAccounts />} />
       <Route path="support" element={<Support />} />
+      <Route path="settings" element={<Settings />} />
     </Route>
    </Routes>
     </>
