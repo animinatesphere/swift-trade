@@ -17,6 +17,7 @@ import BankAccounts from './pages/dashboard/BankAccounts'
 import Support from './pages/dashboard/Support'
 import Withdraw from './pages/dashboard/Withdraw'
 import Settings from './pages/dashboard/Settings'
+import GiftCardsDashboard from './pages/dashboard/GiftCards'
 
 const App = () => {
   return (
@@ -39,6 +40,7 @@ const App = () => {
       <Route path="bank" element={<BankAccounts />} />
       <Route path="support" element={<Support />} />
       <Route path="settings" element={<Settings />} />
+      <Route path="giftcards" element={<GiftCardsDashboard />} />
     </Route>
    </Routes>
     </>

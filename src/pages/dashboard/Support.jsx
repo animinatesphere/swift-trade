@@ -64,11 +64,11 @@ const CATS = ["All", "Trades", "Gift Cards", "Withdrawals", "Account"];
 function FaqItem({ item, delay }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="faq-item" style={{ borderBottom:\`1px solid \${C.border}\`, animation:\`fadeUp 0.4s \${delay}s ease both\` }}>
+    <div className="faq-item" style={{ borderBottom: `1px solid ${C.border}`, animation: `fadeUp 0.4s ${delay}s ease both` }}>
       <button onClick={() => setOpen(o => !o)}
         style={{ width:"100%", display:"flex", justifyContent:"space-between", alignItems:"center", padding:"16px 20px", background:"none", border:"none", cursor:"pointer", textAlign:"left", fontFamily:"'Outfit',sans-serif" }}>
         <span style={{ fontSize:14, fontWeight:500, color:"#ddd", paddingRight:16, lineHeight:1.5 }}>{item.q}</span>
-        <div style={{ width:22, height:22, borderRadius:"50%", flexShrink:0, background: open ? "rgba(14,203,129,0.1)" : C.border2, border:\`1px solid \${open ? "rgba(14,203,129,0.3)" : C.border}\`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.2s" }}>
+        <div style={{ width:22, height:22, borderRadius:"50%", flexShrink:0, background: open ? "rgba(14,203,129,0.1)" : C.border2, border: `1px solid ${open ? "rgba(14,203,129,0.3)" : C.border}`, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.2s" }}>
           <svg width={10} height={10} viewBox="0 0 10 10" fill="none" stroke={open ? C.green : C.muted} strokeWidth={1.6} strokeLinecap="round" style={{ transform: open ? "rotate(45deg)" : "none", transition:"transform 0.25s" }}>
             <line x1="5" y1="1" x2="5" y2="9"/><line x1="1" y1="5" x2="9" y2="5"/>
           </svg>
@@ -98,14 +98,14 @@ function TicketForm() {
 
   if (sent) return (
     <div style={{ textAlign:"center", padding:"32px 20px", animation:"fadeIn 0.4s ease" }}>
-      <div style={{ width:64, height:64, borderRadius:"50%", background:"rgba(14,203,129,0.1)", border:\`2px solid \${C.green}\`, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", animation:"popIn 0.4s ease" }}>
+      <div style={{ width:64, height:64, borderRadius:"50%", background:"rgba(14,203,129,0.1)", border: `2px solid ${C.green}`, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", animation:"popIn 0.4s ease" }}>
         <svg width={28} height={28} viewBox="0 0 28 28" fill="none">
           <path d="M5 14l6 7L23 9" stroke={C.green} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={60} style={{ animation:"checkDraw 0.5s 0.3s ease forwards", strokeDashoffset:60 }}/>
         </svg>
       </div>
       <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, letterSpacing:1, marginBottom:8 }}>TICKET SUBMITTED</div>
       <p style={{ color:C.muted, fontSize:13, lineHeight:1.7, marginBottom:20 }}>We'll reply to your registered email within 2 hours.</p>
-      <button onClick={() => { setSent(false); setForm({ type:"", ref:"", message:"" }); }} style={{ background:"none", border:\`1px solid \${C.border2}\`, color:C.muted, fontSize:12, padding:"8px 20px", borderRadius:8, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Submit Another</button>
+      <button onClick={() => { setSent(false); setForm({ type:"", ref:"", message:"" }); }} style={{ background:"none", border: `1px solid ${C.border2}`, color:C.muted, fontSize:12, padding:"8px 20px", borderRadius:8, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Submit Another</button>
     </div>
   );
 
@@ -113,7 +113,7 @@ function TicketForm() {
     <div style={{ padding:"20px" }}>
       <div style={{ marginBottom:14 }}>
         <label style={{ display:"block", fontSize:10, color:C.muted, letterSpacing:2, marginBottom:7 }}>ISSUE TYPE</label>
-        <select value={form.type} onChange={set("type")} className="st-select" style={{ width:"100%", background:C.card2, border:\`1px solid \${C.border2}\`, borderRadius:10, padding:"12px 14px", color: form.type ? "#fff" : C.muted, fontSize:14, fontFamily:"'Outfit',sans-serif", cursor:"pointer" }}>
+        <select value={form.type} onChange={set("type")} className="st-select" style={{ width:"100%", background:C.card2, border: `1px solid ${C.border2}`, borderRadius:10, padding:"12px 14px", color: form.type ? "#fff" : C.muted, fontSize:14, fontFamily:"'Outfit',sans-serif", cursor:"pointer" }}>
           <option value="">Select issue type...</option>
           <option>Trade not completed</option>
           <option>Wrong amount received</option>
@@ -126,11 +126,11 @@ function TicketForm() {
       </div>
       <div style={{ marginBottom:14 }}>
         <label style={{ display:"block", fontSize:10, color:C.muted, letterSpacing:2, marginBottom:7 }}>TRADE / REFERENCE ID (optional)</label>
-        <input className="st-input" value={form.ref} onChange={set("ref")} placeholder="e.g. TRD-7841, GC-4421, WD-1024" style={{ width:"100%", background:C.card2, border:\`1px solid \${C.border2}\`, borderRadius:10, padding:"12px 14px", color:"#fff", fontSize:14, fontFamily:"'DM Mono',monospace", letterSpacing:1 }}/>
+        <input className="st-input" value={form.ref} onChange={set("ref")} placeholder="e.g. TRD-7841, GC-4421, WD-1024" style={{ width:"100%", background:C.card2, border: `1px solid ${C.border2}`, borderRadius:10, padding:"12px 14px", color:"#fff", fontSize:14, fontFamily:"'DM Mono',monospace", letterSpacing:1 }}/>
       </div>
       <div style={{ marginBottom:18 }}>
         <label style={{ display:"block", fontSize:10, color:C.muted, letterSpacing:2, marginBottom:7 }}>DESCRIBE YOUR ISSUE</label>
-        <textarea className="st-input" value={form.message} onChange={set("message")} rows={4} placeholder="Tell us exactly what happened and when..." style={{ width:"100%", background:C.card2, border:\`1px solid \${C.border2}\`, borderRadius:10, padding:"12px 14px", color:"#fff", fontSize:14, lineHeight:1.6 }}/>
+        <textarea className="st-input" value={form.message} onChange={set("message")} rows={4} placeholder="Tell us exactly what happened and when..." style={{ width:"100%", background:C.card2, border: `1px solid ${C.border2}`, borderRadius:10, padding:"12px 14px", color:"#fff", fontSize:14, lineHeight:1.6 }}/>
         <div style={{ fontSize:11, color:form.message.length > 10 ? C.muted : C.muted2, marginTop:5, textAlign:"right" }}>{form.message.length} chars</div>
       </div>
       <button onClick={submit} disabled={!canSubmit || loading} className="pri-btn" style={{ width:"100%", background:canSubmit ? C.green : C.border, color:canSubmit ? "#000" : C.muted, fontWeight:700, fontSize:14, padding:"13px", borderRadius:10, border:"none", fontFamily:"'Outfit',sans-serif", display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
@@ -163,7 +163,7 @@ export default function Support() {
 
   return (
     <>
-      <div className="topbar-container" style={{ height:56, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 28px", borderBottom:\`1px solid \${C.border}\`, background:"rgba(6,6,6,0.95)", backdropFilter:"blur(12px)", flexShrink:0 }}>
+      <div className="topbar-container" style={{ height:56, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 28px", borderBottom: `1px solid ${C.border}`, background:"rgba(6,6,6,0.95)", backdropFilter:"blur(12px)", flexShrink:0 }}>
         <div>
           <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:20, letterSpacing:1, lineHeight:1 }}>Support</div>
           <div style={{ fontSize:11, color:C.muted, marginTop:1 }}>We typically respond within 2 hours</div>
@@ -173,7 +173,7 @@ export default function Support() {
             <span style={{ width:5, height:5, borderRadius:"50%", background:C.green, animation:"pulse 2s infinite", display:"inline-block" }}/>
             <span style={{ fontSize:10, color:C.green, fontFamily:"'DM Mono',monospace" }}>ONLINE</span>
           </div>
-          <div style={{ width:32, height:32, borderRadius:"50%", background:\`linear-gradient(135deg,\${C.green},\${C.amber})\`, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Bebas Neue',sans-serif", fontSize:12, color:"#000" }}>AO</div>
+          <div style={{ width:32, height:32, borderRadius:"50%", background: `linear-gradient(135deg,${C.green},${C.amber})`, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Bebas Neue',sans-serif", fontSize:12, color:"#000" }}>AO</div>
         </div>
       </div>
 
@@ -181,7 +181,7 @@ export default function Support() {
         <div style={{ maxWidth:900, margin:"0 auto" }}>
           <div className="channels-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:28, animation:"fadeUp 0.4s ease" }}>
             {CHANNELS.map(ch => (
-              <a key={ch.label} href={ch.href} className="channel-card" style={{ background:C.card, border:\`1px solid \${C.border}\`, borderRadius:12, padding:"16px 18px", display:"flex", alignItems:"center", gap:14, textDecoration:"none", cursor:"pointer" }}>
+              <a key={ch.label} href={ch.href} className="channel-card" style={{ background:C.card, border: `1px solid ${C.border}`, borderRadius:12, padding:"16px 18px", display:"flex", alignItems:"center", gap:14, textDecoration:"none", cursor:"pointer" }}>
                 <span style={{ fontSize:24, flexShrink:0 }}>{ch.icon}</span>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontSize:14, fontWeight:600, color:"#ddd", marginBottom:2 }}>{ch.label}</div>
@@ -192,29 +192,29 @@ export default function Support() {
             ))}
           </div>
 
-          <div style={{ display:"flex", background:C.card2, border:\`1px solid \${C.border}\`, borderRadius:10, padding:3, gap:2, marginBottom:20, width:"fit-content" }}>
+          <div style={{ display:"flex", background:C.card2, border: `1px solid ${C.border}`, borderRadius:10, padding:3, gap:2, marginBottom:20, width:"fit-content" }}>
             {[{v:"faq",l:"FAQ"},{v:"ticket",l:"Submit a Ticket"}].map(t => (
               <button key={t.v} onClick={() => setTab(t.v)} style={{ padding:"7px 20px", borderRadius:8, border:"none", fontSize:13, fontWeight:600, cursor:"pointer", background: tab===t.v ? C.card : "transparent", color: tab===t.v ? "#fff" : C.muted, fontFamily:"'Outfit',sans-serif", boxShadow: tab===t.v ? "0 1px 4px rgba(0,0,0,0.3)" : "none", transition:"all 0.15s" }}>{t.l}</button>
             ))}
           </div>
 
           {tab === "faq" && (
-            <div style={{ animation:"fadeIn 0.2s ease" }}>
+            <div style={{ animation:"fadeIn 0.25s ease" }}>
               <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:16 }}>
                 <div style={{ position:"relative", flex:1 }}>
                   <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth={2} strokeLinecap="round" style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)" }}>
                     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                   </svg>
-                  <input value={search} onChange={e => setSearch(e.target.value)} className="search-input" placeholder="Search questions..." style={{ width:"100%", background:C.card, border:\`1px solid \${C.border2}\`, borderRadius:9, padding:"9px 14px 9px 34px", color:"#fff", fontSize:13, fontFamily:"'Outfit',sans-serif" }}/>
+                  <input value={search} onChange={e => setSearch(e.target.value)} className="search-input" placeholder="Search questions..." style={{ width:"100%", background:C.card, border: `1px solid ${C.border2}`, borderRadius:9, padding:"9px 14px 9px 34px", color:"#fff", fontSize:13, fontFamily:"'Outfit',sans-serif" }}/>
                 </div>
                 <div style={{ display:"flex", gap:6, overflowX:"auto", paddingBottom:2 }}>
                   {CATS.map(c => (
-                    <button key={c} onClick={() => setCat(c)} style={{ padding:"7px 12px", borderRadius:100, fontSize:11, fontWeight:500, cursor:"pointer", background: cat===c ? "rgba(14,203,129,0.1)" : "transparent", border:\`1px solid \${cat===c ? "rgba(14,203,129,0.3)" : C.border2}\`, color: cat===c ? C.green : C.muted, fontFamily:"'Outfit',sans-serif", transition:"all 0.15s", whiteSpace:"nowrap" }}>{c}</button>
+                    <button key={c} onClick={() => setCat(c)} style={{ padding:"7px 12px", borderRadius:100, fontSize:11, fontWeight:500, cursor:"pointer", background: cat===c ? "rgba(14,203,129,0.1)" : "transparent", border: `1px solid ${cat===c ? "rgba(14,203,129,0.3)" : C.border2}`, color: cat===c ? C.green : C.muted, fontFamily:"'Outfit',sans-serif", transition:"all 0.15s", whiteSpace:"nowrap" }}>{c}</button>
                   ))}
                 </div>
               </div>
 
-              <div style={{ background:C.card, border:\`1px solid \${C.border}\`, borderRadius:14, overflow:"hidden" }}>
+              <div style={{ background:C.card, border: `1px solid ${C.border}`, borderRadius:14, overflow:"hidden" }}>
                 {filtered.length === 0 ? (
                   <div style={{ padding:"48px 20px", textAlign:"center" }}>
                     <div style={{ fontSize:28, marginBottom:10 }}>🤔</div>
@@ -225,7 +225,7 @@ export default function Support() {
                 ))}
               </div>
 
-              <div style={{ marginTop:16, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 18px", background:C.card, border:\`1px solid \${C.border}\`, borderRadius:12 }}>
+              <div style={{ marginTop:16, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 18px", background:C.card, border: `1px solid ${C.border}`, borderRadius:12 }}>
                 <div style={{ fontSize:13, color:C.muted }}>Didn't find your answer?</div>
                 <button onClick={() => setTab("ticket")} style={{ background:"none", border:"none", color:C.green, fontSize:13, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Submit a ticket →</button>
               </div>
@@ -233,8 +233,8 @@ export default function Support() {
           )}
 
           {tab === "ticket" && (
-            <div style={{ background:C.card, border:\`1px solid \${C.border}\`, borderRadius:14, overflow:"hidden", animation:"fadeIn 0.2s ease" }}>
-              <div style={{ padding:"16px 20px", borderBottom:\`1px solid \${C.border}\`, display:"flex", alignItems:"center", gap:8 }}>
+            <div style={{ background:C.card, border: `1px solid ${C.border}`, borderRadius:14, overflow:"hidden", animation:"fadeIn 0.25s ease" }}>
+              <div style={{ padding:"16px 20px", borderBottom: `1px solid ${C.border}`, display:"flex", alignItems:"center", gap:8 }}>
                 <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth={2} strokeLinecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                 <span style={{ fontSize:13, fontWeight:600 }}>New Support Ticket</span>
                 <span style={{ fontSize:11, color:C.muted, marginLeft:4 }}>· We'll reply to your email within 2 hours</span>
