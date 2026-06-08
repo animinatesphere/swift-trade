@@ -1,5 +1,6 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
+import ProtectedRoute from './components/ProtectedRoute'
 import LandingPage from './pages/LandingPage'
 import Auth from './pages/Auth'
 import GiftCards from './pages/GiftCards'
@@ -18,13 +19,14 @@ import Support from './pages/dashboard/Support'
 import Withdraw from './pages/dashboard/Withdraw'
 import Settings from './pages/dashboard/Settings'
 import GiftCardsDashboard from './pages/dashboard/GiftCards'
+import KYC from './pages/dashboard/KYC'
 
 const App = () => {
   return (
     <>
    <Routes>
     <Route path="/" element={<LandingPage />} />
-    <Route path="/signup" element={<Auth initialPage="register" />} />
+    <Route path="/register" element={<Auth initialPage="register" />} />
     <Route path="/login" element={<Auth initialPage="login" />} />
     <Route path="/gift-cards" element={<GiftCards />} />
     <Route path="/about" element={<About />} />
@@ -32,15 +34,18 @@ const App = () => {
     <Route path="/rates" element={<Rates />} /> 
     <Route path="/forgot-password" element={<ForgotPassword />} />
     
-    <Route path="/dashboard" element={<DashboardLayout />}>
-      <Route index element={<DashboardOverview />} />
-      <Route path="txn" element={<TransactionHistory />} />
-      <Route path="trade" element={<SellCrypto />} />
-      <Route path="withdraw" element={<Withdraw />} />
-      <Route path="bank" element={<BankAccounts />} />
-      <Route path="support" element={<Support />} />
-      <Route path="settings" element={<Settings />} />
-      <Route path="giftcards" element={<GiftCardsDashboard />} />
+    <Route element={<ProtectedRoute />}>
+      <Route path="/dashboard" element={<DashboardLayout />}>
+        <Route index element={<DashboardOverview />} />
+        <Route path="txn" element={<TransactionHistory />} />
+        <Route path="trade" element={<SellCrypto />} />
+        <Route path="withdraw" element={<Withdraw />} />
+        <Route path="bank" element={<BankAccounts />} />
+        <Route path="support" element={<Support />} />
+        <Route path="settings" element={<Settings />} />
+        <Route path="giftcards" element={<GiftCardsDashboard />} />
+        <Route path="kyc" element={<KYC />} />
+      </Route>
     </Route>
    </Routes>
     </>

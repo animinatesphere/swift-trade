@@ -1,817 +1,805 @@
 import React, { useState, useEffect, useRef } from "react";
+import api from "../../api/axios";
 
 const C = {
-  green:"#0ECB81", amber:"#F5A623", red:"#F6465D",
-  bg:"#080808", surface:"#0c0c0c", card:"#101010", card2:"#141414",
-  border:"#1a1a1a", border2:"#222222",
-  text:"#ffffff", muted:"#555555", muted2:"#2e2e2e",
+  green: "#0ECB81", amber: "#F5A623", red: "#F6465D", blue: "#3B82F6",
+  bg: "#080808", surface: "#0c0c0c", card: "#101010", card2: "#141414",
+  border: "#1a1a1a", border2: "#222222",
+  text: "#ffffff", muted: "#888888", muted2: "#2e2e2e",
 };
 
+const MAX_ACCOUNTS = 5;
+
 const CSS = `
-  @keyframes fadeUp    { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeUp    { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
   @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
-  @keyframes slideUp   { from{opacity:0;transform:translateY(32px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes popIn     { 0%{transform:scale(0.7);opacity:0} 70%{transform:scale(1.08)} 100%{transform:scale(1);opacity:1} }
+  @keyframes slideUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes popIn     { 0%{transform:scale(0.7);opacity:0} 70%{transform:scale(1.06)} 100%{transform:scale(1);opacity:1} }
   @keyframes successIn { 0%{transform:scale(0.5);opacity:0} 65%{transform:scale(1.06)} 100%{transform:scale(1);opacity:1} }
   @keyframes checkDraw { from{stroke-dashoffset:70} to{stroke-dashoffset:0} }
-  @keyframes pulse     { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.75)} }
+  @keyframes pulse     { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.35;transform:scale(0.8)} }
   @keyframes spin      { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-  @keyframes shimmer   { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
-  @keyframes ripple    { 0%{transform:scale(1);opacity:0.6} 100%{transform:scale(2.8);opacity:0} }
+  @keyframes ripple    { 0%{transform:scale(1);opacity:0.6} 100%{transform:scale(2.6);opacity:0} }
 
-  .bank-card-wrap  { transition:transform 0.3s, box-shadow 0.3s; animation:fadeUp 0.45s ease both; }
-  .bank-card-wrap:hover { transform:translateY(-4px) !important; }
-
-  .action-pill     { transition:all 0.18s; opacity:0; }
-  .bank-card-wrap:hover .action-pill { opacity:1 !important; }
-
-  /* Mobile accessibility: show action pills on mobile since there is no hover */
-  @media (max-width: 1024px) {
-    .action-pill { opacity:1 !important; }
+  .bank-page { display:flex; flex:1; overflow:hidden; min-width:0; }
+  .bank-left {
+    width:300px; background:#060606; border-right:1px solid #1a1a1a;
+    display:flex; flex-direction:column; flex-shrink:0; padding:28px 24px;
+    position:relative; overflow-y:auto;
   }
+  .bank-main { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+  .bank-scroll { flex:1; overflow-y:auto; padding:28px 32px 40px; }
 
-  .add-card        { transition:all 0.2s; }
-  .add-card:hover  { border-color:rgba(14,203,129,0.4) !important; background:rgba(14,203,129,0.04) !important; }
-  .add-card:hover .add-plus { color:#0ECB81 !important; }
+  .stat-chip { animation:fadeUp 0.4s ease both; }
+  .acct-row  { animation:fadeUp 0.35s ease both; transition:background 0.15s, border-color 0.15s; }
+  .acct-row:hover { background:#141414 !important; border-color:#2a2a2a !important; }
 
-  .pri-btn         { transition:all 0.2s; }
-  .pri-btn:hover:not(:disabled) { background:#0fdf8e !important; transform:translateY(-1px); box-shadow:0 10px 28px rgba(14,203,129,0.3) !important; }
+  .pri-btn:hover:not(:disabled) { background:#0fdf8e !important; transform:translateY(-1px); box-shadow:0 8px 24px rgba(14,203,129,0.28) !important; }
   .pri-btn:disabled { opacity:0.35 !important; cursor:not-allowed !important; }
+  .pri-btn, .ghost-btn, .icon-act { transition:all 0.18s; }
+  .ghost-btn:hover:not(:disabled) { border-color:#444 !important; color:#ccc !important; }
+  .icon-act:hover { background:rgba(255,255,255,0.06) !important; color:#fff !important; }
+  .icon-act.danger:hover { background:rgba(246,70,93,0.1) !important; color:#F6465D !important; }
+  .icon-act.primary:hover { background:rgba(14,203,129,0.1) !important; color:#0ECB81 !important; }
 
-  .ghost-btn       { transition:all 0.18s; }
-  .ghost-btn:hover:not(:disabled) { border-color:#555 !important; color:#ccc !important; }
+  .add-slot:hover { border-color:rgba(14,203,129,0.35) !important; background:rgba(14,203,129,0.03) !important; }
+  .add-slot { transition:all 0.2s; cursor:pointer; }
 
   .bank-opt:hover  { background:#1c1c1c !important; }
-  .bank-opt.sel    { background:rgba(14,203,129,0.07) !important; border-color:rgba(14,203,129,0.3) !important; }
-  .bank-opt        { transition:all 0.15s; }
-
+  .bank-opt.sel    { background:rgba(14,203,129,0.07) !important; }
+  .bank-opt        { transition:background 0.15s; }
   .st-input:focus  { border-color:rgba(14,203,129,0.5) !important; box-shadow:0 0 0 3px rgba(14,203,129,0.07) !important; outline:none; }
   .st-input        { transition:border-color 0.2s, box-shadow 0.2s; }
 
-  .del-btn:hover   { background:rgba(246,70,93,0.12) !important; border-color:rgba(246,70,93,0.3) !important; color:#F6465D !important; }
-  .del-btn         { transition:all 0.2s; }
-
-  .default-btn:hover { background:rgba(14,203,129,0.12) !important; border-color:rgba(14,203,129,0.3) !important; color:#0ECB81 !important; }
-  .default-btn     { transition:all 0.2s; }
-
-  .close-btn:hover   { color:#fff !important; }
-  .close-btn         { transition:color 0.15s; }
-
-  /* Mobile specific overrides */
-  @media (max-width: 640px) {
-    .bank-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
-    .bank-content { padding: 16px !important; }
-    .bank-topbar { padding: 0 16px !important; }
-    .bank-topbar-title { font-size: 18px !important; }
-    .bank-topbar-sub { display: none !important; }
-    .btn-text { display: none !important; }
-    .pri-btn-mobile { padding: 8px !important; border-radius: 50% !important; width: 34px !important; height: 34px !important; display: flex !important; align-items: center !important; justify-content: center !important; }
-    .info-banner { padding: 12px !important; font-size: 12px !important; }
-    .bank-card-inner { padding: 16px 18px !important; border-radius: 14px !important; }
-    .bank-card-number { font-size: 13px !important; letter-spacing: 3px !important; }
-    .modal-container { width: 92% !important; border-radius: 14px !important; }
-    .modal-header { padding: 14px 16px !important; }
-    .modal-body { padding: 16px !important; }
+  @media (max-width:1024px) {
+    .bank-page { flex-direction:column; }
+    .bank-left { width:100%; border-right:none; border-bottom:1px solid #1a1a1a; padding:20px; }
+    .bank-left-hero, .bank-left-default { display:none !important; }
+    .bank-scroll { padding:20px 16px 32px; }
+    .bank-topbar { padding:0 16px !important; }
+    .stats-row { grid-template-columns:1fr 1fr !important; }
+    .acct-actions .act-label { display:none !important; }
+  }
+  @media (max-width:640px) {
+    .stats-row { grid-template-columns:1fr !important; }
+    .bank-topbar-btn-text { display:none !important; }
+    .bank-topbar-btn { padding:8px !important; border-radius:50% !important; width:34px; height:34px; justify-content:center !important; }
   }
 `;
 
-// ─── BANK DATA ────────────────────────────────────────────
-const NIGERIAN_BANKS = [
-  { code:"058", name:"GTBank",        color:"#E8460A", bg:"linear-gradient(135deg,#1a0800,#3d1200)" },
-  { code:"044", name:"Access Bank",   color:"#D91921", bg:"linear-gradient(135deg,#1a0000,#3d0000)" },
-  { code:"057", name:"Zenith Bank",   color:"#E00000", bg:"linear-gradient(135deg,#1a0000,#2d0000)" },
-  { code:"011", name:"First Bank",    color:"#005CA8", bg:"linear-gradient(135deg,#00091a,#001433)" },
-  { code:"033", name:"UBA",           color:"#E20A16", bg:"linear-gradient(135deg,#1a0000,#330000)" },
-  { code:"070", name:"Fidelity Bank", color:"#5DAB00", bg:"linear-gradient(135deg,#051a00,#0a2e00)" },
-  { code:"214", name:"FCMB",          color:"#009900", bg:"linear-gradient(135deg,#001a00,#003300)" },
-  { code:"000",  name:"Kuda Bank",    color:"#4000BF", bg:"linear-gradient(135deg,#0a0019,#15003d)" },
-  { code:"100", name:"OPay",          color:"#00B140", bg:"linear-gradient(135deg,#001a08,#003318)" },
-  { code:"50515",name:"Moniepoint",   color:"#006CFF", bg:"linear-gradient(135deg,#00091a,#00184d)" },
-  { code:"076", name:"Polaris Bank",  color:"#E2001A", bg:"linear-gradient(135deg,#1a0000,#300005)" },
-  { code:"082", name:"Keystone Bank", color:"#046A38", bg:"linear-gradient(135deg,#00100a,#00291a)" },
-];
-
-const ACCOUNT_NAMES = {
-  "0123454521": "ADEWALE IFEOLUWA OBI",
-  "0198778812": "ADEWALE OBI",
-  "2012782230": "ADEWALE O.",
-  "0145678901": "OBI ADEWALE",
-  "0987654321": "ADEWALE OBI IFEOLUWA",
+const BANK_COLORS = {
+  "GTBank":     { color:"#E8460A" },
+  "Access Bank":{ color:"#D91921" },
+  "Zenith Bank":{ color:"#E00000" },
+  "First Bank": { color:"#005CA8" },
+  "UBA":        { color:"#E20A16" },
+  "Fidelity Bank":{ color:"#5DAB00" },
+  "FCMB":       { color:"#009900" },
+  "Kuda Bank":  { color:"#4000BF" },
+  "OPay":       { color:"#00B140" },
+  "Moniepoint": { color:"#006CFF" },
+  "Polaris Bank": { color:"#E2001A" },
+  "Keystone Bank":{ color:"#046A38" },
 };
-function resolveAccount(number) {
-  return ACCOUNT_NAMES[number] || (number.length===10 ? "ADEWALE OBI" : null);
+
+function getBankMeta(code, name) {
+  const color = BANK_COLORS[name]?.color || "#888";
+  const abbr = name ? name.substring(0, 2).toUpperCase() : "BK";
+  return { color, abbr, name };
 }
 
-const INIT_BANKS = [
-  { id:"b1", bankCode:"058", bankName:"GTBank",     accountNumber:"0123454521", accountName:"ADEWALE IFEOLUWA OBI", type:"Savings",  isDefault:true,  addedAt:"Dec 10, 2025" },
-  { id:"b2", bankCode:"044", bankName:"Access Bank", accountNumber:"0198778812", accountName:"ADEWALE OBI",         type:"Current",  isDefault:false, addedAt:"Dec 15, 2025" },
-  { id:"b3", bankCode:"057", bankName:"Zenith Bank", accountNumber:"2012782230", accountName:"ADEWALE O.",          type:"Savings",  isDefault:false, addedAt:"Dec 17, 2025" },
-];
-
-function getBankMeta(code) {
-  return NIGERIAN_BANKS.find(b=>b.code===code) || { color:"#888", bg:"linear-gradient(135deg,#111,#1a1a1a)" };
+function maskAccount(num) {
+  if (!num) return "";
+  return `•••• •••• ${num.slice(-4)}`;
 }
 
-// ─── BANK CARD VISUAL ─────────────────────────────────────
-function BankCardVisual({ account, onSetDefault, onDelete }) {
-  const meta = getBankMeta(account.bankCode);
-  const masked = "••••  ••••  ••••  " + account.accountNumber.slice(-4);
+// ─── LEFT PANEL ───────────────────────────────────────────
+function LeftPanel({ banks }) {
+  const def = banks.find(b => b.isDefault) || banks[0];
+  const meta = def ? getBankMeta(def.bankCode, def.bankName) : null;
 
   return (
-    <div className="bank-card-wrap"
-      style={{ position:"relative", animationDelay:`${Math.random()*0.2}s` }}>
+    <div className="bank-left">
+      <div className="bank-left-hero" style={{ position:"absolute", top:-50, left:-50, width:260, height:260,
+        borderRadius:"50%", background:"radial-gradient(circle,rgba(14,203,129,0.07),transparent 60%)",
+        filter:"blur(40px)", pointerEvents:"none" }} />
 
-      {/* Card */}
-      <div className="bank-card-inner" style={{
-        width:"100%", aspectRatio:"1.7",
-        background:meta.bg,
-        borderRadius:18,
-        padding:"22px 24px",
-        position:"relative",
-        overflow:"hidden",
-        border:`1px solid ${meta.color}22`,
-        boxShadow:`0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px ${meta.color}18`,
-        cursor:"default",
-      }}>
-        {/* Decorative circles */}
-        <div style={{ position:"absolute", right:-30, top:-30,
-          width:160, height:160, borderRadius:"50%",
-          background:`${meta.color}18`, filter:"blur(20px)", pointerEvents:"none" }}/>
-        <div style={{ position:"absolute", right:40, bottom:-40,
-          width:120, height:120, borderRadius:"50%",
-          background:`${meta.color}10`, filter:"blur(16px)", pointerEvents:"none" }}/>
-        {/* Subtle grid */}
-        <div style={{ position:"absolute", inset:0,
-          backgroundImage:`radial-gradient(${meta.color}18 1px,transparent 1px)`,
-          backgroundSize:"20px 20px", opacity:0.4, pointerEvents:"none" }}/>
-        {/* Shimmer effect */}
-        <div style={{ position:"absolute", inset:0, overflow:"hidden", pointerEvents:"none" }}>
-          <div style={{ position:"absolute", top:0, left:0, right:0, bottom:0,
-            background:`linear-gradient(105deg,transparent 40%,${meta.color}10 50%,transparent 60%)`,
-            transform:"translateX(-100%)", animation:"shimmer 3s 1s ease infinite" }}/>
-        </div>
-
-        {/* Top row */}
-        <div style={{ display:"flex", justifyContent:"space-between",
-          alignItems:"flex-start", marginBottom:"auto" }}>
-          <div>
-            <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:18,
-              color:"#fff", letterSpacing:2, lineHeight:1, opacity:0.9 }}>
-              {account.bankName.toUpperCase()}
-            </div>
-            <div style={{ fontSize:10, color:"rgba(255,255,255,0.4)",
-              letterSpacing:1, marginTop:2 }}>BANK ACCOUNT</div>
-          </div>
-          <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
-            {account.isDefault && (
-              <div style={{ background:`${meta.color}28`,
-                border:`1px solid ${meta.color}55`,
-                borderRadius:100, padding:"3px 8px",
-                fontSize:9, color:meta.color, fontWeight:700, letterSpacing:1 }}>
-                DEFAULT
-              </div>
-            )}
-            <div style={{ width:32, height:24, borderRadius:4,
-              background:`linear-gradient(135deg,${meta.color}55,${meta.color}22)`,
-              border:`1px solid ${meta.color}33` }}/>
-          </div>
-        </div>
-
-        {/* Account number */}
-        <div style={{ marginTop:20, marginBottom:14 }}>
-          <div className="bank-card-number" style={{ fontFamily:"'DM Mono',monospace", fontSize:15,
-            color:"rgba(255,255,255,0.85)", letterSpacing:4, fontWeight:500 }}>
-            {masked}
-          </div>
-        </div>
-
-        {/* Bottom row */}
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end" }}>
-          <div>
-            <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)",
-              letterSpacing:2, marginBottom:2 }}>ACCOUNT HOLDER</div>
-            <div style={{ fontFamily:"'DM Mono',monospace", fontSize:11,
-              color:"rgba(255,255,255,0.8)", letterSpacing:1 }}>
-              {account.accountName}
-            </div>
-          </div>
-          <div style={{ textAlign:"right" }}>
-            <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)",
-              letterSpacing:2, marginBottom:2 }}>TYPE</div>
-            <div style={{ fontSize:11, color:"rgba(255,255,255,0.6)",
-              letterSpacing:1, textTransform:"uppercase" }}>
-              {account.type}
-            </div>
-          </div>
-        </div>
-
-        {/* Action pills */}
-        <div style={{ position:"absolute", bottom:12, left:"50%",
-          transform:"translateX(-50%)", display:"flex", gap:6 }}>
-          {!account.isDefault && (
-            <button onClick={()=>onSetDefault(account.id)}
-              className="action-pill default-btn"
-              style={{ background:C.card, border:`1px solid ${C.border2}`,
-                color:C.muted, fontSize:10, fontWeight:600,
-                padding:"4px 10px", borderRadius:100, cursor:"pointer",
-                fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap" }}>
-              Set Default
-            </button>
-          )}
-          <button onClick={()=>onDelete(account.id)}
-            className="action-pill del-btn"
-            style={{ background:C.card, border:`1px solid ${C.border2}`,
-              color:C.muted, fontSize:10, fontWeight:600,
-              padding:"4px 10px", borderRadius:100, cursor:"pointer",
-              fontFamily:"'Outfit',sans-serif", display:"flex",
-              alignItems:"center", gap:4 }}>
-            <svg width={9} height={9} viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
-              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
-            </svg>
-            Delete
-          </button>
-        </div>
+      <div className="bank-left-hero" style={{ fontSize:10, color:C.muted, letterSpacing:3, marginBottom:16 }}>WITHDRAWALS</div>
+      <div className="bank-left-hero" style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:34,
+        letterSpacing:1, lineHeight:0.92, marginBottom:28 }}>
+        BANK<br/><span style={{ color:C.green }}>ACCOUNTS</span>
       </div>
 
-      {/* Below card info */}
-      <div style={{ padding:"12px 4px 0",
-        display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-        <div>
-          <div style={{ fontSize:13, fontWeight:600 }}>
-            {account.bankName}
-            {account.isDefault && (
-              <span style={{ marginLeft:8, fontSize:9, color:C.green,
-                background:"rgba(14,203,129,0.1)", border:"1px solid rgba(14,203,129,0.2)",
-                borderRadius:100, padding:"2px 7px", letterSpacing:1, fontWeight:700 }}>
-                DEFAULT
-              </span>
-            )}
+      <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:24 }}>
+        {[
+          { label:"Saved accounts", val:banks.length, sub:`of ${MAX_ACCOUNTS} max` },
+          { label:"Default payout", val:def?.bankName || "None set", sub:def ? `••${def.accountNumber.slice(-4)}` : "Add an account" },
+        ].map(s => (
+          <div key={s.label} style={{ background:C.card, border:`1px solid ${C.border}`,
+            borderRadius:12, padding:"12px 14px" }}>
+            <div style={{ fontSize:10, color:C.muted, letterSpacing:1, marginBottom:4 }}>{s.label.toUpperCase()}</div>
+            <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, color:"#fff", letterSpacing:0.5, lineHeight:1 }}>{s.val}</div>
+            <div style={{ fontSize:11, color:C.muted, marginTop:4 }}>{s.sub}</div>
           </div>
-          <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>
-            Added {account.addedAt}
+        ))}
+      </div>
+
+      {def && meta && (
+        <div className="bank-left-default" style={{ background:C.card, border:`1px solid ${meta.color}33`,
+          borderRadius:14, padding:"16px", marginBottom:24, position:"relative", overflow:"hidden" }}>
+          <div style={{ position:"absolute", right:-20, top:-20, width:100, height:100,
+            borderRadius:"50%", background:`${meta.color}15`, filter:"blur(20px)" }} />
+          <div style={{ fontSize:9, color:meta.color, letterSpacing:2, marginBottom:10 }}>DEFAULT ACCOUNT</div>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+            <div style={{ width:36, height:36, borderRadius:10, background:`${meta.color}18`,
+              border:`1px solid ${meta.color}33`, display:"flex", alignItems:"center", justifyContent:"center",
+              fontFamily:"'Bebas Neue',sans-serif", fontSize:13, color:meta.color }}>{meta.abbr}</div>
+            <div>
+              <div style={{ fontSize:14, fontWeight:600 }}>{def.bankName}</div>
+              <div style={{ fontSize:11, color:C.muted }}>{def.type}</div>
+            </div>
           </div>
+          <div style={{ fontFamily:"'DM Mono',monospace", fontSize:12, color:"#ccc", letterSpacing:1 }}>{maskAccount(def.accountNumber)}</div>
+          <div style={{ fontSize:11, color:C.muted, marginTop:8, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{def.accountName}</div>
         </div>
-        <div style={{ textAlign:"right" }}>
-          <div style={{ fontFamily:"'DM Mono',monospace", fontSize:12, color:"#bbb" }}>
-            ••{account.accountNumber.slice(-4)}
+      )}
+
+      <div style={{ marginTop:"auto", display:"flex", flexDirection:"column", gap:12 }}>
+        {[
+          {
+            icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3 7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><path d="M8 14v3"/><path d="M12 14v3"/><path d="M16 14v3"/></svg>,
+            text:"NGN withdrawals go to your default account"
+          },
+          {
+            icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
+            text:"Account names are verified before saving"
+          },
+          {
+            icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
+            text:"Switch default anytime in one tap"
+          },
+        ].map(t => (
+          <div key={t.text} style={{ display:"flex", alignItems:"center", gap:10 }}>
+            <span style={{ display:"flex", color:C.muted }}>{t.icon}</span>
+            <span style={{ fontSize:12, color:C.muted, lineHeight:1.4 }}>{t.text}</span>
           </div>
-          <div style={{ fontSize:10, color:C.muted }}>{account.type}</div>
-        </div>
+        ))}
       </div>
     </div>
   );
 }
 
-// ─── ADD ACCOUNT MODAL ────────────────────────────────────
-function AddAccountModal({ onAdd, onClose }) {
-  const [step, setStep]             = useState(1);
-  const [accountNumber, setAccNum]  = useState("");
-  const [selectedBank, setBank]     = useState(null);
-  const [accountName, setAccName]   = useState("");
-  const [accountType, setAccType]   = useState("Savings");
-  const [resolving, setResolving]   = useState(false);
-  const [resolved, setResolved]     = useState(false);
-  const [loading, setLoading]       = useState(false);
-  const [bankSearch, setBankSearch] = useState("");
-  const [showBanks, setShowBanks]   = useState(false);
-  const bankRef = useRef(null);
+// ─── ACCOUNT ROW ──────────────────────────────────────────
+function AccountRow({ account, index, onDelete, onSetDefault }) {
+  const meta = getBankMeta(account.bankCode, account.bankName);
 
-  useEffect(()=>{
-    const fn = e=>{ if(bankRef.current&&!bankRef.current.contains(e.target)) setShowBanks(false); };
-    document.addEventListener("mousedown",fn);
-    return ()=>document.removeEventListener("mousedown",fn);
-  },[]);
+  return (
+    <div className="acct-row" style={{
+      display:"flex", alignItems:"center", gap:14,
+      background:C.card, border:`1px solid ${account.isDefault ? "rgba(14,203,129,0.25)" : C.border}`,
+      borderRadius:14, padding:"16px 18px",
+      animationDelay:`${index * 0.05}s`,
+      position:"relative", overflow:"hidden",
+    }}>
+      <div style={{ position:"absolute", left:0, top:0, bottom:0, width:3,
+        background: account.isDefault ? C.green : meta.color, borderRadius:"14px 0 0 14px" }} />
 
-  useEffect(()=>{
-    if(accountNumber.length===10 && selectedBank) {
-      setResolving(true); setResolved(false); setAccName("");
-      const t = setTimeout(()=>{
-        const name = resolveAccount(accountNumber);
-        setAccName(name||""); setResolving(false); setResolved(!!name);
-      }, 1400);
-      return ()=>clearTimeout(t);
-    } else {
-      setResolved(false); setAccName("");
-    }
-  },[accountNumber, selectedBank]);
+      <div style={{ width:44, height:44, borderRadius:12, flexShrink:0,
+        background:`${meta.color}14`, border:`1px solid ${meta.color}28`,
+        display:"flex", alignItems:"center", justifyContent:"center",
+        fontFamily:"'Bebas Neue',sans-serif", fontSize:15, color:meta.color, marginLeft:4 }}>
+        {meta.abbr}
+      </div>
 
-  const canSubmit = accountNumber.length===10 && selectedBank && resolved && accountName;
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4, flexWrap:"wrap" }}>
+          <span style={{ fontSize:15, fontWeight:600 }}>{account.bankName}</span>
+          {account.isDefault && (
+            <span style={{ fontSize:9, color:C.green, background:"rgba(14,203,129,0.1)",
+              border:"1px solid rgba(14,203,129,0.22)", borderRadius:100,
+              padding:"2px 8px", letterSpacing:1, fontWeight:700 }}>DEFAULT</span>
+          )}
+          <span style={{ fontSize:10, color:C.muted, background:C.card2,
+            border:`1px solid ${C.border}`, borderRadius:100, padding:"2px 8px" }}>{account.type}</span>
+        </div>
+        <div style={{ fontFamily:"'DM Mono',monospace", fontSize:13, color:"#ccc", letterSpacing:0.5, marginBottom:3 }}>
+          {maskAccount(account.accountNumber)}
+        </div>
+        <div style={{ fontSize:12, color:C.muted, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+          {account.accountName}
+        </div>
+      </div>
 
-  const handleSubmit = () => {
-    setLoading(true);
-    setTimeout(()=>{
-      setLoading(false); setStep(2);
-    }, 800);
-  };
-
-  const handleConfirm = () => {
-    setLoading(true);
-    setTimeout(()=>{
-      setLoading(false);
-      onAdd({
-        id:"b"+Date.now(), bankCode:selectedBank.code,
-        bankName:selectedBank.name, accountNumber,
-        accountName, type:accountType, isDefault:false,
-        addedAt:new Date().toLocaleDateString("en-NG",{day:"numeric",month:"short",year:"numeric"}),
-      });
-      setStep(3);
-    }, 1000);
-  };
-
-  const filteredBanks = NIGERIAN_BANKS.filter(b=>
-    b.name.toLowerCase().includes(bankSearch.toLowerCase())
+      <div className="acct-actions" style={{ display:"flex", alignItems:"center", gap:6, flexShrink:0 }}>
+        {!account.isDefault && (
+          <button onClick={() => onSetDefault(account.id)} className="icon-act"
+            title="Make Default"
+            style={{ background:"transparent", border:`1px solid ${C.border2}`,
+              borderRadius:8, padding:"7px 10px", cursor:"pointer", color:C.muted,
+              fontSize:11, fontWeight:600, fontFamily:"'Outfit',sans-serif",
+              display:"flex", alignItems:"center", gap:5 }}>
+            <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <span className="act-label">Make Default</span>
+          </button>
+        )}
+        <button onClick={() => onDelete(account.id)} className="icon-act danger"
+          title="Remove account"
+          style={{ background:"transparent", border:`1px solid ${C.border2}`,
+            borderRadius:8, padding:"7px 10px", cursor:"pointer", color:C.muted,
+            fontSize:11, fontWeight:600, fontFamily:"'Outfit',sans-serif",
+            display:"flex", alignItems:"center", gap:5 }}>
+          <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          <span className="act-label">Remove</span>
+        </button>
+      </div>
+    </div>
   );
+}
+
+// ─── ADD MODAL ────────────────────────────────────────────
+function AddAccountModal({ onAdd, onClose, supportedBanks }) {
+  // Views: "form" | "bankPicker" | "confirm" | "success"
+  const [view, setView] = useState("form");
+  const [accountNumber, setAccNum] = useState("");
+  const [selectedBank, setBank] = useState(null);
+  const [accountName, setAccName] = useState("");
+  const [accountType, setAccType] = useState("Savings");
+  const [resolving, setResolving] = useState(false);
+  const [resolved, setResolved] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [bankSearch, setBankSearch] = useState("");
+  const searchRef = useRef(null);
+
+  // Live account name resolution
+  useEffect(() => {
+    let cancel = false;
+    const resolveAccount = async () => {
+      if (accountNumber.length === 10 && selectedBank) {
+        setResolving(true); setResolved(false); setAccName(""); setErrorMsg("");
+        try {
+          const res = await api.post("/wallets/resolve-account", {
+            account_number: accountNumber,
+            bank_code: selectedBank.code
+          });
+          if (!cancel) {
+            setAccName(res.data.account_name);
+            setResolved(true);
+          }
+        } catch (err) {
+          if (!cancel) {
+            setErrorMsg(err.response?.data?.detail || "Could not verify account details.");
+          }
+        } finally {
+          if (!cancel) setResolving(false);
+        }
+      } else {
+        setResolved(false); setAccName(""); setErrorMsg("");
+      }
+    };
+    
+    const t = setTimeout(resolveAccount, 800);
+    return () => { clearTimeout(t); cancel = true; };
+  }, [accountNumber, selectedBank]);
+
+  // Auto-focus search when bankPicker opens
+  useEffect(() => {
+    if (view === "bankPicker" && searchRef.current) {
+      setTimeout(() => searchRef.current?.focus(), 50);
+    }
+  }, [view]);
+
+  const canSubmit = accountNumber.length === 10 && selectedBank && resolved && accountName;
+  const filteredBanks = supportedBanks.filter(b =>
+    (b?.name || "").toLowerCase().includes((bankSearch || "").toLowerCase())
+  );
+
+  const handleSubmit = () => { setLoading(true); setTimeout(() => { setLoading(false); setView("confirm"); }, 300); };
+  
+  const handleConfirm = async () => {
+    setLoading(true);
+    setErrorMsg("");
+    try {
+      const res = await api.post("/wallets/bank-accounts", {
+        bank_code: selectedBank.code,
+        account_number: accountNumber
+      });
+      const newAcc = {
+        id: res.data.id,
+        bankCode: res.data.bank_code,
+        bankName: res.data.bank_name,
+        accountNumber: res.data.account_number,
+        accountName: res.data.account_name,
+        type: "Savings",
+        isDefault: res.data.is_default
+      };
+      onAdd(newAcc);
+      setView("success");
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(err.response?.data?.detail || err.response?.data?.error || "Failed to add account");
+      setView("form");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBankPick = (b) => {
+    setBank(b);
+    setBankSearch("");
+    setView("form");
+  };
+
+  // ─── HEADER ───
+  const getHeader = () => {
+    if (view === "bankPicker") return { step: "SELECT BANK", title: "Choose Your Bank" };
+    if (view === "confirm") return { step: "STEP 2 OF 2", title: "Confirm Details" };
+    if (view === "success") return { step: "DONE", title: "Account Saved" };
+    return { step: "STEP 1 OF 2", title: "Add Bank Account" };
+  };
+  const header = getHeader();
 
   return (
     <>
-      <div onClick={onClose}
-        style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",
-          backdropFilter:"blur(4px)",zIndex:200 }}/>
-      <div className="modal-container" style={{ position:"fixed",top:"50%",left:"50%",
-        transform:"translate(-50%,-50%)",zIndex:201,
-        width:"100%",maxWidth:460,
-        background:C.card,border:`1px solid ${C.border2}`,
-        borderRadius:18,overflow:"hidden",
+      <div onClick={view === "bankPicker" ? () => setView("form") : onClose}
+        style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.78)",
+          backdropFilter:"blur(5px)", zIndex:200, animation:"fadeIn 0.2s ease" }} />
+      <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)",
+        zIndex:201, width:"92%", maxWidth:440, background:C.card,
+        border:`1px solid ${C.border2}`, borderRadius:18,
         boxShadow:"0 32px 64px rgba(0,0,0,0.7)",
-        animation:"slideUp 0.3s ease" }}>
+        display:"flex", flexDirection:"column",
+        maxHeight: view === "bankPicker" ? "80vh" : "auto",
+        overflow:"hidden",
+        willChange:"transform", animation:"fadeIn 0.2s ease" }}>
 
         {/* Header */}
-        <div className="modal-header" style={{ display:"flex",justifyContent:"space-between",
-          alignItems:"center",padding:"18px 22px",
-          borderBottom:`1px solid ${C.border}` }}>
-          <div>
-            <div style={{ fontSize:10,color:C.muted,letterSpacing:2,marginBottom:3 }}>
-              {step===1?"ADD NEW":""}
-              {step===2?"CONFIRM DETAILS":""}
-              {step===3?"":""}
-            </div>
-            <div style={{ fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:1 }}>
-              {step===1?"Add Bank Account"
-               :step===2?"Confirm Account"
-               :"Account Added!"}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center",
+          padding:"16px 20px", borderBottom:`1px solid ${C.border}`, flexShrink:0 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+            {view === "bankPicker" && (
+              <button onClick={() => { setView("form"); setBankSearch(""); }}
+                style={{ background:C.card2, border:`1px solid ${C.border}`,
+                  borderRadius:8, width:30, height:30, display:"flex", alignItems:"center",
+                  justifyContent:"center", cursor:"pointer", color:C.muted, fontSize:14 }}>
+                <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  strokeWidth={2} strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+            )}
+            <div>
+              <div style={{ fontSize:10, color:C.muted, letterSpacing:2, marginBottom:3 }}>{header.step}</div>
+              <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, letterSpacing:1 }}>{header.title}</div>
             </div>
           </div>
-          {step!==3 && (
-            <button onClick={onClose} className="close-btn"
-              style={{ background:C.card2,border:`1px solid ${C.border}`,
-                borderRadius:8,width:30,height:30,display:"flex",
-                alignItems:"center",justifyContent:"center",
-                cursor:"pointer",color:C.muted,fontSize:15,lineHeight:1 }}>✕</button>
+          {view !== "success" && view !== "bankPicker" && (
+            <button onClick={onClose} style={{ background:C.card2, border:`1px solid ${C.border}`,
+              borderRadius:8, width:30, height:30, display:"flex", alignItems:"center",
+              justifyContent:"center", cursor:"pointer", color:C.muted, fontSize:15 }}>{"\u2715"}</button>
           )}
         </div>
 
-        <div className="modal-body" style={{ padding:"20px 22px" }}>
-
-          {/* STEP 1: Form */}
-          {step===1 && (
-            <div style={{ animation:"fadeIn 0.3s ease" }}>
-              <div style={{ marginBottom:16 }}>
-                <label style={{ display:"block",fontSize:10,color:C.muted,
-                  letterSpacing:2,marginBottom:8 }}>ACCOUNT NUMBER</label>
-                <div style={{ position:"relative" }}>
-                  <input className={`st-input${resolving||resolved?"":" "}`}
-                    type="text" maxLength={10}
-                    value={accountNumber}
-                    onChange={e=>setAccNum(e.target.value.replace(/\D/g,""))}
-                    placeholder="10-digit account number"
-                    style={{ width:"100%",background:C.card2,
-                      border:`1px solid ${resolved?C.green:C.border2}`,
-                      borderRadius:10,padding:"13px 44px 13px 14px",
-                      color:"#fff",fontSize:15,
-                      fontFamily:"'DM Mono',monospace",letterSpacing:2 }}/>
-                  <div style={{ position:"absolute",right:14,top:"50%",
-                    transform:"translateY(-50%)" }}>
-                    {resolving && (
-                      <div style={{ width:16,height:16,borderRadius:"50%",
-                        border:"2px solid rgba(14,203,129,0.2)",
-                        borderTopColor:C.green,animation:"spin 0.8s linear infinite" }}/>
-                    )}
-                    {resolved && !resolving && (
-                      <svg width={16} height={16} viewBox="0 0 16 16" fill="none"
-                        style={{ animation:"popIn 0.2s ease" }}>
+        {/* ─── BANK PICKER VIEW ─── */}
+        {view === "bankPicker" && (
+          <>
+            <div style={{ padding:"12px 16px", borderBottom:`1px solid ${C.border}`, flexShrink:0 }}>
+              <div style={{ position:"relative" }}>
+                <svg width={13} height={13} viewBox="0 0 24 24" fill="none"
+                  stroke={C.muted} strokeWidth={2} strokeLinecap="round"
+                  style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", pointerEvents:"none" }}>
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input ref={searchRef} value={bankSearch}
+                  onChange={e => setBankSearch(e.target.value)}
+                  placeholder="Search banks..."
+                  className="st-input"
+                  style={{ width:"100%", background:"#0a0a0a", border:`1px solid ${C.border2}`,
+                    borderRadius:9, padding:"11px 14px 11px 34px", color:"#fff", fontSize:13,
+                    fontFamily:"'Outfit',sans-serif" }} />
+              </div>
+            </div>
+            <div style={{ flex:1, overflowY:"auto", minHeight:0 }}>
+              {filteredBanks.length === 0 ? (
+                <div style={{ padding:"32px", textAlign:"center", color:C.muted, fontSize:13 }}>
+                  No banks match &ldquo;{bankSearch}&rdquo;
+                </div>
+              ) : filteredBanks.map(b => {
+                const meta = getBankMeta(b.code, b.name);
+                const isSel = selectedBank?.code === b.code;
+                return (
+                  <button key={b.code} className={`bank-opt${isSel ? " sel" : ""}`}
+                    onClick={() => handleBankPick(b)}
+                    style={{ width:"100%", display:"flex", alignItems:"center", gap:10,
+                      padding:"12px 16px", background:"transparent", border:"none",
+                      borderBottom:`1px solid ${C.border}`, color:"#fff", cursor:"pointer",
+                      fontFamily:"'Outfit',sans-serif", textAlign:"left" }}>
+                    <div style={{ width:32, height:32, borderRadius:8, background:`${meta.color}18`,
+                      border:`1px solid ${meta.color}28`, display:"flex", alignItems:"center",
+                      justifyContent:"center", fontFamily:"'Bebas Neue',sans-serif",
+                      fontSize:11, color:meta.color, flexShrink:0 }}>{meta.abbr}</div>
+                    <span style={{ fontSize:14, fontWeight:500 }}>{b.name}</span>
+                    {isSel && (
+                      <svg width={16} height={16} viewBox="0 0 16 16" fill="none" style={{ marginLeft:"auto" }}>
                         <circle cx={8} cy={8} r={8} fill={C.green}/>
                         <path d="M4 8l2.5 3L12 5" stroke="#000" strokeWidth={1.5} strokeLinecap="round"/>
                       </svg>
                     )}
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ marginBottom:16 }} ref={bankRef}>
-                <label style={{ display:"block",fontSize:10,color:C.muted,
-                  letterSpacing:2,marginBottom:8 }}>SELECT BANK</label>
-                <button onClick={()=>setShowBanks(!showBanks)}
-                  style={{ width:"100%",background:C.card2,
-                    border:`1px solid ${selectedBank?C.green:C.border2}`,
-                    borderRadius:10,padding:"13px 14px",
-                    color:selectedBank?"#fff":C.muted,fontSize:14,
-                    fontFamily:"'Outfit',sans-serif",fontWeight:selectedBank?500:400,
-                    cursor:"pointer",display:"flex",justifyContent:"space-between",
-                    alignItems:"center",textAlign:"left",
-                    transition:"border-color 0.2s" }}>
-                  <span>{selectedBank?selectedBank.name:"Choose your bank"}</span>
-                  <svg width={14} height={14} viewBox="0 0 24 24" fill="none"
-                    stroke={C.muted} strokeWidth={2} strokeLinecap="round"
-                    style={{ transform:showBanks?"rotate(180deg)":"none",
-                      transition:"transform 0.2s" }}>
-                    <polyline points="6 9 12 15 18 9"/>
-                  </svg>
-                </button>
-
-                {showBanks && (
-                  <div style={{ position:"relative",zIndex:10 }}>
-                    <div style={{ position:"absolute",top:4,left:0,right:0,
-                      background:C.card,border:`1px solid ${C.border2}`,
-                      borderRadius:12,boxShadow:"0 16px 32px rgba(0,0,0,0.5)",
-                      overflow:"hidden",animation:"fadeIn 0.15s ease" }}>
-                      <div style={{ padding:"8px 10px",
-                        borderBottom:`1px solid ${C.border}` }}>
-                        <input value={bankSearch}
-                          onChange={e=>setBankSearch(e.target.value)}
-                          placeholder="Search bank..."
-                          autoFocus
-                          style={{ width:"100%",background:"transparent",
-                            border:"none",color:"#fff",fontSize:13,
-                            fontFamily:"'Outfit',sans-serif",outline:"none" }}/>
-                      </div>
-                      <div style={{ maxHeight:220,overflowY:"auto" }}>
-                        {filteredBanks.map(b=>(
-                          <button key={b.code} className={`bank-opt${selectedBank?.code===b.code?" sel":""}`}
-                            onClick={()=>{ setBank(b); setShowBanks(false); setBankSearch(""); }}
-                            style={{ width:"100%",display:"flex",alignItems:"center",
-                              gap:10,padding:"10px 14px",
-                              background:selectedBank?.code===b.code?"rgba(14,203,129,0.07)":"transparent",
-                              border:"none",borderBottom:`1px solid ${C.border}`,
-                              color:"#fff",cursor:"pointer",textAlign:"left",
-                              fontFamily:"'Outfit',sans-serif" }}>
-                            <div style={{ width:28,height:28,borderRadius:7,flexShrink:0,
-                              background:b.bg,border:`1px solid ${b.color}22`,
-                              display:"flex",alignItems:"center",justifyContent:"center" }}>
-                              <span style={{ fontFamily:"'Bebas Neue',sans-serif",
-                                fontSize:10,color:b.color,letterSpacing:1 }}>
-                                {b.name.slice(0,2).toUpperCase()}
-                              </span>
-                            </div>
-                            <span style={{ fontSize:13,fontWeight:500 }}>{b.name}</span>
-                            {selectedBank?.code===b.code && (
-                              <svg width={14} height={14} viewBox="0 0 14 14" fill="none"
-                                style={{ marginLeft:"auto" }}>
-                                <path d="M2 7l3 3.5L12 3.5" stroke={C.green} strokeWidth={1.5} strokeLinecap="round"/>
-                              </svg>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {resolved && accountName && (
-                <div style={{ background:"rgba(14,203,129,0.05)",
-                  border:"1px solid rgba(14,203,129,0.18)",
-                  borderRadius:10,padding:"12px 14px",marginBottom:16,
-                  animation:"fadeIn 0.3s ease" }}>
-                  <div style={{ fontSize:9,color:C.green,letterSpacing:2,marginBottom:5 }}>
-                    ACCOUNT NAME
-                  </div>
-                  <div style={{ fontFamily:"'DM Mono',monospace",fontSize:14,
-                    color:"#fff",fontWeight:500 }}>{accountName}</div>
-                </div>
-              )}
-
-              {resolved && (
-                <div style={{ marginBottom:20, animation:"fadeIn 0.3s ease" }}>
-                  <label style={{ display:"block",fontSize:10,color:C.muted,
-                    letterSpacing:2,marginBottom:8 }}>ACCOUNT TYPE</label>
-                  <div style={{ display:"flex",gap:8 }}>
-                    {["Savings","Current"].map(t=>(
-                      <button key={t} onClick={()=>setAccType(t)}
-                        style={{ flex:1,padding:"10px",borderRadius:9,
-                          background:accountType===t?"rgba(14,203,129,0.08)":C.card2,
-                          border:`1px solid ${accountType===t?"rgba(14,203,129,0.3)":C.border2}`,
-                          color:accountType===t?C.green:"#aaa",fontSize:13,fontWeight:500,
-                          cursor:"pointer",fontFamily:"'Outfit',sans-serif",
-                          transition:"all 0.15s" }}>{t}</button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <button disabled={!canSubmit||loading} onClick={handleSubmit}
-                className="pri-btn"
-                style={{ width:"100%",background:canSubmit?C.green:C.border,
-                  color:canSubmit?"#000":C.muted,fontWeight:700,fontSize:15,
-                  padding:"14px",borderRadius:12,border:"none",
-                  fontFamily:"'Outfit',sans-serif",
-                  display:"flex",alignItems:"center",justifyContent:"center",gap:10 }}>
-                {loading
-                  ? <><div style={{ width:18,height:18,borderRadius:"50%",
-                      border:"2.5px solid rgba(0,0,0,0.2)",borderTopColor:"#000",
-                      animation:"spin 0.8s linear infinite" }}/>Verifying...</>
-                  : "Continue →"}
-              </button>
+                  </button>
+                );
+              })}
             </div>
-          )}
+          </>
+        )}
 
-          {/* STEP 2: Confirm */}
-          {step===2 && (
-            <div style={{ animation:"fadeIn 0.3s ease" }}>
-              <div style={{
-                background:getBankMeta(selectedBank?.code||"").bg,
-                border:`1px solid ${getBankMeta(selectedBank?.code||"").color}22`,
-                borderRadius:16,padding:"20px 22px",marginBottom:20,
-                position:"relative",overflow:"hidden",
-              }}>
-                <div style={{ position:"absolute",right:-20,top:-20,width:120,height:120,
-                  borderRadius:"50%",
-                  background:`${getBankMeta(selectedBank?.code||"").color}18`,
-                  filter:"blur(16px)" }}/>
-                <div style={{ fontFamily:"'Bebas Neue',sans-serif",fontSize:16,
-                  letterSpacing:2,marginBottom:14,opacity:0.9 }}>
-                  {selectedBank?.name.toUpperCase()}
-                </div>
-                <div style={{ fontFamily:"'DM Mono',monospace",fontSize:14,
-                  color:"rgba(255,255,255,0.8)",letterSpacing:3,marginBottom:12 }}>
-                  ••••  ••••  ••••  {accountNumber.slice(-4)}
-                </div>
-                <div style={{ display:"flex",justifyContent:"space-between" }}>
-                  <div>
-                    <div style={{ fontSize:8,color:"rgba(255,255,255,0.35)",letterSpacing:2,marginBottom:2 }}>ACCOUNT HOLDER</div>
-                    <div style={{ fontFamily:"'DM Mono',monospace",fontSize:11,
-                      color:"rgba(255,255,255,0.8)" }}>{accountName}</div>
-                  </div>
-                  <div style={{ textAlign:"right" }}>
-                    <div style={{ fontSize:8,color:"rgba(255,255,255,0.35)",letterSpacing:2,marginBottom:2 }}>TYPE</div>
-                    <div style={{ fontSize:11,color:"rgba(255,255,255,0.6)" }}>{accountType}</div>
-                  </div>
-                </div>
+        {/* ─── FORM VIEW ─── */}
+        {view === "form" && (
+          <div style={{ padding:"20px" }}>
+            {errorMsg && (
+              <div style={{ background:"rgba(246,70,93,0.1)", border:"1px solid rgba(246,70,93,0.2)",
+                borderRadius:10, padding:"12px", marginBottom:14, color:C.red, fontSize:13 }}>
+                {errorMsg}
               </div>
-
-              {[
-                ["Bank",           selectedBank?.name],
-                ["Account Number", accountNumber],
-                ["Account Name",   accountName],
-                ["Account Type",   accountType],
-              ].map(([k,v])=>(
-                <div key={k} style={{ display:"flex",justifyContent:"space-between",
-                  padding:"11px 0",borderBottom:`1px solid ${C.border}` }}>
-                  <span style={{ fontSize:13,color:C.muted }}>{k}</span>
-                  <span style={{ fontFamily:"'DM Mono',monospace",fontSize:13,
-                    color:"#ccc" }}>{v}</span>
-                </div>
-              ))}
-
-              <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:20 }}>
-                <button onClick={()=>setStep(1)} className="ghost-btn"
-                  style={{ background:"transparent",border:`1px solid ${C.border2}`,
-                    color:C.muted,fontSize:14,padding:"13px",
-                    borderRadius:11,fontFamily:"'Outfit',sans-serif",cursor:"pointer" }}>
-                  ← Edit
-                </button>
-                <button onClick={handleConfirm} className="pri-btn"
-                  style={{ background:C.green,color:"#000",fontWeight:700,
-                    fontSize:14,padding:"13px",borderRadius:11,border:"none",
-                    fontFamily:"'Outfit',sans-serif",
-                    display:"flex",alignItems:"center",justifyContent:"center",gap:8 }}>
-                  {loading
-                    ? <><div style={{ width:16,height:16,borderRadius:"50%",
-                        border:"2px solid rgba(0,0,0,0.2)",borderTopColor:"#000",
-                        animation:"spin 0.8s linear infinite" }}/>Adding...</>
-                    : "Confirm & Add ✓"}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 3: Success */}
-          {step===3 && (
-            <div style={{ textAlign:"center",padding:"16px 0 8px",
-              animation:"fadeIn 0.4s ease" }}>
-              <div style={{ position:"relative",width:80,height:80,margin:"0 auto 20px" }}>
-                <div style={{ position:"absolute",inset:-6,borderRadius:"50%",
-                  border:`2px solid rgba(14,203,129,0.4)`,animation:"ripple 0.8s ease-out" }}/>
-                <div style={{ width:80,height:80,borderRadius:"50%",
-                  background:"rgba(14,203,129,0.1)",border:`2px solid ${C.green}`,
-                  display:"flex",alignItems:"center",justifyContent:"center",
-                  animation:"successIn 0.5s ease",boxShadow:`0 0 32px rgba(14,203,129,0.2)` }}>
-                  <svg width={34} height={34} viewBox="0 0 34 34" fill="none">
-                    <path d="M7 17l6 7L27 10" stroke={C.green} strokeWidth={2.5}
-                      strokeLinecap="round" strokeLinejoin="round"
-                      strokeDasharray={70}
-                      style={{ animation:"checkDraw 0.5s 0.3s ease forwards",strokeDashoffset:70 }}/>
-                  </svg>
-                </div>
-              </div>
-              <h3 style={{ fontFamily:"'Bebas Neue',sans-serif",fontSize:28,
-                letterSpacing:1,marginBottom:8 }}>ACCOUNT ADDED!</h3>
-              <p style={{ color:C.muted,fontSize:13,lineHeight:1.7,marginBottom:24 }}>
-                <span style={{ color:"#ccc",fontWeight:500 }}>{selectedBank?.name}</span> has been saved to your account. You can now receive NGN withdrawals to this account.
-              </p>
-              <button onClick={onClose} className="pri-btn"
-                style={{ width:"100%",background:C.green,color:"#000",fontWeight:700,
-                  fontSize:14,padding:"13px",borderRadius:11,border:"none",
-                  fontFamily:"'Outfit',sans-serif" }}>
-                Done
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </>
-  );
-}
-
-// ─── DELETE CONFIRM ───────────────────────────────────────
-function DeleteConfirm({ account, onConfirm, onCancel }) {
-  return (
-    <>
-      <div onClick={onCancel}
-        style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",
-          backdropFilter:"blur(3px)",zIndex:200 }}/>
-      <div className="modal-container" style={{ position:"fixed",top:"50%",left:"50%",
-        transform:"translate(-50%,-50%)",zIndex:201,
-        width:"100%",maxWidth:380,
-        background:C.card,border:`1px solid rgba(246,70,93,0.2)`,
-        borderRadius:16,padding:"24px 24px",
-        boxShadow:"0 24px 48px rgba(0,0,0,0.6)",
-        animation:"slideUp 0.25s ease" }}>
-        <div style={{ width:52,height:52,borderRadius:"50%",
-          background:"rgba(246,70,93,0.1)",border:"1px solid rgba(246,70,93,0.2)",
-          display:"flex",alignItems:"center",justifyContent:"center",
-          margin:"0 auto 16px" }}>
-          <svg width={22} height={22} viewBox="0 0 24 24" fill="none"
-            stroke={C.red} strokeWidth={2} strokeLinecap="round">
-            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/>
-          </svg>
-        </div>
-        <h3 style={{ fontFamily:"'Bebas Neue',sans-serif",fontSize:22,
-          textAlign:"center",letterSpacing:1,marginBottom:8 }}>REMOVE ACCOUNT?</h3>
-        <p style={{ color:C.muted,fontSize:13,textAlign:"center",
-          lineHeight:1.6,marginBottom:20 }}>
-          This will remove <span style={{ color:"#ccc" }}>{account.bankName} ••{account.accountNumber.slice(-4)}</span> from your saved accounts.
-        </p>
-        <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:10 }}>
-          <button onClick={onCancel} className="ghost-btn"
-            style={{ background:"transparent",border:`1px solid ${C.border2}`,
-              color:C.muted,fontSize:14,padding:"12px",borderRadius:10,
-              fontFamily:"'Outfit',sans-serif",cursor:"pointer" }}>
-            Cancel
-          </button>
-          <button onClick={onConfirm}
-            style={{ background:"rgba(246,70,93,0.12)",
-              border:"1px solid rgba(246,70,93,0.3)",
-              color:C.red,fontWeight:700,fontSize:14,padding:"12px",borderRadius:10,
-              fontFamily:"'Outfit',sans-serif",cursor:"pointer",transition:"all 0.2s" }}
-            onMouseEnter={e=>{ e.currentTarget.style.background="rgba(246,70,93,0.2)"; }}
-            onMouseLeave={e=>{ e.currentTarget.style.background="rgba(246,70,93,0.12)"; }}>
-            Remove
-          </button>
-        </div>
-      </div>
-    </>
-  );
-}
-
-// ─── MAIN COMPONENT ───────────────────────────────────────
-export default function BankAccounts() {
-  const [banks, setBanks]       = useState(INIT_BANKS);
-  const [showAdd, setShowAdd]   = useState(false);
-  const [deleting, setDeleting] = useState(null);
-
-  useEffect(()=>{
-    const s=document.createElement("style"); s.textContent=CSS;
-    document.head.appendChild(s); return ()=>document.head.removeChild(s);
-  },[]);
-
-  const handleAdd     = acct => { setBanks(b=>[...b,acct]); };
-  const handleDelete  = id   => { setDeleting(banks.find(b=>b.id===id)); };
-  const confirmDelete = ()   => { setBanks(b=>b.filter(x=>x.id!==deleting.id)); setDeleting(null); };
-  const handleDefault = id   => { setBanks(b=>b.map(x=>({...x,isDefault:x.id===id}))); };
-
-  return (
-    <div style={{ flex:1, display:"flex", flexDirection:"column", minWidth:0 }}>
-
-      {/* Topbar */}
-      <div className="bank-topbar" style={{ height:56, display:"flex", alignItems:"center",
-        justifyContent:"space-between", padding:"0 28px",
-        borderBottom:`1px solid ${C.border}`,
-        background:"rgba(6,6,6,0.95)", backdropFilter:"blur(12px)", flexShrink:0 }}>
-        <div>
-          <div className="bank-topbar-title" style={{ fontFamily:"'Bebas Neue',sans-serif",
-            fontSize:20, letterSpacing:1, lineHeight:1 }}>Bank Accounts</div>
-          <div className="bank-topbar-sub" style={{ fontSize:11, color:C.muted, marginTop:1 }}>
-            Manage your withdrawal destinations
-          </div>
-        </div>
-        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-          <button onClick={()=>setShowAdd(true)} className="pri-btn pri-btn-mobile"
-            style={{ background:C.green,color:"#000",fontWeight:700,
-              fontSize:12,padding:"8px 18px",borderRadius:8,border:"none",
-              display:"flex",alignItems:"center",gap:5,
-              fontFamily:"'Outfit',sans-serif",cursor:"pointer" }}>
-            <svg width={13} height={13} viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            <span className="btn-text">Add Account</span>
-          </button>
-          <div style={{ width:32,height:32,borderRadius:"50%",cursor:"pointer",
-            background:`linear-gradient(135deg,${C.green},${C.amber})`,
-            display:"flex",alignItems:"center",justifyContent:"center",
-            fontFamily:"'Bebas Neue',sans-serif",fontSize:12,color:"#000" }}>AO</div>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="bank-content" style={{ flex:1, overflowY:"auto", padding:"28px" }}>
-
-        {/* Info banner */}
-        <div className="info-banner" style={{ display:"flex", gap:10, alignItems:"flex-start",
-          background:"rgba(14,203,129,0.04)", border:"1px solid rgba(14,203,129,0.12)",
-          borderRadius:12, padding:"14px 18px", marginBottom:28,
-          animation:"fadeUp 0.4s ease" }}>
-          <svg width={15} height={15} viewBox="0 0 24 24" fill="none"
-            stroke={C.green} strokeWidth={2} strokeLinecap="round"
-            style={{ flexShrink:0, marginTop:1 }}>
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-          <div style={{ fontSize:13, color:C.muted, lineHeight:1.6 }}>
-            Your <span style={{ color:"#bbb" }}>default account</span> is automatically selected when you make a withdrawal. Hover over any card to set default or remove.
-            You can save up to <span style={{ color:"#bbb" }}>5 accounts</span>.
-          </div>
-        </div>
-
-        {/* Cards grid */}
-        {banks.length > 0 ? (
-          <div className="bank-grid" style={{ display:"grid",
-            gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",
-            gap:24 }}>
-            {banks.map((b,i)=>(
-              <div key={b.id} style={{ animationDelay:`${i*0.08}s` }}>
-                <BankCardVisual
-                  account={b}
-                  onSetDefault={handleDefault}
-                  onDelete={handleDelete}
-                />
-              </div>
-            ))}
-
-            {/* Add account card */}
-            {banks.length < 5 && (
-              <button onClick={()=>setShowAdd(true)} className="add-card"
-                style={{ background:"transparent",
-                  border:`1px dashed ${C.border2}`,
-                  borderRadius:18,cursor:"pointer",
-                  display:"flex",flexDirection:"column",
-                  alignItems:"center",justifyContent:"center",
-                  gap:12, minHeight:160,
-                  animation:`fadeUp 0.45s ${banks.length*0.08}s ease both`,
-                  fontFamily:"'Outfit',sans-serif" }}>
-                <div className="add-plus"
-                  style={{ width:44,height:44,borderRadius:"50%",
-                    background:C.card2, border:`1px solid ${C.border2}`,
-                    display:"flex",alignItems:"center",justifyContent:"center",
-                    color:C.muted, transition:"color 0.2s", fontSize:22 }}>+</div>
-                <div style={{ textAlign:"center" }}>
-                  <div style={{ fontSize:14,fontWeight:500,color:C.muted,marginBottom:4 }}>
-                    Add Bank Account
-                  </div>
-                  <div style={{ fontSize:11,color:C.muted2 }}>
-                    {5-banks.length} slot{5-banks.length!==1?"s":""} remaining
-                  </div>
-                </div>
-              </button>
             )}
-          </div>
-        ) : (
-          <div style={{ textAlign:"center",padding:"80px 0",
-            animation:"fadeUp 0.5s ease" }}>
-            <div style={{ fontSize:40,marginBottom:16 }}>🏦</div>
-            <div style={{ fontFamily:"'Bebas Neue',sans-serif",
-              fontSize:28,letterSpacing:1,marginBottom:10 }}>NO BANK ACCOUNTS YET</div>
-            <p style={{ color:C.muted,fontSize:14,marginBottom:24,lineHeight:1.6 }}>
-              Add a Nigerian bank account to start receiving<br/>your NGN payouts.
-            </p>
-            <button onClick={()=>setShowAdd(true)} className="pri-btn"
-              style={{ background:C.green,color:"#000",fontWeight:700,
-                fontSize:14,padding:"12px 28px",borderRadius:10,
-                border:"none",fontFamily:"'Outfit',sans-serif",cursor:"pointer" }}>
-              Add Your First Account →
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:"block", fontSize:10, color:C.muted, letterSpacing:2, marginBottom:8 }}>ACCOUNT NUMBER</label>
+              <div style={{ position:"relative" }}>
+                <input className="st-input" type="text" maxLength={10} value={accountNumber}
+                  onChange={e => setAccNum(e.target.value.replace(/\D/g, ""))}
+                  placeholder="10-digit account number"
+                  style={{ width:"100%", background:"#0a0a0a", border:`1px solid ${resolved ? C.green : C.border2}`,
+                    borderRadius:10, padding:"13px 44px 13px 14px", color:"#fff", fontSize:15,
+                    fontFamily:"'DM Mono',monospace", letterSpacing:2 }} />
+                <div style={{ position:"absolute", right:14, top:"50%", transform:"translateY(-50%)" }}>
+                  {resolving && (
+                    <div style={{ width:16, height:16, borderRadius:"50%",
+                      border:"2px solid rgba(14,203,129,0.2)", borderTopColor:C.green,
+                      animation:"spin 0.8s linear infinite" }} />
+                  )}
+                  {resolved && !resolving && (
+                    <svg width={16} height={16} viewBox="0 0 16 16" fill="none" style={{ animation:"popIn 0.2s ease" }}>
+                      <circle cx={8} cy={8} r={8} fill={C.green}/>
+                      <path d="M4 8l2.5 3L12 5" stroke="#000" strokeWidth={1.5} strokeLinecap="round"/>
+                    </svg>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:"block", fontSize:10, color:C.muted, letterSpacing:2, marginBottom:8 }}>BANK</label>
+              <button onClick={() => setView("bankPicker")}
+                style={{ width:"100%", background:"#0a0a0a",
+                  border:`1px solid ${selectedBank ? C.green : C.border2}`,
+                  borderRadius:10, padding:"13px 14px", color:selectedBank ? "#fff" : C.muted,
+                  fontSize:14, cursor:"pointer", display:"flex", justifyContent:"space-between",
+                  alignItems:"center", fontFamily:"'Outfit',sans-serif", textAlign:"left" }}>
+                <span>{selectedBank ? selectedBank.name : "Choose your bank"}</span>
+                <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={C.muted}
+                  strokeWidth={2} strokeLinecap="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </button>
+            </div>
+
+            {resolved && accountName && (
+              <div style={{ background:"rgba(14,203,129,0.05)", border:"1px solid rgba(14,203,129,0.15)",
+                borderRadius:10, padding:"12px 14px", marginBottom:14, animation:"fadeIn 0.25s ease" }}>
+                <div style={{ fontSize:9, color:C.green, letterSpacing:2, marginBottom:4 }}>ACCOUNT NAME</div>
+                <div style={{ fontFamily:"'DM Mono',monospace", fontSize:14, color:"#fff" }}>{accountName}</div>
+              </div>
+            )}
+
+            <button disabled={!canSubmit || loading} onClick={handleSubmit} className="pri-btn"
+              style={{ width:"100%", background:canSubmit ? C.green : C.border,
+                color:canSubmit ? "#000" : C.muted, fontWeight:700, fontSize:14,
+                padding:"14px", borderRadius:11, border:"none", fontFamily:"'Outfit',sans-serif",
+                display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
+              {loading ? "Preparing\u2026" : "Continue \u2192"}
             </button>
           </div>
         )}
+
+        {/* ─── CONFIRM VIEW ─── */}
+        {view === "confirm" && (
+          <div style={{ padding:"20px" }}>
+            {[
+              ["Bank", selectedBank?.name],
+              ["Account Number", accountNumber],
+              ["Account Name", accountName],
+              ["Type", accountType],
+            ].map(([k, v]) => (
+              <div key={k} style={{ display:"flex", justifyContent:"space-between",
+                padding:"12px 0", borderBottom:`1px solid ${C.border}` }}>
+                <span style={{ fontSize:13, color:C.muted }}>{k}</span>
+                <span style={{ fontFamily:"'DM Mono',monospace", fontSize:13, color:"#ccc" }}>{v}</span>
+              </div>
+            ))}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginTop:20 }}>
+              <button onClick={() => setView("form")} className="ghost-btn" disabled={loading}
+                style={{ background:"transparent", border:`1px solid ${C.border2}`, color:C.muted,
+                  fontSize:14, padding:"13px", borderRadius:11, cursor:"pointer",
+                  fontFamily:"'Outfit',sans-serif" }}>{"\u2190"} Edit</button>
+              <button onClick={handleConfirm} className="pri-btn" disabled={loading}
+                style={{ background:C.green, color:"#000", fontWeight:700, fontSize:14,
+                  padding:"13px", borderRadius:11, border:"none", cursor:"pointer",
+                  fontFamily:"'Outfit',sans-serif", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                {loading ? (
+                  <><div style={{ width:16, height:16, marginRight:8, borderRadius:"50%", border:"2px solid rgba(0,0,0,0.2)", borderTopColor:"#000", animation:"spin 0.8s linear infinite" }} /> Saving...</>
+                ) : "Confirm & Add"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ─── SUCCESS VIEW ─── */}
+        {view === "success" && (
+          <div style={{ padding:"20px", textAlign:"center" }}>
+            <div style={{ position:"relative", width:72, height:72, margin:"12px auto 18px" }}>
+              <div style={{ position:"absolute", inset:-6, borderRadius:"50%",
+                border:"2px solid rgba(14,203,129,0.35)", animation:"ripple 0.8s ease-out" }} />
+              <div style={{ width:72, height:72, borderRadius:"50%",
+                background:"rgba(14,203,129,0.1)", border:`2px solid ${C.green}`,
+                display:"flex", alignItems:"center", justifyContent:"center", animation:"successIn 0.45s ease" }}>
+                <svg width={30} height={30} viewBox="0 0 34 34" fill="none">
+                  <path d="M7 17l6 7L27 10" stroke={C.green} strokeWidth={2.5}
+                    strokeLinecap="round" strokeLinejoin="round"
+                    strokeDasharray={70}
+                    style={{ animation:"checkDraw 0.5s 0.2s ease forwards", strokeDashoffset:70 }} />
+                </svg>
+              </div>
+            </div>
+            <h3 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:26, letterSpacing:1, marginBottom:8 }}>ACCOUNT ADDED</h3>
+            <p style={{ color:C.muted, fontSize:13, lineHeight:1.6, marginBottom:22 }}>
+              {selectedBank?.name} is saved. Use it for NGN withdrawals anytime.
+            </p>
+            <button onClick={onClose} className="pri-btn"
+              style={{ width:"100%", background:C.green, color:"#000", fontWeight:700,
+                fontSize:14, padding:"13px", borderRadius:11, border:"none", cursor:"pointer",
+                fontFamily:"'Outfit',sans-serif" }}>Done</button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+function DeleteConfirm({ account, onConfirm, onCancel }) {
+  const [loading, setLoading] = useState(false);
+  const handleConfirm = async () => {
+    setLoading(true);
+    await onConfirm();
+  };
+
+  return (
+    <>
+      <div onClick={onCancel} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)",
+        backdropFilter:"blur(4px)", zIndex:200 }} />
+      <div style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)",
+        zIndex:201, width:"92%", maxWidth:360, background:C.card,
+        border:"1px solid rgba(246,70,93,0.25)", borderRadius:16, padding:"22px",
+        boxShadow:"0 24px 48px rgba(0,0,0,0.6)", animation:"slideUp 0.25s ease" }}>
+        <div style={{ width:48, height:48, borderRadius:"50%", background:"rgba(246,70,93,0.1)",
+          border:"1px solid rgba(246,70,93,0.2)", display:"flex", alignItems:"center",
+          justifyContent:"center", margin:"0 auto 14px" }}>
+          <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={C.red}
+            strokeWidth={2} strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+        </div>
+        <h3 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, textAlign:"center",
+          letterSpacing:1, marginBottom:8 }}>REMOVE ACCOUNT?</h3>
+        <p style={{ color:C.muted, fontSize:13, textAlign:"center", lineHeight:1.6, marginBottom:18 }}>
+          Remove <span style={{ color:"#ccc" }}>{account.bankName} ••{account.accountNumber.slice(-4)}</span> from your saved accounts?
+        </p>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+          <button onClick={onCancel} className="ghost-btn" disabled={loading}
+            style={{ background:"transparent", border:`1px solid ${C.border2}`, color:C.muted,
+              fontSize:14, padding:"12px", borderRadius:10, cursor:"pointer",
+              fontFamily:"'Outfit',sans-serif" }}>Cancel</button>
+          <button onClick={handleConfirm} disabled={loading}
+            style={{ background:"rgba(246,70,93,0.12)", border:"1px solid rgba(246,70,93,0.3)",
+              color:C.red, fontWeight:700, fontSize:14, padding:"12px", borderRadius:10,
+              cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+            {loading ? "Removing..." : "Remove"}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── MAIN ─────────────────────────────────────────────────
+export default function BankAccounts() {
+  const [banks, setBanks] = useState([]);
+  const [supportedBanks, setSupportedBanks] = useState([]);
+  const [showAdd, setShowAdd] = useState(false);
+  const [deleting, setDeleting] = useState(null);
+  const [loadingInitial, setLoadingInitial] = useState(true);
+
+  useEffect(() => {
+    const s = document.createElement("style");
+    s.textContent = CSS;
+    document.head.appendChild(s);
+    return () => document.head.removeChild(s);
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoadingInitial(true);
+        
+        // 1. Fetch Supported Banks (with fallback if backend Paystack is unconfigured)
+        let fetchedBanks = [];
+        try {
+          const banksRes = await api.get("/wallets/banks");
+          fetchedBanks = Array.isArray(banksRes.data) ? banksRes.data : [];
+        } catch (e) {
+          console.warn("Could not fetch live banks, using fallback list:", e);
+          fetchedBanks = [
+            { code:"058", name:"GTBank" }, { code:"044", name:"Access Bank" },
+            { code:"057", name:"Zenith Bank" }, { code:"011", name:"First Bank" },
+            { code:"033", name:"UBA" }, { code:"070", name:"Fidelity Bank" },
+            { code:"214", name:"FCMB" }, { code:"000", name:"Kuda Bank" },
+            { code:"100", name:"OPay" }, { code:"50515", name:"Moniepoint" },
+            { code:"076", name:"Polaris Bank" }, { code:"082", name:"Keystone Bank" }
+          ];
+        }
+        setSupportedBanks(fetchedBanks);
+
+        // 2. Fetch User's Linked Bank Accounts
+        const accountsRes = await api.get("/wallets/bank-accounts");
+        const accountsData = Array.isArray(accountsRes.data) ? accountsRes.data : [];
+        const formattedAccounts = accountsData.map(b => ({
+          id: b.id,
+          bankCode: b.bank_code,
+          bankName: b.bank_name,
+          accountNumber: b.account_number,
+          accountName: b.account_name,
+          type: "Savings",
+          isDefault: b.is_default
+        }));
+        setBanks(formattedAccounts);
+      } catch (err) {
+        console.error("Failed to fetch bank accounts data", err);
+      } finally {
+        setLoadingInitial(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleDelete = async () => {
+    if (!deleting) return;
+    try {
+      await api.delete(`/wallets/bank-accounts/${deleting.id}`);
+      setBanks(prev => prev.filter(x => x.id !== deleting.id));
+    } catch (err) {
+      console.error("Failed to delete account", err);
+      alert(err.response?.data?.detail || "Failed to remove account.");
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const handleSetDefault = async (id) => {
+    try {
+      await api.patch(`/wallets/bank-accounts/${id}/default`);
+      setBanks(prev => {
+        const updated = prev.map(b => ({ ...b, isDefault: b.id === id }));
+        // Sort so default is at the top, like the backend does
+        return updated.sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
+      });
+    } catch (err) {
+      console.error("Failed to set default", err);
+      alert(err.response?.data?.detail || "Failed to set default account.");
+    }
+  };
+
+  const defaultAcct = banks.find(b => b.isDefault) || banks[0];
+  const slotsLeft = MAX_ACCOUNTS - banks.length;
+
+  return (
+    <div className="bank-page">
+      <LeftPanel banks={banks} />
+
+      <div className="bank-main">
+        <div className="bank-topbar" style={{ height:54, display:"flex", alignItems:"center",
+          justifyContent:"space-between", padding:"0 32px",
+          borderBottom:`1px solid ${C.border}`, background:"rgba(8,8,8,0.95)",
+          backdropFilter:"blur(12px)", flexShrink:0 }}>
+          <div>
+            <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:20, letterSpacing:1, lineHeight:1 }}>
+              Your Accounts
+            </div>
+            <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>
+              {banks.length} saved · {slotsLeft} slot{slotsLeft !== 1 ? "s" : ""} left
+            </div>
+          </div>
+          <button onClick={() => setShowAdd(true)} disabled={banks.length >= MAX_ACCOUNTS || loadingInitial}
+            className="pri-btn bank-topbar-btn"
+            style={{ background:banks.length >= MAX_ACCOUNTS ? C.border : C.green,
+              color:banks.length >= MAX_ACCOUNTS ? C.muted : "#000", fontWeight:700,
+              fontSize:12, padding:"8px 16px", borderRadius:8, border:"none",
+              display:"flex", alignItems:"center", gap:6, cursor:"pointer",
+              fontFamily:"'Outfit',sans-serif" }}>
+            <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth={2.5} strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span className="bank-topbar-btn-text">Add Account</span>
+          </button>
+        </div>
+
+        <div className="bank-scroll">
+          <div className="stats-row" style={{ display:"grid",
+            gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:24 }}>
+            {[
+              { label:"Total saved", val:banks.length, sub:`Max ${MAX_ACCOUNTS} accounts` },
+              { label:"Default bank", val:defaultAcct?.bankName || "—", sub:defaultAcct ? maskAccount(defaultAcct.accountNumber) : "Not set" },
+              { label:"Withdrawal Fee", val:"₦0.00", sub:"Free on all transfers" },
+            ].map((s, i) => (
+              <div key={s.label} className="stat-chip" style={{ background:C.card,
+                border:`1px solid ${C.border}`, borderRadius:12, padding:"14px 16px",
+                animationDelay:`${i * 0.06}s` }}>
+                <div style={{ fontSize:10, color:C.muted, letterSpacing:1, marginBottom:6 }}>{s.label.toUpperCase()}</div>
+                <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:24, color:"#fff", letterSpacing:0.5, lineHeight:1 }}>{s.val}</div>
+                <div style={{ fontSize:11, color:C.muted, marginTop:4 }}>{s.sub}</div>
+              </div>
+            ))}
+          </div>
+
+          {loadingInitial ? (
+            <div style={{ display:"flex", justifyContent:"center", padding:"40px 0" }}>
+              <div style={{ width:24, height:24, borderRadius:"50%", border:"2px solid rgba(14,203,129,0.2)", borderTopColor:C.green, animation:"spin 0.8s linear infinite" }}/>
+            </div>
+          ) : banks.length === 0 ? (
+            <div style={{ textAlign:"center", padding:"64px 20px", animation:"fadeUp 0.4s ease" }}>
+              <div style={{ width:64, height:64, borderRadius:"50%", margin:"0 auto 16px",
+                background:"rgba(14,203,129,0.06)", border:"1px solid rgba(14,203,129,0.12)",
+                display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <svg width={28} height={28} viewBox="0 0 24 24" fill="none" stroke={C.muted}
+                  strokeWidth={1.5} strokeLinecap="round"><rect x="3" y="10" width="18" height="11" rx="2"/><path d="M7 10V7a5 5 0 0110 0v3"/></svg>
+              </div>
+              <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:28, letterSpacing:1, marginBottom:8 }}>NO ACCOUNTS YET</div>
+              <p style={{ color:C.muted, fontSize:14, lineHeight:1.6, marginBottom:22, maxWidth:320, margin:"0 auto 22px" }}>
+                Link a Nigerian bank account to receive your NGN withdrawals.
+              </p>
+              <button onClick={() => setShowAdd(true)} className="pri-btn"
+                style={{ background:C.green, color:"#000", fontWeight:700, fontSize:14,
+                  padding:"12px 24px", borderRadius:10, border:"none", cursor:"pointer",
+                  fontFamily:"'Outfit',sans-serif" }}>Add Your First Account →</button>
+            </div>
+          ) : (
+            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+              {banks.map((b, i) => (
+                <AccountRow key={b.id} account={b} index={i}
+                  onDelete={id => setDeleting(banks.find(x => x.id === id))}
+                  onSetDefault={handleSetDefault} />
+              ))}
+
+              {banks.length < MAX_ACCOUNTS && (
+                <button onClick={() => setShowAdd(true)} className="add-slot"
+                  style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:10,
+                    background:"transparent", border:`1px dashed ${C.border2}`,
+                    borderRadius:14, padding:"18px", fontFamily:"'Outfit',sans-serif",
+                    color:C.muted, animation:`fadeUp 0.35s ${banks.length * 0.05}s ease both` }}>
+                  <div style={{ width:32, height:32, borderRadius:"50%", background:C.card2,
+                    border:`1px solid ${C.border}`, display:"flex", alignItems:"center",
+                    justifyContent:"center", fontSize:18, color:C.muted }}>+</div>
+                  <div style={{ textAlign:"left" }}>
+                    <div style={{ fontSize:14, fontWeight:500, color:"#aaa" }}>Add another account</div>
+                    <div style={{ fontSize:11, color:C.muted2 }}>{slotsLeft} slot{slotsLeft !== 1 ? "s" : ""} remaining</div>
+                  </div>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {showAdd && (
-        <AddAccountModal onAdd={acct=>{ handleAdd(acct); }} onClose={()=>setShowAdd(false)}/>
+        <AddAccountModal onAdd={acct => { setBanks(b => [...b, acct]); setShowAdd(false); }}
+          onClose={() => setShowAdd(false)} supportedBanks={supportedBanks} />
       )}
       {deleting && (
         <DeleteConfirm account={deleting}
-          onConfirm={confirmDelete} onCancel={()=>setDeleting(null)}/>
+          onConfirm={handleDelete}
+          onCancel={() => setDeleting(null)} />
       )}
     </div>
   );

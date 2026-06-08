@@ -15,19 +15,19 @@ import {
 
 // ─── TOKENS ───────────────────────────────────────────────
 const C = {
-  green: "#0ECB81", amber: "#F5A623", red: "#F6465D",
-  bg: "#080808", surface: "#0f0f0f", card: "#111111",
+  green: "#0ECB81", amber: "#F5A623", red: "#F6465D", blue: "#3B82F6",
+  bg: "#080808", surface: "#0c0c0c", card: "#101010", card2: "#141414",
   border: "#1a1a1a", border2: "#222222",
-  text: "#ffffff", muted: "#666666", muted2: "#333333",
+  text: "#ffffff", muted: "#888888", muted2: "#2e2e2e",
 };
 
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
-  body { background: #080808; color: #fff; font-family: 'Outfit', sans-serif; overflow-x: hidden; }
+  body { background:#080808; color:#fff; font-family: 'Outfit', sans-serif; overflow-x: hidden; }
   ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: #080808; }
+  ::-webkit-scrollbar-track { background:#080808; }
   ::-webkit-scrollbar-thumb { background: #222; border-radius: 4px; }
   a { text-decoration: none; color: inherit; }
   button { cursor: pointer; font-family: 'Outfit', sans-serif; }
@@ -244,7 +244,7 @@ function ExchangeWidget() {
                     </div>
                   ) : (
                     <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0, background:C.card, border:`1px solid ${C.border2}`, borderRadius:10, padding:"8px 12px" }}>
-                      <span style={{ fontSize:16 }}>🇳🇬</span>
+                      <div style={{ width:20, height:20, borderRadius:"50%", background:"rgba(14,203,129,0.15)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, color:C.green }}>₦</div>
                       <span style={{ fontWeight:600, fontSize:14 }}>NGN</span>
                     </div>
                   )}
@@ -261,7 +261,7 @@ function ExchangeWidget() {
                 <div style={{ display:"flex", gap:12, alignItems:"center" }}>
                   {side==="sell" ? (
                     <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0, background:C.card, border:`1px solid ${C.border2}`, borderRadius:10, padding:"8px 12px" }}>
-                      <span style={{ fontSize:16 }}>🇳🇬</span>
+                      <div style={{ width:20, height:20, borderRadius:"50%", background:"rgba(14,203,129,0.15)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, color:C.green }}>₦</div>
                       <span style={{ fontWeight:600, fontSize:14 }}>NGN</span>
                     </div>
                   ) : (
@@ -429,9 +429,9 @@ export default function ExchangePage() {
           <div className="side-panel side-panel-desktop" style={{ width:280, flexShrink:0 }}>
             <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:"20px", marginBottom:16 }}>
               <div style={{ fontSize:12, fontWeight:600, letterSpacing:1, marginBottom:16 }}>WHY SWIFT TRADE</div>
-              {[{ icon:"⚡", title:"Instant Quotes", sub:"Rate locked for 60 seconds" },{ icon:"🔒", title:"Secure Platform", sub:"2FA + encrypted wallets" },{ icon:"💸", title:"Best Rates", sub:"4% spread, zero hidden fees"},{ icon:"⏱", title:"Fast Payouts", sub:"NGN in 2–5 minutes" }].map(b => (
+{[{ icon:<svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke={C.amber} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>, title:"Instant Quotes", sub:"Rate locked for 60 seconds" },{ icon:<svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>, title:"Secure Platform", sub:"2FA + encrypted wallets" },{ icon:<svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>, title:"Best Rates", sub:"4% spread, zero hidden fees"},{ icon:<svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke={C.amber} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, title:"Fast Payouts", sub:"NGN in 2–5 minutes" }].map(b => (
                 <div key={b.title} style={{ display:"flex", gap:12, alignItems:"flex-start", marginBottom:14 }}>
-                  <span style={{ fontSize:18, flexShrink:0 }}>{b.icon}</span>
+                  <span style={{ flexShrink:0, marginTop:1 }}>{b.icon}</span>
                   <div><div style={{ fontSize:13, fontWeight:500, marginBottom:2 }}>{b.title}</div><div style={{ fontSize:12, color:C.muted, lineHeight:1.5 }}>{b.sub}</div></div>
                 </div>
               ))}

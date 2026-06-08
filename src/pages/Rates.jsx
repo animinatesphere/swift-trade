@@ -4,10 +4,10 @@ import Navbar from "../components/Navbar";
 
 // ─── TOKENS ───────────────────────────────────────────────
 const C = {
-  green: "#0ECB81", amber: "#F5A623", red: "#F6465D",
-  bg: "#080808", surface: "#0f0f0f", card: "#111111",
+  green: "#0ECB81", amber: "#F5A623", red: "#F6465D", blue: "#3B82F6",
+  bg: "#080808", surface: "#0c0c0c", card: "#101010", card2: "#141414",
   border: "#1a1a1a", border2: "#222222",
-  text: "#ffffff", muted: "#666666", muted2: "#333333",
+  text: "#ffffff", muted: "#888888", muted2: "#2e2e2e",
 };
 
 const GLOBAL_CSS = `
@@ -321,9 +321,14 @@ export default function RatesPage() {
               ))}
             </div>
             <div className="info-grid" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginTop:20 }}>
-              {[{ icon:"⏱", title:"Fast payout" },{ icon:"💯", title:"No hidden fees" },{ icon:"📷", title:"Photo upload" },{ icon:"🔁", title:"Daily updates" }].map(c => (
+              {[
+                { icon:<svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={C.amber} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, title:"Fast payout" },
+                { icon:<svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>, title:"No hidden fees" },
+                { icon:<svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>, title:"Photo upload" },
+                { icon:<svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>, title:"Daily updates" }
+              ].map(c => (
                 <div key={c.title} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, padding:"20px", textAlign:"center" }}>
-                  <div style={{ fontSize:24, marginBottom:10 }}>{c.icon}</div>
+                  <div style={{ display:"flex", justifyContent:"center", marginBottom:10 }}>{c.icon}</div>
                   <div style={{ fontSize:14, fontWeight:600 }}>{c.title}</div>
                 </div>
               ))}

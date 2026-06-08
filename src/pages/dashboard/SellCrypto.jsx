@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { useOutletContext } from "react-router-dom";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import api from "../../api/axios";
 
 // ─── TOKENS ───────────────────────────────────────────────
 const C = {
   green:"#0ECB81", amber:"#F5A623", red:"#F6465D",
   bg:"#080808", surface:"#0c0c0c", card:"#101010", card2:"#141414",
   border:"#1a1a1a", border2:"#222222",
-  text:"#ffffff", muted:"#555555", muted2:"#2e2e2e",
+  text:"#ffffff", muted:"#888888", muted2:"#2e2e2e",
 };
 
-const SPREAD   = 0.04;
-const RATE_TTL = 60;
+const RATES_REFRESH = 30;
 const PAY_TTL  = 1800; // 30 min
 
 const CSS = `
@@ -120,27 +120,85 @@ const CSS = `
 
 // ─── DATA ─────────────────────────────────────────────────
 const COINS = [
-  { id:"USDT", name:"Tether",   icon:"₮", color:"#26A17B", bg:"rgba(38,161,123,0.15)",  rate:1592,     networks:["TRC20","ERC20"] },
-  { id:"BTC",  name:"Bitcoin",  icon:"₿", color:"#F7931A", bg:"rgba(247,147,26,0.15)",  rate:98240000, networks:["Bitcoin"]       },
-  { id:"ETH",  name:"Ethereum", icon:"Ξ", color:"#627EEA", bg:"rgba(98,126,234,0.15)",  rate:3420000,  networks:["ERC20"]         },
-  { id:"USDC", name:"USD Coin", icon:"◎", color:"#0072FF", bg:"rgba(0,114,255,0.15)",   rate:1590,     networks:["ERC20","SOL"]   },
-  { id:"BNB",  name:"BNB",      icon:"⬡", color:"#F3BA2F", bg:"rgba(243,186,47,0.15)",  rate:920000,   networks:["BEP20"]         },
-  { id:"SOL",  name:"Solana",   icon:"◎", color:"#9945FF", bg:"rgba(153,69,255,0.15)",  rate:218400,   networks:["SOL"]           },
+  { id:"USDT", name:"Tether",   icon:"₮", color:"#26A17B", bg:"rgba(38,161,123,0.15)",  networks:["TRC20","ERC20"] },
+  { id:"BTC",  name:"Bitcoin",  icon:"₿", color:"#F7931A", bg:"rgba(247,147,26,0.15)",  networks:["Bitcoin"]       },
+  { id:"ETH",  name:"Ethereum", icon:"Ξ", color:"#627EEA", bg:"rgba(98,126,234,0.15)",  networks:["ERC20"]         },
+  { id:"USDC", name:"USD Coin", icon:"◎", color:"#0072FF", bg:"rgba(0,114,255,0.15)",   networks:["ERC20","SOL"]   },
+  { id:"BNB",  name:"BNB",      icon:"⬡", color:"#F3BA2F", bg:"rgba(243,186,47,0.15)",  networks:["BEP20"]         },
+  { id:"SOL",  name:"Solana",   icon:"◎", color:"#9945FF", bg:"rgba(153,69,255,0.15)",  networks:["SOL"]           },
 ];
 
-const NET_WALLETS = {
-  "TRC20":   "TQn9Y7tgsJgxnBt7K8aVHJp5mEkRdCPLsW",
-  "ERC20":   "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
-  "Bitcoin": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
-  "BEP20":   "bnb1grpf0955h0ykzq3ar5nmum7y6gdfl6lxfn46h2",
-  "SOL":     "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
-};
+function parseRate(r) {
+  return parseFloat(r.user_ngn_usd_rate || r.user_rate || 0);
+}
 
-const BANKS = [
-  { id:"b1", name:"GTBank",    number:"4521", account:"0123454521", type:"Savings" },
-  { id:"b2", name:"Access Bank", number:"8812", account:"0198778812", type:"Current" },
-  { id:"b3", name:"Zenith Bank", number:"2230", account:"2012782230", type:"Savings" },
-];
+function normNet(s) {
+  return (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function normalizeAddressList(addrs) {
+  if (!Array.isArray(addrs)) return [];
+  return addrs.map(a => ({
+    network: a.network || a.chain || a.blockchain || "",
+    address: a.address || a.deposit_address || a.wallet_address || "",
+  })).filter(a => a.network);
+}
+
+function normalizeDepositAddresses(data) {
+  if (!data) return {};
+
+  const payload = data.data ?? data.addresses ?? data.deposit_addresses ?? data;
+
+  if (Array.isArray(payload)) {
+    const out = {};
+    payload.forEach(item => {
+      const asset = (item.asset || item.currency || item.coin || item.symbol || "").toLowerCase();
+      if (!asset) return;
+      if (!out[asset]) out[asset] = [];
+      out[asset].push({
+        network: item.network || item.chain || item.blockchain || "",
+        address: item.address || item.deposit_address || item.wallet_address || "",
+      });
+    });
+    return out;
+  }
+
+  if (typeof payload === "object") {
+    const out = {};
+    Object.entries(payload).forEach(([asset, val]) => {
+      const key = asset.toLowerCase();
+      if (Array.isArray(val)) {
+        out[key] = normalizeAddressList(val);
+      } else if (val && typeof val === "object") {
+        out[key] = Object.entries(val).map(([network, entry]) => ({
+          network,
+          address: typeof entry === "string"
+            ? entry
+            : (entry?.address || entry?.deposit_address || entry?.wallet_address || ""),
+        })).filter(a => a.address);
+      }
+    });
+    return out;
+  }
+
+  return {};
+}
+
+function findDepositEntry(coinId, network, depositAddresses) {
+  const addrs = depositAddresses[coinId?.toLowerCase()] || [];
+  if (!network) return addrs.find(a => a.address) || null;
+  const target = normNet(network);
+  return addrs.find(a => normNet(a.network) === target)
+    || addrs.find(a => normNet(a.network).includes(target) || target.includes(normNet(a.network)))
+    || null;
+}
+
+function buildLiveCoins(liveRates) {
+  return COINS.map(c => ({
+    ...c,
+    rate: liveRates[c.id] || 0,
+  }));
+}
 
 function genTradeId() {
   return "TRD-" + Math.floor(1000 + Math.random()*9000);
@@ -165,12 +223,12 @@ function Copy({ text }) {
 // ─── PROGRESS BAR ─────────────────────────────────────────
 function ProgressBar({ step, hasNetwork }) {
   const visibleSteps = hasNetwork
-    ? ["coin","network","amount","bank","review","send"]
-    : ["coin","amount","bank","review","send"];
+    ? ["coin","network","amount","review","send"]
+    : ["coin","amount","review","send"];
 
   const labels = {
     coin:"Coin", network:"Network", amount:"Amount",
-    bank:"Bank", review:"Review", send:"Send",
+    review:"Review", send:"Send",
   };
 
   const current = visibleSteps.indexOf(step);
@@ -223,9 +281,8 @@ function LeftPanel({ trade }) {
     { label:"Coin",      val: trade.coin   ? `${trade.coin.id} — ${trade.coin.name}` : null      },
     { label:"Network",   val: trade.network ? trade.network                            : null      },
     { label:"You Send",  val: trade.amount  ? `${trade.amount} ${trade.coin?.id}`     : null      },
-    { label:"Rate",      val: trade.coin    ? `₦${(trade.coin.rate*(1-SPREAD)).toLocaleString("en-NG",{maximumFractionDigits:0})}` : null },
+    { label:"Rate",      val: trade.liveRate ? `₦${trade.liveRate.toLocaleString("en-NG",{maximumFractionDigits:0})} / ${trade.coin?.id}` : null },
     { label:"You Receive", val: trade.ngnAmount > 0 ? fmtNGN(trade.ngnAmount)         : null, green:true },
-    { label:"Bank",      val: trade.bank   ? `${trade.bank.name} ••${trade.bank.number}` : null  },
   ];
 
   return (
@@ -291,8 +348,8 @@ function LeftPanel({ trade }) {
       <div className="left-panel-title" style={{ marginTop:24, display:"flex", flexDirection:"column", gap:8 }}>
         {[
           { icon:"⚡", text:"NGN paid within minutes" },
-          { icon:"🔒", text:"Secured wallet generation" },
-          { icon:"💯", text:"Rate locked for 60 seconds" },
+          { icon:"🔒", text:"Secure crypto deposits" },
+          { icon:"💯", text:"Live rates from server" },
         ].map(t=>(
           <div key={t.text} style={{ display:"flex", alignItems:"center", gap:8 }}>
             <span style={{ fontSize:13 }}>{t.icon}</span>
@@ -305,7 +362,7 @@ function LeftPanel({ trade }) {
 }
 
 // ─── STEPS ──────────────────────────────────────────────
-function StepCoin({ selected, onSelect }) {
+function StepCoin({ selected, coins, onSelect, ratesLoading }) {
   return (
     <div className="step-form">
       <div style={{ fontSize:10, color:C.muted, letterSpacing:3, marginBottom:10 }}>STEP 1</div>
@@ -318,8 +375,15 @@ function StepCoin({ selected, onSelect }) {
         Select the cryptocurrency you want to convert to naira.
       </p>
 
+      {ratesLoading && (
+        <div style={{ fontSize:12, color:C.muted, marginBottom:16, display:"flex", alignItems:"center", gap:8 }}>
+          <span style={{ width:8, height:8, borderRadius:"50%", background:C.green, animation:"pulse 2s infinite" }}/>
+          Getting live rates…
+        </div>
+      )}
+
       <div className="coins-grid">
-        {COINS.map(c=>(
+        {(coins||COINS).map(c=>(
           <button key={c.id} className={`coin-card${selected?.id===c.id?" sel":""}`}
             onClick={()=>onSelect(c)}
             style={{ background:C.card, border:`1px solid ${C.border}`,
@@ -344,9 +408,11 @@ function StepCoin({ selected, onSelect }) {
               <div style={{ fontSize:14, fontWeight:600, marginBottom:2 }}>{c.id}</div>
               <div style={{ fontSize:11, color:C.muted }}>{c.name}</div>
             </div>
-            <div style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:C.green }}>
-              ₦{(c.rate*(1-SPREAD)).toLocaleString("en-NG",{maximumFractionDigits:0})}
-            </div>
+            {c.rate > 0 && (
+              <div style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:C.green }}>
+                ₦{c.rate.toLocaleString("en-NG",{maximumFractionDigits:0})}
+              </div>
+            )}
           </button>
         ))}
       </div>
@@ -418,18 +484,20 @@ function StepNetwork({ coin, selected, onSelect }) {
   );
 }
 
-function StepAmount({ coin, network, amount, setAmount, ngnAmount, setNgnAmount }) {
-  const [mode, setMode]     = useState("crypto");
-  const [rateTimer, setRateTimer] = useState(RATE_TTL);
-  const [liveRate, setLiveRate]   = useState(coin.rate*(1-SPREAD));
+function StepAmount({ coin, network, amount, setAmount, ngnAmount, setNgnAmount, onRateUpdate, ratesRefreshIn }) {
+  const [mode, setMode] = useState("crypto");
+  const liveRate = coin.rate || 0;
 
-  useEffect(()=>{
-    const iv=setInterval(()=>setRateTimer(t=>{
-      if(t<=1){ setLiveRate(r=>r*(1+(Math.random()-0.5)*0.002)); return RATE_TTL; }
-      return t-1;
-    }),1000);
-    return ()=>clearInterval(iv);
-  },[]);
+  useEffect(() => {
+    onRateUpdate?.(liveRate);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveRate]);
+
+  useEffect(() => {
+    if (!amount) return;
+    const n = parseFloat(amount);
+    if (!isNaN(n) && n > 0) setNgnAmount(n * liveRate);
+  }, [liveRate]);
 
   const handleCrypto = v => {
     setAmount(v);
@@ -440,11 +508,11 @@ function StepAmount({ coin, network, amount, setAmount, ngnAmount, setNgnAmount 
   const handleNGN = v => {
     setNgnAmount(parseFloat(v)||0);
     const n = parseFloat(v);
-    setAmount(!isNaN(n)&&n>0 ? (n/liveRate).toFixed(8) : "");
+    setAmount(!isNaN(n)&&n>0 && liveRate > 0 ? (n/liveRate).toFixed(8) : "");
   };
 
-  const timerColor = rateTimer>30?C.green:rateTimer>10?C.amber:C.red;
-  const pct = (rateTimer/RATE_TTL)*100;
+  const timerColor = ratesRefreshIn>20?C.green:ratesRefreshIn>10?C.amber:C.red;
+  const pct = (ratesRefreshIn/RATES_REFRESH)*100;
   const minNGN = 5000;
   const tooLow = ngnAmount>0 && ngnAmount<minNGN;
 
@@ -562,13 +630,12 @@ function StepAmount({ coin, network, amount, setAmount, ngnAmount, setNgnAmount 
                 background:timerColor, transition:"width 1s linear, background 0.5s" }} />
             </div>
             <span style={{ fontFamily:"'DM Mono',monospace", fontSize:10,
-              color:timerColor }}>{rateTimer}s</span>
+              color:timerColor }}>{ratesRefreshIn}s</span>
           </div>
         </div>
         {[
-          ["Rate",   `₦${liveRate.toLocaleString("en-NG",{maximumFractionDigits:0})} / ${coin.id}`],
-          ["Spread", "4.00%"],
-          ["Payout", "To your bank account"],
+          ["Rate",   liveRate > 0 ? `₦${liveRate.toLocaleString("en-NG",{maximumFractionDigits:0})} / ${coin.id}` : "Loading..."],
+          ["Payout", "To your NGN wallet"],
         ].map(([k,v])=>(
           <div key={k} style={{ display:"flex", justifyContent:"space-between",
             padding:"5px 0", borderTop:`1px solid ${C.border}` }}>
@@ -581,88 +648,24 @@ function StepAmount({ coin, network, amount, setAmount, ngnAmount, setNgnAmount 
   );
 }
 
-function StepBank({ selected, onSelect }) {
-  return (
-    <div className="step-form">
-      <div style={{ fontSize:10, color:C.muted, letterSpacing:3, marginBottom:10 }}>STEP 4</div>
-      <h2 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:40,
-        letterSpacing:1, lineHeight:1, marginBottom:6 }}>
-        WHERE DO WE<br/>SEND YOUR NAIRA?
-      </h2>
-      <p style={{ color:C.muted, fontSize:14, fontWeight:300,
-        lineHeight:1.6, marginBottom:28 }}>
-        Select the bank account you want to receive your NGN payout.
-      </p>
-
-      <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:20 }}>
-        {BANKS.map(b=>(
-          <button key={b.id} className={`bank-card${selected?.id===b.id?" sel":""}`}
-            onClick={()=>onSelect(b)}
-            style={{ background:C.card, border:`1px solid ${C.border}`,
-              borderRadius:12, padding:"16px 20px", cursor:"pointer",
-              display:"flex", justifyContent:"space-between", alignItems:"center",
-              fontFamily:"'Outfit',sans-serif" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-              <div style={{ width:36, height:36, borderRadius:9, background:"#1a1a1a",
-                border:`1px solid ${C.border}`, display:"flex", alignItems:"center",
-                justifyContent:"center", fontSize:14 }}>🏦</div>
-              <div style={{ textAlign:"left" }}>
-                <div style={{ fontSize:14, fontWeight:600, color:selected?.id===b.id?C.green:"#fff" }}>
-                  {b.name}
-                </div>
-                <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>
-                  ••••{b.number} · {b.type}
-                </div>
-              </div>
-            </div>
-            {selected?.id===b.id
-              ? <div style={{ width:20, height:20, borderRadius:"50%",
-                  background:C.green, display:"flex", alignItems:"center",
-                  justifyContent:"center", animation:"popIn 0.2s ease" }}>
-                  <svg width={10} height={10} viewBox="0 0 10 10" fill="none">
-                    <path d="M1.5 5l2.5 3L8.5 2" stroke="#000" strokeWidth={1.2} strokeLinecap="round"/>
-                  </svg>
-                </div>
-              : <div style={{ width:20, height:20, borderRadius:"50%",
-                  border:`1px solid ${C.border2}` }} />}
-          </button>
-        ))}
-      </div>
-
-      <button className="ghost-btn"
-        style={{ width:"100%", background:"transparent",
-          border:`1px dashed ${C.muted2}`, color:C.muted,
-          fontSize:13, fontWeight:500, padding:"13px",
-          borderRadius:12, cursor:"pointer",
-          fontFamily:"'Outfit',sans-serif",
-          display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
-        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add New Bank Account
-      </button>
-    </div>
-  );
-}
-
 function StepReview({ trade }) {
   const rows = [
     ["Coin",            `${trade.coin.name} (${trade.coin.id})`],
     ["Network",         trade.network || trade.coin.networks[0]],
     ["You Send",        `${trade.amount} ${trade.coin.id}`],
-    ["Exchange Rate",   `₦${(trade.coin.rate*(1-SPREAD)).toLocaleString("en-NG",{maximumFractionDigits:0})} / ${trade.coin.id}`],
-    ["Spread",          "4%"],
+    ["Exchange Rate",   `₦${(trade.liveRate || trade.coin.rate || 0).toLocaleString("en-NG",{maximumFractionDigits:0})} / ${trade.coin.id}`],
     ["You Receive",     `₦${trade.ngnAmount.toLocaleString("en-NG",{maximumFractionDigits:0})}`],
-    ["Bank Account",    `${trade.bank.name} ••${trade.bank.number}`],
   ];
   return (
     <div className="step-form">
-      <div style={{ fontSize:10, color:C.muted, letterSpacing:3, marginBottom:10 }}>STEP 5</div>
+      <div style={{ fontSize:10, color:C.muted, letterSpacing:3, marginBottom:10 }}>STEP {trade.coin?.networks?.length > 1 ? "4" : "3"}</div>
       <h2 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:40,
         letterSpacing:1, lineHeight:1, marginBottom:6 }}>
         REVIEW YOUR<br/>TRADE
       </h2>
       <p style={{ color:C.muted, fontSize:14, fontWeight:300,
         lineHeight:1.6, marginBottom:24 }}>
-        Check everything looks right before generating your wallet address.
+        Check everything looks right before continuing to payment.
       </p>
 
       <div style={{ background:C.card, border:`1px solid ${C.border}`,
@@ -688,17 +691,36 @@ function StepReview({ trade }) {
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
         <span style={{ fontSize:12, color:C.muted, lineHeight:1.6 }}>
-          A wallet address will be generated for this trade. You'll have <span style={{ color:"#ccc" }}>30 minutes</span> to send your {trade.coin.id} after confirming.
+          On the next step we'll load your deposit address for this trade. You'll have <span style={{ color:"#ccc" }}>30 minutes</span> to send your {trade.coin.id} once an address is available. Final payout depends on the live rate when your deposit confirms.
         </span>
       </div>
     </div>
   );
 }
 
-function StepSend({ trade, onPaid }) {
+function StepSend({ trade, onLoadAddress, onPaid }) {
   const [timer, setTimer]   = useState(PAY_TTL);
   const [loading, setLoading] = useState(false);
-  const wallet = NET_WALLETS[trade.network||trade.coin.networks[0]] || NET_WALLETS["ERC20"];
+  const [resolving, setResolving] = useState(true);
+  const [addressError, setAddressError] = useState(null);
+  const net = trade.network || trade.coin.networks[0];
+  const wallet = trade.depositEntry?.address || "";
+
+  useEffect(()=>{
+    let cancelled = false;
+    (async () => {
+      setResolving(true);
+      setAddressError(null);
+      const result = await onLoadAddress?.(trade.coin.id, net);
+      if (cancelled) return;
+      setResolving(false);
+      if (!result?.address) {
+        setAddressError(result?.message || `No deposit address is configured for ${trade.coin.id} on ${net}.`);
+      }
+    })();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(()=>{
     const iv=setInterval(()=>setTimer(t=>Math.max(0,t-1)),1000);
@@ -713,7 +735,6 @@ function StepSend({ trade, onPaid }) {
   const pct  = (timer/PAY_TTL)*100;
   const tcol = timer>600?C.green:timer>120?C.amber:C.red;
   const r    = 20, circ = 2*Math.PI*r;
-  const net  = trade.network||trade.coin.networks[0];
 
   const handlePaid = () => {
     setLoading(true);
@@ -722,7 +743,7 @@ function StepSend({ trade, onPaid }) {
 
   return (
     <div className="step-form">
-      <div style={{ fontSize:10, color:C.muted, letterSpacing:3, marginBottom:10 }}>STEP 6</div>
+      <div style={{ fontSize:10, color:C.muted, letterSpacing:3, marginBottom:10 }}>STEP {trade.coin?.networks?.length > 1 ? "5" : "4"}</div>
       <h2 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:40,
         letterSpacing:1, lineHeight:1, marginBottom:6 }}>
         SEND YOUR<br/><span style={{ color:trade.coin.color }}>{trade.coin.id}</span>
@@ -757,19 +778,42 @@ function StepSend({ trade, onPaid }) {
 
       <div style={{ background:"#0a0a0a", border:`1px solid ${C.border}`,
         borderRadius:12, padding:"14px 16px", marginBottom:14 }}>
-        <div style={{ display:"flex", justifyContent:"space-between",
-          alignItems:"center", marginBottom:8 }}>
-          <span style={{ fontSize:9, color:C.muted, letterSpacing:2 }}>
-            {trade.coin.id} WALLET ADDRESS · {net}
-          </span>
-          <Copy text={wallet}/>
-        </div>
-        <div style={{ fontFamily:"'DM Mono',monospace", fontSize:12,
-          color:C.green, wordBreak:"break-all", lineHeight:1.6 }}>
-          {wallet}
-        </div>
+        {resolving ? (
+          <div style={{ fontSize:12, color:C.muted, display:"flex", alignItems:"center", gap:8 }}>
+            <span style={{ width:8, height:8, borderRadius:"50%", background:C.green, animation:"pulse 2s infinite" }}/>
+            Loading deposit address…
+          </div>
+        ) : wallet ? (
+          <div style={{ display:"flex", gap:12, alignItems:"center" }}>
+            <div style={{ background:"#fff", padding:4, borderRadius:6, flexShrink:0 }}>
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${wallet}`}
+                alt="QR" width={68} height={68} style={{ display:"block" }}/>
+            </div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ display:"flex", justifyContent:"space-between",
+                alignItems:"center", marginBottom:8 }}>
+                <span style={{ fontSize:9, color:C.muted, letterSpacing:2 }}>
+                  {trade.coin.id} DEPOSIT ADDRESS · {net}
+                </span>
+                <Copy text={wallet}/>
+              </div>
+              <div style={{ fontFamily:"'DM Mono',monospace", fontSize:12,
+                color:C.green, wordBreak:"break-all", lineHeight:1.6 }}>
+                {wallet}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display:"flex", gap:8, alignItems:"flex-start",
+            background:"rgba(245,166,35,0.06)", border:"1px solid rgba(245,166,35,0.2)",
+            borderRadius:10, padding:"12px 14px" }}>
+            <span style={{ flexShrink:0, fontSize:13, color:C.amber }}>⚠</span>
+            <span style={{ fontSize:12, color:C.amber, lineHeight:1.6 }}>{addressError}</span>
+          </div>
+        )}
       </div>
 
+      {wallet && (
       <div style={{ display:"flex", gap:8, alignItems:"flex-start",
         background:"rgba(246,70,93,0.05)", border:"1px solid rgba(246,70,93,0.2)",
         borderRadius:10, padding:"11px 14px", marginBottom:14 }}>
@@ -778,6 +822,7 @@ function StepSend({ trade, onPaid }) {
           Only send <strong style={{ color:"#fff" }}>{trade.coin.id}</strong> on the <strong style={{ color:"#fff" }}>{net}</strong> network. Sending the wrong coin or wrong network = permanent loss.
         </span>
       </div>
+      )}
 
       <div style={{ background:C.card, border:`1px solid ${C.border}`,
         borderRadius:12, padding:"14px 16px", marginBottom:16 }}>
@@ -811,7 +856,7 @@ function StepSend({ trade, onPaid }) {
         </div>
       </div>
 
-      <button onClick={handlePaid} disabled={loading||timer===0}
+      <button onClick={handlePaid} disabled={loading||timer===0||!wallet||resolving}
         className="pri-btn"
         style={{ width:"100%", background:timer===0?C.border:C.green,
           color:timer===0?C.muted:"#000", fontWeight:700, fontSize:15,
@@ -835,6 +880,8 @@ function StepSend({ trade, onPaid }) {
 }
 
 function StepDone({ trade }) {
+  const navigate = useNavigate();
+
   return (
     <div className="step-form" style={{ textAlign:"center", padding:"20px 0" }}>
       <div style={{ position:"relative", width:96, height:96, margin:"0 auto 28px" }}>
@@ -871,7 +918,7 @@ function StepDone({ trade }) {
 
       <p style={{ color:C.muted, fontSize:14, lineHeight:1.7,
         maxWidth:360, margin:"0 auto 28px" }}>
-        Your {trade.coin.id} payment has been flagged for review. Once our team confirms the deposit, <span style={{ color:C.green, fontWeight:500 }}>₦{trade.ngnAmount.toLocaleString("en-NG",{maximumFractionDigits:0})}</span> will be sent to your {trade.bank.name} account.
+        Your {trade.coin.id} payment is being processed automatically. Once the network confirms the deposit, <span style={{ color:C.green, fontWeight:500 }}>₦{trade.ngnAmount.toLocaleString("en-NG",{maximumFractionDigits:0})}</span> will be instantly credited to your NGN balance.
       </p>
 
       <div style={{ background:C.card, border:`1px solid ${C.border}`,
@@ -895,7 +942,6 @@ function StepDone({ trade }) {
           ["You Sent",       `${trade.amount} ${trade.coin.id}`],
           ["Network",        trade.network||trade.coin.networks[0]],
           ["Expected Payout",`₦${trade.ngnAmount.toLocaleString("en-NG",{maximumFractionDigits:0})}`],
-          ["Bank",           `${trade.bank.name} ••${trade.bank.number}`],
           ["Est. Time",      "5–15 minutes"],
         ].map(([k,v])=>(
           <div key={k} style={{ display:"flex", justifyContent:"space-between",
@@ -908,13 +954,13 @@ function StepDone({ trade }) {
       </div>
 
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-        <button className="pri-btn"
+        <button onClick={() => navigate("/dashboard/txn")} className="pri-btn"
           style={{ background:C.green, color:"#000", fontWeight:700,
             fontSize:14, padding:"13px", borderRadius:11,
             border:"none", fontFamily:"'Outfit',sans-serif", cursor:"pointer" }}>
           Track Trade
         </button>
-        <button className="ghost-btn"
+        <button onClick={() => navigate("/dashboard")} className="ghost-btn"
           style={{ background:"transparent", color:C.muted,
             fontWeight:500, fontSize:14, padding:"13px", borderRadius:11,
             border:`1px solid ${C.border2}`, fontFamily:"'Outfit',sans-serif",
@@ -928,15 +974,79 @@ function StepDone({ trade }) {
 
 // ─── MAIN ─────────────────────────────────────────────────
 export default function SellCrypto() {
+  const [searchParams] = useSearchParams();
   const [step, setStep] = useState("coin");
   const [trade, setTrade] = useState({
-    coin:null, network:null, amount:"", ngnAmount:0, bank:null, tradeId:null,
+    coin:null, network:null, depositEntry:null, amount:"", ngnAmount:0, liveRate:0, tradeId:null,
   });
+  const [liveRates, setLiveRates] = useState({});
+  const [ratesLoading, setRatesLoading] = useState(true);
+  const [ratesRefreshIn, setRatesRefreshIn] = useState(RATES_REFRESH);
+  const [prefilledCoin, setPrefilledCoin] = useState(false);
 
   useEffect(()=>{
     const s=document.createElement("style"); s.textContent=CSS;
     document.head.appendChild(s); return ()=>document.head.removeChild(s);
   },[]);
+
+  const loadDepositAddress = useCallback(async (coinId, network) => {
+    try {
+      const addrRes = await api.get("/wallets/deposit-addresses");
+      const normalized = normalizeDepositAddresses(addrRes.data);
+      const entry = findDepositEntry(coinId, network, normalized);
+      if (entry?.address) {
+        setTrade(t => ({ ...t, depositEntry: entry }));
+        return { address: entry.address };
+      }
+      return {
+        message: `No deposit address is configured for ${coinId} on ${network} yet. Wallet setup is still in progress — please contact support.`,
+      };
+    } catch (e) {
+      console.error("Failed to fetch deposit address:", e);
+      if (e.response?.status === 401) {
+        return { message: "Your session expired. Please log in again to load your deposit address." };
+      }
+      return { message: "Unable to load deposit address. Please try again or contact support." };
+    }
+  }, []);
+
+  const fetchRates = useCallback(async () => {
+    try {
+      const ratesRes = await api.get("/rates/");
+      const map = {};
+      (Array.isArray(ratesRes.data) ? ratesRes.data : [ratesRes.data]).forEach(r => {
+        if (r?.asset) map[r.asset.toUpperCase()] = parseRate(r);
+      });
+      setLiveRates(map);
+    } catch (e) {
+      console.error("Failed to fetch rates:", e);
+    } finally {
+      setRatesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRates();
+    const iv = setInterval(() => {
+      setRatesRefreshIn(t => {
+        if (t <= 1) {
+          fetchRates();
+          return RATES_REFRESH;
+        }
+        return t - 1;
+      });
+    }, 1000);
+    return () => clearInterval(iv);
+  }, [fetchRates]);
+
+  const liveCoins = useMemo(() => buildLiveCoins(liveRates), [liveRates]);
+
+  useEffect(() => {
+    if (!trade.coin) return;
+    const fresh = liveCoins.find(c => c.id === trade.coin.id);
+    if (!fresh || fresh.rate === trade.coin.rate) return;
+    setTrade(t => ({ ...t, coin: fresh }));
+  }, [liveCoins, trade.coin?.id, trade.coin?.rate]);
 
   const hasNetwork = trade.coin?.networks.length > 1;
 
@@ -944,16 +1054,16 @@ export default function SellCrypto() {
 
   const next = () => {
     const order = hasNetwork
-      ? ["coin","network","amount","bank","review","send","done"]
-      : ["coin","amount","bank","review","send","done"];
+      ? ["coin","network","amount","review","send","done"]
+      : ["coin","amount","review","send","done"];
     const i = order.indexOf(step);
     if(i < order.length-1) setStep(order[i+1]);
   };
 
   const back = () => {
     const order = hasNetwork
-      ? ["coin","network","amount","bank","review","send","done"]
-      : ["coin","amount","bank","review","send","done"];
+      ? ["coin","network","amount","review","send","done"]
+      : ["coin","amount","review","send","done"];
     const i = order.indexOf(step);
     if(i > 0) setStep(order[i-1]);
   };
@@ -961,14 +1071,13 @@ export default function SellCrypto() {
   const canNext = () => {
     if(step==="coin")    return !!trade.coin;
     if(step==="network") return !!trade.network;
-    if(step==="amount")  return !!trade.amount && parseFloat(trade.amount)>0 && trade.ngnAmount>=5000;
-    if(step==="bank")    return !!trade.bank;
+    if(step==="amount")  return !!trade.amount && parseFloat(trade.amount)>0 && trade.ngnAmount>=5000 && trade.liveRate>0;
     if(step==="review")  return true;
     return false;
   };
 
   const nextLabel = () => {
-    if(step==="review") return "Generate Wallet Address →";
+    if(step==="review") return "Continue to Payment →";
     if(step==="send")   return null;
     if(step==="done")   return null;
     return "Continue →";
@@ -976,15 +1085,33 @@ export default function SellCrypto() {
 
   const handleNextClick = () => {
     if(step==="review") {
-      const id = genTradeId();
-      update({ tradeId:id });
+      update({ tradeId: genTradeId(), depositEntry: null });
     }
     next();
   };
 
   const handleCoinSelect = c => {
-    update({ coin:c, network:c.networks.length===1?c.networks[0]:null });
+    update({
+      coin: c,
+      network: c.networks.length === 1 ? c.networks[0] : null,
+      depositEntry: null,
+    });
   };
+
+  useEffect(() => {
+    if (prefilledCoin) return;
+    const coinId = searchParams.get("coin");
+    if (!coinId || !liveCoins.length) return;
+    const match = liveCoins.find(c => c.id.toLowerCase() === coinId.toLowerCase());
+    if (!match) return;
+    setTrade(t => ({
+      ...t,
+      coin: match,
+      network: match.networks.length === 1 ? match.networks[0] : null,
+      depositEntry: null,
+    }));
+    setPrefilledCoin(true);
+  }, [liveCoins, searchParams, prefilledCoin]);
 
   return (
     <div className="sell-crypto-container">
@@ -1047,24 +1174,22 @@ export default function SellCrypto() {
             )}
 
             {step==="coin" && (
-              <StepCoin selected={trade.coin} onSelect={c=>{
-                handleCoinSelect(c);
-              }}/>
+              <StepCoin selected={trade.coin} coins={liveCoins} onSelect={handleCoinSelect}
+                ratesLoading={ratesLoading}/>
             )}
             {step==="network" && (
               <StepNetwork coin={trade.coin} selected={trade.network}
-                onSelect={n=>update({network:n})}/>
+                onSelect={n=>update({ network:n, depositEntry:null })}/>
             )}
             {step==="amount" && (
               <StepAmount coin={trade.coin} network={trade.network}
                 amount={trade.amount} setAmount={v=>update({amount:v})}
-                ngnAmount={trade.ngnAmount} setNgnAmount={v=>update({ngnAmount:v})}/>
-            )}
-            {step==="bank" && (
-              <StepBank selected={trade.bank} onSelect={b=>update({bank:b})}/>
+                ngnAmount={trade.ngnAmount} setNgnAmount={v=>update({ngnAmount:v})}
+                onRateUpdate={r=>update({liveRate:r})}
+                ratesRefreshIn={ratesRefreshIn}/>
             )}
             {step==="review" && <StepReview trade={trade}/>}
-            {step==="send"   && <StepSend trade={trade} onPaid={next}/>}
+            {step==="send"   && <StepSend trade={trade} onLoadAddress={loadDepositAddress} onPaid={next}/>}
             {step==="done"   && <StepDone trade={trade}/>}
 
             {nextLabel() && (

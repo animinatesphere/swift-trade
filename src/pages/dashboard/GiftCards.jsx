@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { useOutletContext, Link } from "react-router-dom";
 
 const C = {
-  green:"#0ECB81", amber:"#F5A623", red:"#F6465D",
-  bg:"#080808", surface:"#0c0c0c", card:"#101010", card2:"#141414",
-  border:"#1a1a1a", border2:"#222222",
-  text:"#ffffff", muted:"#555555", muted2:"#2e2e2e",
+  green: "#0ECB81", amber: "#F5A623", red: "#F6465D", blue: "#3B82F6",
+  bg: "#080808", surface: "#0c0c0c", card: "#101010", card2: "#141414",
+  border: "#1a1a1a", border2: "#222222",
+  text: "#ffffff", muted: "#888888", muted2: "#2e2e2e",
 };
 
 const CSS = `
@@ -317,7 +317,9 @@ function LeftPanel({ trade }) {
         ) : (
           <div style={{ border:`1px dashed ${C.muted2}`, borderRadius:12,
             padding:"24px 16px", textAlign:"center" }}>
-            <div style={{ fontSize:28, marginBottom:8 }}>🎁</div>
+            <div style={{ display:"flex", justifyContent:"center", marginBottom:8 }}>
+              <svg width={28} height={28} viewBox="0 0 24 24" fill="none" stroke={C.muted2} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" rx="1"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+            </div>
             <div style={{ fontSize:12, color:C.muted, lineHeight:1.6 }}>
               Select a gift card to see your payout
             </div>
@@ -327,12 +329,12 @@ function LeftPanel({ trade }) {
 
       <div style={{ marginTop:20, display:"flex", flexDirection:"column", gap:8 }}>
         {[
-          { icon:"⚡", text:"5–15 min payout" },
-          { icon:"📸", text:"Submit card image" },
-          { icon:"💯", text:"Best rates guaranteed" },
+          { icon:<svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke={C.amber} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>, text:"5–15 min payout" },
+          { icon:<svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>, text:"Submit card image" },
+          { icon:<svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>, text:"Best rates guaranteed" },
         ].map(t => (
           <div key={t.text} style={{ display:"flex", alignItems:"center", gap:8 }}>
-            <span style={{ fontSize:12 }}>{t.icon}</span>
+            <span style={{ display:"flex", alignItems:"center" }}>{t.icon}</span>
             <span style={{ fontSize:11, color:C.muted }}>{t.text}</span>
           </div>
         ))}
@@ -607,7 +609,7 @@ function StepUpload({ image, setImage, cardCode, setCardCode }) {
       <div style={{ display:"flex", gap:8, alignItems:"flex-start",
         background:"rgba(245,166,35,0.05)", border:"1px solid rgba(245,166,35,0.12)",
         borderRadius:10, padding:"11px 14px" }}>
-        <span style={{ fontSize:13, flexShrink:0 }}>💡</span>
+        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={C.amber} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0, marginTop:1 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <span style={{ fontSize:12, color:C.muted, lineHeight:1.6 }}>
           Make sure the card code and amount are clearly visible. Scratched-off cards should show the full code. Blurry images may delay verification.
         </span>

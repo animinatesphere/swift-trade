@@ -1,24 +1,17 @@
 export const C = {
-  green:   "#0ECB81",
-  amber:   "#F5A623",
-  red:     "#F6465D",
-  bg:      "#080808",
-  surface: "#0f0f0f",
-  card:    "#111111",
-  border:  "#1a1a1a",
-  border2: "#222222",
-  text:    "#ffffff",
-  muted:   "#666666",
-  muted2:  "#333333",
+  green: "#0ECB81", amber: "#F5A623", red: "#F6465D", blue: "#3B82F6",
+  bg: "#080808", surface: "#0c0c0c", card: "#101010", card2: "#141414",
+  border: "#1a1a1a", border2: "#222222",
+  text: "#ffffff", muted: "#888888", muted2: "#2e2e2e",
 };
 
 export const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
-  body { background: #080808; color: #fff; font-family: 'Outfit', sans-serif; overflow-x: hidden; }
+  body { background:#080808; color:#fff; font-family: 'Outfit', sans-serif; overflow-x: hidden; }
   ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: #080808; }
+  ::-webkit-scrollbar-track { background:#080808; }
   ::-webkit-scrollbar-thumb { background: #222; border-radius: 4px; }
   a { text-decoration: none; }
   button { cursor: pointer; }

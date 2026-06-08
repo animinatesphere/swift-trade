@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
+import api from "../../api/axios";
 
 const C = {
-  green:"#0ECB81", amber:"#F5A623", red:"#F6465D",
-  bg:"#080808", surface:"#0c0c0c", card:"#101010", card2:"#141414",
-  border:"#1a1a1a", border2:"#222222",
-  text:"#ffffff", muted:"#555555", muted2:"#2e2e2e",
+  green: "#0ECB81", amber: "#F5A623", red: "#F6465D", blue: "#3B82F6",
+  bg: "#080808", surface: "#0c0c0c", card: "#101010", card2: "#141414",
+  border: "#1a1a1a", border2: "#222222",
+  text: "#ffffff", muted: "#888888", muted2: "#2e2e2e",
 };
 
 const CSS = `
@@ -93,20 +94,20 @@ const CSS = `
 `;
 
 // ─── DATA ─────────────────────────────────────────────────
-const NGN_BALANCE = 482200;
 const MIN_WITHDRAWAL = 1000;
 const MAX_WITHDRAWAL = 500000;
-
-const BANKS = [
-  { id:"b1", name:"GTBank",     number:"4521", account:"0123454521", type:"Savings",  isDefault:true  },
-  { id:"b2", name:"Access Bank",number:"8812", account:"0198778812", type:"Current",  isDefault:false },
-  { id:"b3", name:"Zenith Bank",number:"2230", account:"2012782230", type:"Savings",  isDefault:false },
-];
 
 const BANK_COLORS = {
   "GTBank":     { color:"#E8460A", bg:"linear-gradient(135deg,#1a0800,#3d1200)" },
   "Access Bank":{ color:"#D91921", bg:"linear-gradient(135deg,#1a0000,#3d0000)" },
   "Zenith Bank":{ color:"#E00000", bg:"linear-gradient(135deg,#1a0000,#2d0000)" },
+  "First Bank": { color:"#005CA8", bg:"linear-gradient(135deg,#000a1a,#001a3d)" },
+  "UBA":        { color:"#E20A16", bg:"linear-gradient(135deg,#1a0000,#3d0005)" },
+  "Fidelity Bank":{ color:"#5DAB00", bg:"linear-gradient(135deg,#0a1a00,#1a3d00)" },
+  "FCMB":       { color:"#009900", bg:"linear-gradient(135deg,#001a00,#003d00)" },
+  "Kuda Bank":  { color:"#4000BF", bg:"linear-gradient(135deg,#0a001a,#1a003d)" },
+  "OPay":       { color:"#00B140", bg:"linear-gradient(135deg,#001a0a,#003d1a)" },
+  "Moniepoint": { color:"#006CFF", bg:"linear-gradient(135deg,#000a1a,#001a3d)" },
 };
 const bankMeta = name => BANK_COLORS[name] || { color:"#888", bg:"linear-gradient(135deg,#111,#1a1a1a)" };
 
@@ -145,9 +146,7 @@ function ProgressBar({ step }) {
 }
 
 // ─── LEFT PANEL ───────────────────────────────────────────
-function LeftPanel({ amount, bank, step }) {
-  const fmtN = n => n > 0 ? "₦"+Number(n).toLocaleString("en-NG",{maximumFractionDigits:0}) : "—";
-  
+function LeftPanel({ amount, bank, step, ngnBalance }) {
   return (
     <div className="left-panel">
       <div className="left-panel-ambient" style={{ position:"absolute", top:-60, left:-60, width:300, height:300,
@@ -168,7 +167,7 @@ function LeftPanel({ amount, bank, step }) {
         </div>
         <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:30,
           color:C.green, letterSpacing:1, lineHeight:1 }}>
-          ₦{NGN_BALANCE.toLocaleString()}
+          ₦{ngnBalance.toLocaleString()}
         </div>
         <div style={{ fontSize:11, color:C.muted, marginTop:4 }}>Swift Trade wallet</div>
       </div>
@@ -201,7 +200,9 @@ function LeftPanel({ amount, bank, step }) {
         ) : (
           <div style={{ border:`1px dashed ${C.muted2}`, borderRadius:12,
             padding:"28px 20px", textAlign:"center" }}>
-            <div style={{ fontSize:28, marginBottom:10 }}>💸</div>
+            <div style={{ display:"flex", justifyContent:"center", marginBottom:10 }}>
+              <svg width={28} height={28} viewBox="0 0 24 24" fill="none" stroke={C.muted2} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            </div>
             <div style={{ fontSize:13, color:C.muted, lineHeight:1.6 }}>
               Enter an amount to start your withdrawal
             </div>
@@ -212,12 +213,12 @@ function LeftPanel({ amount, bank, step }) {
       {/* Info */}
       <div className="left-panel-title" style={{ marginTop:20, display:"flex", flexDirection:"column", gap:8 }}>
         {[
-          { icon:"⚡", text:"Arrives in 5–15 minutes" },
-          { icon:"🏦", text:"All Nigerian banks supported" },
-          { icon:"💯", text:"No withdrawal fees" },
+          { icon:<svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>, text:"Arrives in 5–15 minutes" },
+          { icon:<svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="10" width="18" height="11" rx="2"/><path d="M7 10V7a5 5 0 0110 0v3"/></svg>, text:"All Nigerian banks supported" },
+          { icon:<svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>, text:"No withdrawal fees" },
         ].map(t => (
           <div key={t.text} style={{ display:"flex", alignItems:"center", gap:8 }}>
-            <span style={{ fontSize:13 }}>{t.icon}</span>
+            <span style={{ display:"flex", alignItems:"center" }}>{t.icon}</span>
             <span style={{ fontSize:11, color:C.muted }}>{t.text}</span>
           </div>
         ))}
@@ -227,16 +228,16 @@ function LeftPanel({ amount, bank, step }) {
 }
 
 // ─── STEP 1: AMOUNT ───────────────────────────────────────
-function StepAmount({ amount, setAmount, onNext }) {
+function StepAmount({ amount, setAmount, onNext, ngnBalance }) {
   const QUICK = [5000, 10000, 50000, 100000, 200000];
   const n       = parseFloat(amount) || 0;
   const tooLow  = n > 0 && n < MIN_WITHDRAWAL;
   const tooHigh = n > MAX_WITHDRAWAL;
-  const overBal = n > NGN_BALANCE;
+  const overBal = n > ngnBalance;
   const error   = tooLow  ? `Minimum withdrawal is ₦${MIN_WITHDRAWAL.toLocaleString()}`
                 : tooHigh ? `Maximum withdrawal is ₦${MAX_WITHDRAWAL.toLocaleString()}`
                 : overBal ? "Amount exceeds your available balance" : "";
-  const isValid = n >= MIN_WITHDRAWAL && n <= MAX_WITHDRAWAL && n <= NGN_BALANCE;
+  const isValid = n >= MIN_WITHDRAWAL && n <= MAX_WITHDRAWAL && n <= ngnBalance;
 
   return (
     <div className="step-form">
@@ -248,7 +249,7 @@ function StepAmount({ amount, setAmount, onNext }) {
       <p style={{ color:C.muted, fontSize:14, fontWeight:300,
         lineHeight:1.6, marginBottom:28 }}>
         Available: <span style={{ color:C.green, fontWeight:600 }}>
-          ₦{NGN_BALANCE.toLocaleString()}
+          ₦{ngnBalance.toLocaleString()}
         </span>
       </p>
 
@@ -304,11 +305,11 @@ function StepAmount({ amount, setAmount, onNext }) {
             </button>
           ))}
           <button className="amt-btn"
-            onClick={() => setAmount(String(NGN_BALANCE))}
+            onClick={() => setAmount(String(ngnBalance))}
             style={{ padding:"7px 14px", borderRadius:100,
-              background: parseFloat(amount)===NGN_BALANCE ? "rgba(14,203,129,0.1)" : C.card2,
-              border:`1px solid ${parseFloat(amount)===NGN_BALANCE ? "rgba(14,203,129,0.3)" : C.border2}`,
-              color: parseFloat(amount)===NGN_BALANCE ? C.green : C.muted,
+              background: parseFloat(amount)===ngnBalance ? "rgba(14,203,129,0.1)" : C.card2,
+              border:`1px solid ${parseFloat(amount)===ngnBalance ? "rgba(14,203,129,0.3)" : C.border2}`,
+              color: parseFloat(amount)===ngnBalance ? C.green : C.muted,
               fontSize:12, fontFamily:"'DM Mono',monospace", cursor:"pointer" }}>
             Max
           </button>
@@ -340,7 +341,7 @@ function StepAmount({ amount, setAmount, onNext }) {
 }
 
 // ─── STEP 2: BANK ─────────────────────────────────────────
-function StepBank({ selected, onSelect, onNext }) {
+function StepBank({ selected, onSelect, onNext, banks }) {
   return (
     <div className="step-form">
       <div style={{ fontSize:10, color:C.muted, letterSpacing:3, marginBottom:10 }}>STEP 2</div>
@@ -354,7 +355,11 @@ function StepBank({ selected, onSelect, onNext }) {
       </p>
 
       <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:20 }}>
-        {BANKS.map(b => {
+        {banks.length === 0 ? (
+          <div style={{ padding: "20px", textAlign: "center", color: C.muted, border: `1px dashed ${C.border}`, borderRadius: 12 }}>
+            No bank accounts linked. Please link a bank account in Settings.
+          </div>
+        ) : banks.map(b => {
           const meta = bankMeta(b.name);
           const isSel = selected?.id === b.id;
           return (
@@ -443,7 +448,9 @@ function StepReview({ amount, bank, onConfirm, loading }) {
             ₦{Number(amount).toLocaleString()}
           </div>
         </div>
-        <div style={{ fontSize:36 }}>💸</div>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"center", width:44, height:44, borderRadius:"50%", background:"rgba(14,203,129,0.08)", border:"1px solid rgba(14,203,129,0.15)" }}>
+          <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        </div>
       </div>
 
       {/* Bank preview */}
@@ -581,13 +588,49 @@ function StepDone({ amount, bank, refId, onReset }) {
 export default function Withdraw() {
   const [step, setStep]     = useState("amount");
   const [amount, setAmount] = useState("");
-  const [bank, setBank]     = useState(BANKS.find(b => b.isDefault) || null);
+  const [bank, setBank]     = useState(null);
   const [loading, setLoading] = useState(false);
   const [refId, setRefId]   = useState("");
+  const [ngnBalance, setNgnBalance] = useState(0);
+  const [banks, setBanks] = useState([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [fetchError, setFetchError] = useState("");
 
   useEffect(() => {
     const s = document.createElement("style"); s.textContent = CSS;
     document.head.appendChild(s); return () => document.head.removeChild(s);
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoadingData(true);
+        setFetchError("");
+        const [balRes, banksRes] = await Promise.all([
+          api.get("/wallets/balance"),
+          api.get("/wallets/bank-accounts")
+        ]);
+        setNgnBalance(Number(balRes.data.balance) || 0);
+        const bankData = Array.isArray(banksRes.data) ? banksRes.data : [];
+        const formattedBanks = bankData.map(b => ({
+          id: b.id,
+          name: b.bank_name,
+          number: b.account_number.slice(-4),
+          account: b.account_number,
+          type: "Savings",
+          isDefault: b.is_default
+        }));
+        setBanks(formattedBanks);
+        const defaultBank = formattedBanks.find(b => b.isDefault) || formattedBanks[0] || null;
+        setBank(defaultBank);
+      } catch (err) {
+        console.error("Failed to fetch withdrawal data:", err);
+        setFetchError("Could not load wallet data. Please try again.");
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+    fetchData();
   }, []);
 
   const handleConfirm = () => {
@@ -601,7 +644,7 @@ export default function Withdraw() {
 
   const handleReset = () => {
     setStep("amount"); setAmount(""); setRefId("");
-    setBank(BANKS.find(b => b.isDefault) || null);
+    setBank(banks.find(b => b.isDefault) || banks[0] || null);
   };
 
   const next = () => {
@@ -616,7 +659,22 @@ export default function Withdraw() {
 
   return (
     <div className="withdraw-container">
-      <LeftPanel amount={parseFloat(amount)||0} bank={bank} step={step}/>
+      {isLoadingData ? (
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: C.muted }}>
+          <div style={{ width:24, height:24, borderRadius:"50%", border:"2px solid rgba(14,203,129,0.2)", borderTopColor:C.green, animation:"spin 0.8s linear infinite" }}/>
+        </div>
+      ) : fetchError ? (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, color: C.muted, padding: 32 }}>
+          <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke={C.red} strokeWidth={1.5} strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div style={{ fontSize: 14, textAlign: "center" }}>{fetchError}</div>
+          <button onClick={() => window.location.reload()} className="pri-btn"
+            style={{ background: C.green, color: "#000", fontWeight: 700, fontSize: 13, padding: "10px 24px", borderRadius: 10, border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+            Retry
+          </button>
+        </div>
+      ) : (
+        <>
+      <LeftPanel amount={parseFloat(amount)||0} bank={bank} step={step} ngnBalance={ngnBalance}/>
 
       {/* Right */}
       <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
@@ -656,11 +714,11 @@ export default function Withdraw() {
             {step !== "done" && <ProgressBar step={step}/>}
 
             {step === "amount" && (
-              <StepAmount amount={amount} setAmount={setAmount} onNext={next}/>
+              <StepAmount amount={amount} setAmount={setAmount} onNext={next} ngnBalance={ngnBalance}/>
             )}
 
             {step === "bank" && (
-              <StepBank selected={bank} onSelect={setBank} onNext={next}/>
+              <StepBank selected={bank} onSelect={setBank} onNext={next} banks={banks}/>
             )}
 
             {step === "review" && (
@@ -675,6 +733,8 @@ export default function Withdraw() {
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

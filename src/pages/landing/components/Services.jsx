@@ -4,13 +4,13 @@ import { Link } from "react-router-dom";
 import { Eyebrow } from "./Eyebrow";
 
 const SERVICES = [
-  { icon:"₿", iconClass:"green", title:"Crypto Exchange",
+  { icon:<svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 9h-5M15.5 15h-6M10 6v2M14 6v2M10 16v2M14 16v2M9.5 9h2a2 2 0 0 1 0 4h-2M10 13h2.5a2.5 2.5 0 0 1 0 5H10"/></svg>, iconClass:"green", title:"Crypto Exchange",
     desc:"Buy and sell Bitcoin, USDT, Ethereum, and 15+ other cryptocurrencies at the best market rates with zero hidden fees.",
     link:"Start trading" },
-  { icon:"⇄", iconClass:"amber", title:"Crypto Conversion",
+  { icon:<svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>, iconClass:"amber", title:"Crypto Conversion",
     desc:"Convert any crypto asset directly to Nigerian Naira and receive funds in your bank account within minutes.",
     link:"Convert now" },
-  { icon:"🎁", iconClass:"red", title:"Gift Card Exchange",
+  { icon:<svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" rx="1"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>, iconClass:"red", title:"Gift Card Exchange",
     desc:"Trade Amazon, iTunes, Steam, Google Play and more gift cards for naira. Instant quotes, fast payouts.",
     link:"Sell gift cards" },
 ];
@@ -47,13 +47,14 @@ export function Services() {
                 background:`linear-gradient(90deg,transparent,${C.green},transparent)`,
                 opacity:0, transition:"opacity 0.3s" }} />
               <div style={{ width:52, height:52, borderRadius:14, display:"flex", alignItems:"center",
-                justifyContent:"center", marginBottom:28, fontSize:24,
-                background:ICON_COLORS[s.iconClass].bg, border:`1px solid ${ICON_COLORS[s.iconClass].border}` }}>
+                justifyContent:"center", marginBottom:28,
+                background:ICON_COLORS[s.iconClass].bg, border:`1px solid ${ICON_COLORS[s.iconClass].border}`,
+                color:C[s.iconClass] }}>
                 {s.icon}
               </div>
               <h3 style={{ fontSize:20, fontWeight:600, marginBottom:14, letterSpacing:"-0.2px" }}>{s.title}</h3>
               <p style={{ color:C.muted, fontSize:14, lineHeight:1.7, fontWeight:300, marginBottom:32 }}>{s.desc}</p>
-              <Link to="/login" style={{ display:"inline-flex", alignItems:"center", gap:8,
+              <Link to={s.title === "Gift Card Exchange" ? "/gift-cards" : "/register"} style={{ display:"inline-flex", alignItems:"center", gap:8,
                 color:C.green, fontSize:13, fontWeight:500, letterSpacing:"0.3px", transition:"gap 0.2s", textDecoration:"none" }}>
                 {s.link} <span className="svc-link-arrow" style={{ marginLeft:0, transition:"margin 0.2s" }}>→</span>
               </Link>

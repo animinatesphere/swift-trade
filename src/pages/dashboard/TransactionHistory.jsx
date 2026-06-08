@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
+import api from "../../api/axios";
 
 const C = {
   green:"#0ECB81", amber:"#F5A623", red:"#F6465D", blue:"#3B82F6",
@@ -96,23 +97,12 @@ const CSS = `
   }
 `;
 
-// ─── MOCK DATA ────────────────────────────────────────────
-const ALL_TXN = [
-  { id:"TRD-7841", type:"trade",      date:"2025-12-20 14:23", coin:"USDT", coinIcon:"₮", coinColor:"#26A17B", network:"TRC20",   cryptoAmt:200,    ngnAmt:318400,   bank:"GTBank ••4521",  status:"pending",    ref:"TRD-7841" },
-  { id:"TRD-7840", type:"trade",      date:"2025-12-20 10:32", coin:"USDT", coinIcon:"₮", coinColor:"#26A17B", network:"TRC20",   cryptoAmt:500,    ngnAmt:795000,   bank:"GTBank ••4521",  status:"completed",  ref:"TRD-7840" },
-  { id:"TRD-7835", type:"trade",      date:"2025-12-19 15:14", coin:"BTC",  coinIcon:"₿", coinColor:"#F7931A", network:"Bitcoin", cryptoAmt:0.002,  ngnAmt:196480,   bank:"Access ••8812",  status:"completed",  ref:"TRD-7835" },
-  { id:"TRD-7829", type:"trade",      date:"2025-12-18 09:00", coin:"ETH",  coinIcon:"Ξ", coinColor:"#627EEA", network:"ERC20",   cryptoAmt:0.05,   ngnAmt:171000,   bank:"GTBank ••4521",  status:"completed",  ref:"TRD-7829" },
-  { id:"TRD-7821", type:"trade",      date:"2025-12-17 14:45", coin:"USDT", coinIcon:"₮", coinColor:"#26A17B", network:"ERC20",   cryptoAmt:1000,   ngnAmt:1585000,  bank:"Zenith ••2230",  status:"completed",  ref:"TRD-7821" },
-  { id:"TRD-7814", type:"trade",      date:"2025-12-15 11:00", coin:"BTC",  coinIcon:"₿", coinColor:"#F7931A", network:"Bitcoin", cryptoAmt:0.001,  ngnAmt:97500,    bank:"GTBank ••4521",  status:"completed",  ref:"TRD-7814" },
-  { id:"TRD-7801", type:"trade",      date:"2025-12-10 08:45", coin:"SOL",  coinIcon:"◎", coinColor:"#9945FF", network:"SOL",     cryptoAmt:5,      ngnAmt:1082000,  bank:"Access ••8812",  status:"failed",     ref:"TRD-7801" },
-  { id:"GC-4421",  type:"giftcard",   date:"2025-12-19 18:30", brand:"Amazon",     brandIcon:"🛒", cryptoAmt:"$50",   ngnAmt:68000,   bank:"GTBank ••4521",  status:"completed",  ref:"GC-4421"  },
-  { id:"GC-4418",  type:"giftcard",   date:"2025-12-17 12:00", brand:"iTunes",     brandIcon:"🎵", cryptoAmt:"$25",   ngnAmt:33750,   bank:"GTBank ••4521",  status:"completed",  ref:"GC-4418"  },
-  { id:"GC-4412",  type:"giftcard",   date:"2025-12-14 16:20", brand:"Steam",      brandIcon:"🎮", cryptoAmt:"$100",  ngnAmt:130000,  bank:"Zenith ••2230",  status:"completed",  ref:"GC-4412"  },
-  { id:"GC-4409",  type:"giftcard",   date:"2025-12-12 10:05", brand:"Google Play",brandIcon:"▶",  cryptoAmt:"$50",   ngnAmt:68500,   bank:"GTBank ••4521",  status:"pending",    ref:"GC-4409"  },
-  { id:"WD-1024",  type:"withdrawal", date:"2025-12-19 09:15", ngnAmt:150000, bank:"GTBank ••4521",  status:"completed",  ref:"WD-1024" },
-  { id:"WD-1021",  type:"withdrawal", date:"2025-12-16 14:50", ngnAmt:500000, bank:"Access ••8812",  status:"completed",  ref:"WD-1021" },
-  { id:"WD-1018",  type:"withdrawal", date:"2025-12-11 11:30", ngnAmt:75000,  bank:"GTBank ••4521",  status:"failed",     ref:"WD-1018" },
-];
+// ─── COIN COLOR MAP ───────────────────────────────────────
+const COIN_COLORS = {
+  USDT: "#26A17B", BTC: "#F7931A", ETH: "#627EEA",
+  SOL: "#9945FF", BNB: "#F3BA2F", XRP: "#23292F",
+  LTC: "#345D9D", DOGE: "#C2A633", TRX: "#FF0013",
+};
 
 const TYPE_META = {
   trade:      { label:"Crypto Trade",  color:C.green,  bg:"rgba(14,203,129,0.1)",  icon:<svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg> },
@@ -123,18 +113,22 @@ const TYPE_META = {
 
 const STATUS_META = {
   completed:  { label:"Completed",   color:C.green, bg:"rgba(14,203,129,0.1)"  },
+  success:    { label:"Completed",   color:C.green, bg:"rgba(14,203,129,0.1)"  },
+  converted:  { label:"Completed",   color:C.green, bg:"rgba(14,203,129,0.1)"  },
   pending:    { label:"Pending",     color:C.amber, bg:"rgba(245,166,35,0.1)"  },
   processing: { label:"Processing",  color:C.blue,  bg:"rgba(59,130,246,0.1)"  },
+  confirmed:  { label:"Confirmed",   color:C.blue,  bg:"rgba(59,130,246,0.1)"  },
   failed:     { label:"Failed",      color:C.red,   bg:"rgba(246,70,93,0.1)"   },
+  reversed:   { label:"Reversed",    color:C.red,   bg:"rgba(246,70,93,0.1)"   },
 };
 
 // ─── UTILS ────────────────────────────────────────────────
 function fmtDate(str) {
   const d = new Date(str);
   return d.toLocaleDateString("en-NG",{ day:"numeric", month:"short", year:"numeric" }) +
-    " · " + d.toLocaleTimeString("en-NG",{ hour:"2-digit", minute:"2-digit" });
+    " \u00b7 " + d.toLocaleTimeString("en-NG",{ hour:"2-digit", minute:"2-digit" });
 }
-function fmtNGN(n) { return "₦"+Number(n).toLocaleString("en-NG",{maximumFractionDigits:0}); }
+function fmtNGN(n) { return "\u20a6"+Number(n).toLocaleString("en-NG",{maximumFractionDigits:0}); }
 
 function Copy({ text, small }) {
   const [ok, setOk] = useState(false);
@@ -153,11 +147,12 @@ function Copy({ text, small }) {
 
 // ─── DETAIL PANEL ─────────────────────────────────────────
 function DetailPanel({ txn, onClose }) {
-  const meta   = TYPE_META[txn.type];
-  const status = STATUS_META[txn.status];
+  const meta   = TYPE_META[txn.type] || TYPE_META.trade;
+  const status = STATUS_META[txn.status] || STATUS_META.pending;
   const isTrade= txn.type==="trade";
   const isGC   = txn.type==="giftcard";
   const isWD   = txn.type==="withdrawal";
+  const coinColor = COIN_COLORS[txn.coin] || C.green;
 
   const timeline = [
     { label: isTrade?"Trade submitted":isGC?"Card submitted":"Withdrawal requested",
@@ -167,13 +162,13 @@ function DetailPanel({ txn, onClose }) {
       done:txn.status!=="pending" },
     { label:"Admin confirmed",
       sub:"Swift Trade team verified the transaction",
-      done:txn.status==="completed"||txn.status==="processing" },
+      done:txn.status==="completed"||txn.status==="success"||txn.status==="converted"||txn.status==="processing" },
     { label: isTrade||isGC?"NGN released to your bank":"Transfer sent",
-      sub: `Funds sent to ${txn.bank}`,
-      done:txn.status==="completed" },
+      sub: `Funds sent to ${txn.bank || "your bank"}`,
+      done:txn.status==="completed"||txn.status==="success"||txn.status==="converted" },
   ];
 
-  if(txn.status==="failed") {
+  if(txn.status==="failed"||txn.status==="reversed") {
     timeline.forEach((t,i)=>{ if(i>1) t.done=false; });
     timeline[2] = { label:"Transaction failed", sub:"Contact support with your reference ID", done:true, failed:true };
     timeline.splice(3);
@@ -204,8 +199,8 @@ function DetailPanel({ txn, onClose }) {
               </span>
             </div>
             <div style={{ fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:1,lineHeight:1 }}>
-              {isTrade ? `${txn.cryptoAmt} ${txn.coin} → NGN`
-               : isGC  ? `${txn.brand} ${txn.cryptoAmt} → NGN`
+              {isTrade ? `${txn.cryptoAmt || ""} ${txn.coin || ""} \u2192 NGN`
+               : isGC  ? `${txn.brand || ""} ${txn.cryptoAmt || ""} \u2192 NGN`
                :         `NGN Withdrawal`}
             </div>
             <div style={{ fontFamily:"'DM Mono',monospace",fontSize:11,
@@ -213,7 +208,7 @@ function DetailPanel({ txn, onClose }) {
           </div>
           <button onClick={onClose} className="close-btn"
             style={{ background:"none",border:"none",color:C.muted,
-              fontSize:18,cursor:"pointer",padding:0,lineHeight:1 }}>✕</button>
+              fontSize:18,cursor:"pointer",padding:0,lineHeight:1 }}>{"\u2715"}</button>
         </div>
 
         <div style={{ padding:"20px", flex:1 }}>
@@ -239,8 +234,8 @@ function DetailPanel({ txn, onClose }) {
                   alignItems:"center",padding:"13px 16px",borderBottom:`1px solid ${C.border}` }}>
                   <span style={{ fontSize:12,color:C.muted }}>You sent</span>
                   <div style={{ display:"flex",alignItems:"center",gap:6 }}>
-                    <span style={{ fontSize:10,color:txn.coinColor,letterSpacing:1 }}>{txn.network}</span>
-                    <span style={{ fontFamily:"'DM Mono',monospace",fontSize:14,color:txn.coinColor,fontWeight:500 }}>
+                    <span style={{ fontSize:10,color:coinColor,letterSpacing:1 }}>{txn.network}</span>
+                    <span style={{ fontFamily:"'DM Mono',monospace",fontSize:14,color:coinColor,fontWeight:500 }}>
                       {txn.cryptoAmt} {txn.coin}
                     </span>
                   </div>
@@ -259,7 +254,7 @@ function DetailPanel({ txn, onClose }) {
                   alignItems:"center",padding:"13px 16px",borderBottom:`1px solid ${C.border}` }}>
                   <span style={{ fontSize:12,color:C.muted }}>Gift card</span>
                   <span style={{ fontSize:14,fontWeight:500 }}>
-                    {txn.brandIcon} {txn.brand} {txn.cryptoAmt}
+                    {txn.brand} {txn.cryptoAmt}
                   </span>
                 </div>
                 <div style={{ display:"flex",justifyContent:"space-between",
@@ -285,7 +280,7 @@ function DetailPanel({ txn, onClose }) {
             {[
               ["Reference", txn.ref, true],
               ["Date", fmtDate(txn.date), false],
-              ["Bank Account", txn.bank, false],
+              ["Bank Account", txn.bank || "N/A", false],
             ].map(([k,v,copy])=>(
               <div key={k} style={{ display:"flex",justifyContent:"space-between",
                 alignItems:"center",padding:"12px 16px",
@@ -331,12 +326,12 @@ function DetailPanel({ txn, onClose }) {
             </div>
           </div>
 
-          {txn.status==="failed" && (
+          {(txn.status==="failed"||txn.status==="reversed") && (
             <div style={{ background:"rgba(246,70,93,0.05)",
               border:"1px solid rgba(246,70,93,0.2)",
               borderRadius:10,padding:"12px 14px",
               display:"flex",gap:8,alignItems:"flex-start" }}>
-              <span style={{ fontSize:13,flexShrink:0 }}>⚠</span>
+              <span style={{ fontSize:13,flexShrink:0 }}>{"\u26a0"}</span>
               <span style={{ fontSize:12,color:"#e88",lineHeight:1.6 }}>
                 This transaction failed. Contact support with reference <span style={{ color:"#fff",fontFamily:"'DM Mono',monospace" }}>{txn.ref}</span> for assistance.
               </span>
@@ -355,43 +350,83 @@ export default function TransactionHistory() {
   const [sortDir, setSortDir]     = useState(-1);
   const { setIsMobileOpen }       = useOutletContext() || {};
 
+  const [transactions, setTransactions] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
   useEffect(()=>{
     const s=document.createElement("style"); s.textContent=CSS;
     document.head.appendChild(s); return ()=>document.head.removeChild(s);
   },[]);
 
-  const completedTrades = ALL_TXN.filter(t=>t.type==="trade"&&t.status==="completed");
-  const completedGC     = ALL_TXN.filter(t=>t.type==="giftcard"&&t.status==="completed");
-  const completedWD     = ALL_TXN.filter(t=>t.type==="withdrawal"&&t.status==="completed");
-  const totalIn  = [...completedTrades,...completedGC].reduce((s,t)=>s+t.ngnAmt,0);
-  const totalOut = completedWD.reduce((s,t)=>s+t.ngnAmt,0);
-  const pending  = ALL_TXN.filter(t=>t.status==="pending").length;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [txRes, statRes] = await Promise.all([
+          api.get("/transactions/"),
+          api.get("/transactions/stats")
+        ]);
 
-  const filtered = ALL_TXN
+        // The paginated response wraps items in { items: [...], count: N }
+        const rawItems = txRes.data?.items || txRes.data || [];
+        const items = Array.isArray(rawItems) ? rawItems : [];
+
+        // Map backend schema to frontend expectations
+        const mapped = items.map(t => ({
+          id: t.id,
+          type: t.type,
+          date: t.created_at,
+          ref: t.ref || t.reference || String(t.id),
+          ngnAmt: Number(t.amount) || 0,
+          status: (t.status || "pending").toLowerCase(),
+          bank: t.bank || null,
+          coin: t.coin || null,
+          network: t.network || null,
+          cryptoAmt: t.crypto_amount ? Number(t.crypto_amount) : null,
+          description: t.description || "",
+        }));
+
+        setTransactions(mapped);
+        setStats(statRes.data);
+      } catch (err) {
+        console.error("Failed to load transactions", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const totalIn  = stats ? Number(stats.total_deposit_amount) || 0 : 0;
+  const totalOut = stats ? Number(stats.total_withdrawal_amount) || 0 : 0;
+  const totalCount = stats ? (Number(stats.deposit_count) + Number(stats.withdrawal_count)) : transactions.length;
+  const pending  = transactions.filter(t => t.status==="pending").length;
+
+  const filtered = transactions
     .filter(t => activeFilter==="all" || t.type===activeFilter)
     .filter(t => {
       if(!search) return true;
       const q=search.toLowerCase();
-      return t.id.toLowerCase().includes(q)
+      return String(t.id).toLowerCase().includes(q)
         || t.type.toLowerCase().includes(q)
         || (t.coin||"").toLowerCase().includes(q)
-        || (t.brand||"").toLowerCase().includes(q)
+        || (t.ref||"").toLowerCase().includes(q)
         || (t.bank||"").toLowerCase().includes(q);
     })
     .sort((a,b)=> sortDir * (new Date(b.date)-new Date(a.date)));
 
   const FILTERS = [
-    { id:"all",        label:"All",         count:ALL_TXN.length },
-    { id:"trade",      label:"Trades",      count:ALL_TXN.filter(t=>t.type==="trade").length },
-    { id:"giftcard",   label:"Gift Cards",  count:ALL_TXN.filter(t=>t.type==="giftcard").length },
-    { id:"withdrawal", label:"Withdrawals", count:ALL_TXN.filter(t=>t.type==="withdrawal").length },
+    { id:"all",        label:"All",         count:transactions.length },
+    { id:"trade",      label:"Trades",      count:transactions.filter(t=>t.type==="trade").length },
+    { id:"withdrawal", label:"Withdrawals", count:transactions.filter(t=>t.type==="withdrawal").length },
   ];
 
   const STATS = [
-    { label:"Total Received",  val:fmtNGN(totalIn),  sub:"From trades & gift cards", col:C.green,  icon:"💹", delay:"0s"    },
-    { label:"Total Withdrawn", val:fmtNGN(totalOut), sub:"To bank accounts",         col:C.red,    icon:"🏦", delay:"0.07s" },
-    { label:"Transactions",    val:String(ALL_TXN.length), sub:"All time",           col:"#ccc",   icon:"🔄", delay:"0.14s" },
-    { label:"Pending",         val:String(pending),  sub:"Awaiting confirmation",    col:C.amber,  icon:"⏳", delay:"0.21s" },
+    { label:"Total Received",  val:fmtNGN(totalIn),  sub:"From crypto trades",     col:C.green,  icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>, delay:"0s"    },
+    { label:"Total Withdrawn", val:fmtNGN(totalOut), sub:"To bank accounts",       col:C.red,    icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3 7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><path d="M8 14v3"/><path d="M12 14v3"/><path d="M16 14v3"/></svg>, delay:"0.07s" },
+    { label:"Transactions",    val:String(totalCount), sub:"All time",             col:"#ccc",   icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.2v-2a4 4 0 0 1 4-4h12.8M7 21.9l-4-4 4-4"/><path d="M21 11.8v2a4 4 0 0 1-4 4H4.2"/></svg>, delay:"0.14s" },
+    { label:"Pending",         val:String(pending),  sub:"Awaiting confirmation",  col:C.amber,  icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, delay:"0.21s" },
   ];
 
   return (
@@ -406,7 +441,7 @@ export default function TransactionHistory() {
           <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:20,
             letterSpacing:1, lineHeight:1 }}>Transaction History</div>
           <div style={{ fontSize:11, color:C.muted, marginTop:1 }}>
-            All trades, gift card exchanges and withdrawals
+            All trades and withdrawals
           </div>
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
@@ -498,21 +533,27 @@ export default function TransactionHistory() {
                   {h}
                   {h==="Date" && (
                     <span style={{ fontSize:8,color:C.muted2 }}>
-                      {sortDir===-1?"↓":"↑"}
+                      {sortDir===-1?"\u2193":"\u2191"}
                     </span>
                   )}
                 </div>
               ))}
             </div>
 
-            {filtered.length===0 ? (
+            {loading ? (
               <div style={{ textAlign:"center", padding:"56px 0" }}>
-                <div style={{ fontSize:28, marginBottom:10 }}>🔍</div>
-                <div style={{ fontSize:14, color:C.muted }}>No transactions match your search</div>
+                <div style={{ fontSize:14, color:C.muted }}>Loading transactions...</div>
+              </div>
+            ) : filtered.length===0 ? (
+              <div style={{ textAlign:"center", padding:"56px 0" }}>
+                <div style={{ display:"flex", justifyContent:"center", marginBottom:12, color:C.muted2 }}>
+                  <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </div>
+                <div style={{ fontSize:14, color:C.muted }}>No transactions found</div>
               </div>
             ) : filtered.map((t,i)=>{
-              const meta   = TYPE_META[t.type];
-              const status = STATUS_META[t.status];
+              const meta   = TYPE_META[t.type] || TYPE_META.trade;
+              const status = STATUS_META[t.status] || STATUS_META.pending;
               const isSel  = selected?.id===t.id;
               return (
                 <div key={t.id}
@@ -533,8 +574,7 @@ export default function TransactionHistory() {
                       color:meta.color }}>{meta.icon}</div>
                     <div>
                       <div style={{ fontSize:13,fontWeight:500 }}>
-                        {t.type==="trade"    ? `${t.coin} → NGN`
-                         :t.type==="giftcard"? `${t.brand} Gift Card`
+                        {t.type==="trade"    ? `${t.coin || "Crypto"} \u2192 NGN`
                          :                     "Bank Withdrawal"}
                       </div>
                       <div style={{ fontFamily:"'DM Mono',monospace",
@@ -553,14 +593,9 @@ export default function TransactionHistory() {
                       color:t.type==="withdrawal"?C.red:C.green,fontWeight:500 }}>
                       {t.type==="withdrawal"?"-":""}{fmtNGN(t.ngnAmt)}
                     </div>
-                    {t.type==="trade" && (
+                    {t.type==="trade" && t.cryptoAmt && (
                       <div style={{ fontSize:10,color:C.muted }}>
                         {t.cryptoAmt} {t.coin}
-                      </div>
-                    )}
-                    {t.type==="giftcard" && (
-                      <div style={{ fontSize:10,color:C.muted }}>
-                        {t.cryptoAmt} card
                       </div>
                     )}
                   </div>
@@ -594,10 +629,10 @@ export default function TransactionHistory() {
             display:"flex", justifyContent:"space-between",
             alignItems:"center" }}>
             <span style={{ fontSize:11,color:C.muted }}>
-              Showing {filtered.length} of {ALL_TXN.length} transactions
+              Showing {filtered.length} of {transactions.length} transactions
             </span>
             <span style={{ fontSize:11,color:C.green,cursor:"pointer" }}>
-              Export CSV →
+              Export CSV {"\u2192"}
             </span>
           </div>
         </div>

@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 
 const C = {
-  green:"#0ECB81", amber:"#F5A623", red:"#F6465D",
-  bg:"#080808", surface:"#0c0c0c", card:"#101010", card2:"#141414",
-  border:"#1a1a1a", border2:"#222222",
-  text:"#ffffff", muted:"#555555", muted2:"#2e2e2e",
+  green: "#0ECB81", amber: "#F5A623", red: "#F6465D", blue: "#3B82F6",
+  bg: "#080808", surface: "#0c0c0c", card: "#101010", card2: "#141414",
+  border: "#1a1a1a", border2: "#222222",
+  text: "#ffffff", muted: "#888888", muted2: "#2e2e2e",
 };
 
 const CSS = `
@@ -156,9 +156,9 @@ export default function Support() {
     .filter(f => !search || f.q.toLowerCase().includes(search.toLowerCase()) || f.a.toLowerCase().includes(search.toLowerCase()));
 
   const CHANNELS = [
-    { icon:"💬", label:"WhatsApp", sub:"Fastest response", action:"Chat with us", color:C.green, href:"#" },
-    { icon:"✉️", label:"Email", sub:"Reply within 2hrs", action:"Send an email", color:"#aaa", href:"#" },
-    { icon:"𝕏", label:"Twitter/X", sub:"Public & DMs", action:"Tweet at us", color:"#aaa", href:"#" },
+    { icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>, label:"WhatsApp", sub:"Fastest response", action:"Chat with us", color:C.green, href:"#" },
+    { icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>, label:"Email", sub:"Reply within 2hrs", action:"Send an email", color:"#aaa", href:"#" },
+    { icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M4 4l16 16M4 20L20 4"/><circle cx="12" cy="12" r="10"/></svg>, label:"Twitter/X", sub:"Public & DMs", action:"Tweet at us", color:"#aaa", href:"#" },
   ];
 
   return (
@@ -182,7 +182,7 @@ export default function Support() {
           <div className="channels-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:28, animation:"fadeUp 0.4s ease" }}>
             {CHANNELS.map(ch => (
               <a key={ch.label} href={ch.href} className="channel-card" style={{ background:C.card, border: `1px solid ${C.border}`, borderRadius:12, padding:"16px 18px", display:"flex", alignItems:"center", gap:14, textDecoration:"none", cursor:"pointer" }}>
-                <span style={{ fontSize:24, flexShrink:0 }}>{ch.icon}</span>
+                <span style={{ flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>{ch.icon}</span>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontSize:14, fontWeight:600, color:"#ddd", marginBottom:2 }}>{ch.label}</div>
                   <div style={{ fontSize:11, color:C.muted }}>{ch.sub}</div>
@@ -217,7 +217,9 @@ export default function Support() {
               <div style={{ background:C.card, border: `1px solid ${C.border}`, borderRadius:14, overflow:"hidden" }}>
                 {filtered.length === 0 ? (
                   <div style={{ padding:"48px 20px", textAlign:"center" }}>
-                    <div style={{ fontSize:28, marginBottom:10 }}>🤔</div>
+                    <div style={{ display:"flex", justifyContent:"center", marginBottom:10 }}>
+                      <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                    </div>
                     <div style={{ fontSize:14, color:C.muted }}>No questions match your search</div>
                   </div>
                 ) : filtered.map((f, i) => (

@@ -8,7 +8,7 @@ export const colors = {
   border:  "#1a1a1a",
   border2: "#222222",
   text:    "#ffffff",
-  muted:   "#666666",
+  muted:   "#888888",
   muted2:  "#333333",
 };
 

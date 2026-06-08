@@ -6,18 +6,18 @@ import lifestyleGiftcard from "../assets/lifestyle_giftcard.png";
 
 // ─── TOKENS ──────────────────────────────────────────────
 const C = {
-  green: "#0ECB81", amber: "#F5A623", red: "#F6465D",
-  bg: "#080808", surface: "#0f0f0f", card: "#111111",
+  green: "#0ECB81", amber: "#F5A623", red: "#F6465D", blue: "#3B82F6",
+  bg: "#080808", surface: "#0c0c0c", card: "#101010", card2: "#141414",
   border: "#1a1a1a", border2: "#222222",
-  text: "#ffffff", muted: "#666666", muted2: "#333333",
+  text: "#ffffff", muted: "#888888", muted2: "#2e2e2e",
 };
 
 const GLOBAL_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #080808; color: #fff; font-family: 'Outfit', sans-serif; overflow-x: hidden; }
+  body { background:#080808; color:#fff; font-family: 'Outfit', sans-serif; overflow-x: hidden; }
   ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: #080808; }
+  ::-webkit-scrollbar-track { background:#080808; }
   ::-webkit-scrollbar-thumb { background: #222; border-radius: 4px; }
   a { text-decoration: none; color: inherit; }
   button { cursor: pointer; font-family: 'Outfit', sans-serif; }
@@ -550,7 +550,7 @@ export default function GiftCardsPage() {
         fontSize: 14,
         color: C.muted
       }}>
-        <span style={{ fontSize: 18 }}>💡</span>
+        <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
         <span>
           Note: To securely trade or purchase gift cards, you are required to <Link to="/login" style={{ color: C.green, fontWeight: 600, textDecoration: "underline" }}>sign in</Link> to your Swift Trade account. The trading flow below is for demonstration purposes.
         </span>
@@ -577,7 +577,9 @@ export default function GiftCardsPage() {
 
         <div style={{ position:"relative" }}>
           <span style={{ position:"absolute", left:14, top:"50%", transform:"translateY(-50%)",
-            color:C.muted, fontSize:14 }}>🔍</span>
+            color:C.muted, display:"flex" }}>
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </span>
           <input className="search-input" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search cards..."
             style={{
@@ -592,7 +594,9 @@ export default function GiftCardsPage() {
       <div className="section-padding" style={{ padding:"48px 64px" }}>
         {filtered.length === 0 ? (
           <div style={{ textAlign:"center", padding:"80px 0", color:C.muted }}>
-            <div style={{ fontSize:48, marginBottom:16 }}>🃏</div>
+            <div style={{ display:"flex", justifyContent:"center", marginBottom:16 }}>
+              <svg width={48} height={48} viewBox="0 0 24 24" fill="none" stroke={C.muted2} strokeWidth={1} strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" rx="1"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+            </div>
             <div style={{ fontSize:16 }}>No gift cards found</div>
           </div>
         ) : (
@@ -645,9 +649,9 @@ export default function GiftCardsPage() {
             </div>
             <div style={{ display:"flex", flexDirection: "column", gap:16 }}>
               {[
-                { n:"01", icon:"🎴", title:"Pick Your Card", desc:"Choose the brand and denomination of your gift card from our supported list." },
-                { n:"02", icon:"🔑", title:"Enter the Code",  desc:"Type in your gift card code. You can also upload a photo of the card for faster verification." },
-                { n:"03", icon:"💸", title:"Receive Naira",   desc:"Once verified, your NGN equivalent lands in your Swift Trade wallet within minutes." },
+                { n:"01", icon:<svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>, title:"Pick Your Card", desc:"Choose the brand and denomination of your gift card from our supported list." },
+                { n:"02", icon:<svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>, title:"Enter the Code",  desc:"Type in your gift card code. You can also upload a photo of the card for faster verification." },
+                { n:"03", icon:<svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>, title:"Receive Naira",   desc:"Once verified, your NGN equivalent lands in your Swift Trade wallet within minutes." },
               ].map((s, i) => (
                 <FadeIn key={s.n} delay={i * 0.1}>
                   <div className="step-card" style={{

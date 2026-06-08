@@ -26,3 +26,32 @@ body {
   background: var(--bg);
   overflow-x: hidden;
 }
+
+/* ── Global interactive cursor ─────────────────────────── */
+button,
+a,
+[role="button"],
+[role="tab"],
+[role="menuitem"],
+select,
+label[for],
+summary {
+  cursor: pointer;
+}
+
+button:disabled,
+input:disabled,
+[disabled] {
+  cursor: not-allowed !important;
+}
+
+input,
+textarea {
+  cursor: text;
+}
+
+/* Ensure SVG inside buttons doesn't block pointer events */
+button svg,
+a svg {
+  pointer-events: none;
+}

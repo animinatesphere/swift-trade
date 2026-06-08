@@ -474,7 +474,7 @@ export default function LandingPage() {
             Join 50,000+ Nigerians already using Swift Trade for crypto exchange and gift cards.
           </p>
           <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 16, justifyContent: "center" }}>
-            <Link to="/signup" className="btn" style={{ 
+            <Link to="/register" className="btn" style={{ 
               background: colors.green, color: "#000", border: "none", padding: "16px 32px", 
               borderRadius: radius.lg, fontWeight: 600, textDecoration: "none", display: "inline-block"
             }}>Create Free Account</Link>

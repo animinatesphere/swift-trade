@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
+import api from "../api/axios";
 
 const C = {
-  green: "#0ECB81", amber: "#F5A623", red: "#F6465D",
-  bg: "#080808", surface: "#0f0f0f", card: "#111111",
+  green: "#0ECB81", amber: "#F5A623", red: "#F6465D", blue: "#3B82F6",
+  bg: "#080808", surface: "#0c0c0c", card: "#101010", card2: "#141414",
   border: "#1a1a1a", border2: "#222222",
-  text: "#ffffff", muted: "#555555", muted2: "#333333",
+  text: "#ffffff", muted: "#888888", muted2: "#2e2e2e",
 };
 
 const DEMO_OTP = "482916";
@@ -21,7 +22,7 @@ const CSS = `
   input:-webkit-autofill, input:-webkit-autofill:focus {
     -webkit-box-shadow: 0 0 0 1000px #111 inset !important;
     -webkit-text-fill-color: #fff !important;
-    caret-color: #fff;
+    caret-color:#fff;
   }
 
   @keyframes fadeUp    { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
@@ -270,11 +271,18 @@ function StepEmail({ onNext }) {
 
   const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const submit = () => {
+  const submit = async () => {
     if (!email.trim()) return setError("Please enter your email address");
     if (!isValid)      return setError("Enter a valid email address");
     setLoading(true);
-    setTimeout(() => { setLoading(false); onNext(email); }, 1200);
+    try {
+      await api.post('/auth/forget-password', { email });
+      setLoading(false);
+      onNext(email);
+    } catch (err) {
+      setLoading(false);
+      setError(err.response?.data?.message || err.response?.data?.detail || "Something went wrong.");
+    }
   };
 
   return (
@@ -309,7 +317,6 @@ function StepEmail({ onNext }) {
         )}
       />
 
-      {/* Info note */}
       <div style={{ display:"flex", gap:10, alignItems:"flex-start",
         background:"rgba(14,203,129,0.04)", border:"1px solid rgba(14,203,129,0.12)",
         borderRadius:11, padding:"12px 14px", marginBottom:22 }}>
@@ -400,27 +407,21 @@ function StepOTP({ email, onNext, onBack }) {
   const submit = useCallback(() => {
     const code = digits.join("");
     if (code.length < 6) return;
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      if (code === DEMO_OTP) {
-        onNext(code);
-      } else {
-        setBadCode(true);
-        setAttempts(a => a+1);
-        setTimeout(() => {
-          setBadCode(false);
-          setDigits(["","","","","",""]);
-          refs.current[0]?.focus();
-        }, 900);
-      }
-    }, 1200);
+    onNext(code);
   }, [digits, onNext]);
 
-  const resend = () => {
-    setTimer(OTP_DURATION); setCanResend(false);
-    setDigits(["","","","","",""]); setBadCode(false);
-    refs.current[0]?.focus();
+  const resend = async () => {
+    setLoading(true);
+    try {
+      await api.post('/auth/resend-reset-token', { email });
+      setTimer(OTP_DURATION); setCanResend(false);
+      setDigits(["","","","","",""]); setBadCode(false);
+      refs.current[0]?.focus();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const complete = digits.every(d => d !== "");
@@ -444,7 +445,6 @@ function StepOTP({ email, onNext, onBack }) {
         </p>
       </div>
 
-      {/* OTP Boxes */}
       <div style={{ marginBottom:10 }}>
         <label style={{ display:"block", fontSize:11, color:C.muted,
           letterSpacing:2, marginBottom:12 }}>VERIFICATION CODE</label>
@@ -477,7 +477,6 @@ function StepOTP({ email, onNext, onBack }) {
         </div>
       </div>
 
-      {/* Error / expired messages */}
       <div style={{ height:20, marginBottom:14 }}>
         {badCode && (
           <div style={{ fontSize:12, color:C.red, display:"flex", alignItems:"center", gap:5, animation:"fadeIn 0.2s ease" }}>
@@ -486,13 +485,13 @@ function StepOTP({ email, onNext, onBack }) {
           </div>
         )}
         {!badCode && timer === 0 && (
-          <div style={{ fontSize:12, color:C.amber, display:"flex", alignItems:"center", gap:5 }}>
-            <span>⚠</span> Code expired — request a new one below.
+          <div style={{ color:C.amber, fontSize:13, background:"rgba(245,166,35,0.06)", border:"1px solid rgba(245,166,35,0.2)", padding:"12px", borderRadius:8, marginBottom:20, display:"flex", alignItems:"flex-start", gap:8 }}>
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={C.amber} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0, marginTop:1 }}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span>Code expired — request a new one below.</span>
           </div>
         )}
       </div>
 
-      {/* Timer row */}
       <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:22,
         background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:"14px 16px" }}>
         <Ring s={timer} total={OTP_DURATION} />
@@ -516,7 +515,6 @@ function StepOTP({ email, onNext, onBack }) {
         </button>
       </div>
 
-      {/* Progress bar */}
       <div style={{ height:2, background:C.border, borderRadius:1,
         marginBottom:22, overflow:"hidden" }}>
         <div style={{ height:"100%", borderRadius:1,
@@ -531,16 +529,12 @@ function StepOTP({ email, onNext, onBack }) {
         Verify Code →
       </Btn>
 
-      {/* Demo hint */}
       <div style={{ marginTop:18, textAlign:"center", padding:"10px 14px",
         background:"rgba(245,166,35,0.05)", border:"1px solid rgba(245,166,35,0.12)",
         borderRadius:10 }}>
-        <span style={{ fontSize:11, color:C.amber, letterSpacing:1, marginRight:8 }}>DEMO</span>
+        <span style={{ fontSize:11, color:C.amber, letterSpacing:1, marginRight:8 }}>INFO</span>
         <span style={{ fontSize:12, color:C.muted }}>
-          Use code{" "}
-          <span style={{ fontFamily:"'DM Mono',monospace", color:C.amber, letterSpacing:2 }}>
-            {DEMO_OTP}
-          </span>
+          Check your email inbox or spam folder for the code.
         </span>
       </div>
     </div>
@@ -550,7 +544,7 @@ function StepOTP({ email, onNext, onBack }) {
 // ══════════════════════════════════════════════════════════
 // STEP 3 — NEW PASSWORD
 // ══════════════════════════════════════════════════════════
-function StepPassword({ onNext, onBack }) {
+function StepPassword({ email, token, onNext, onBack }) {
   const [pw, setPw]           = useState("");
   const [cpw, setCpw]         = useState("");
   const [showPw, setShowPw]   = useState(false);
@@ -569,11 +563,23 @@ function StepPassword({ onNext, onBack }) {
     return e;
   };
 
-  const submit = () => {
+  const submit = async () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
     setLoading(true);
-    setTimeout(() => { setLoading(false); onNext(); }, 1400);
+    try {
+      await api.post('/auth/reset-password', {
+        email,
+        token,
+        new_password: pw,
+        confirm_password: cpw
+      });
+      setLoading(false);
+      onNext();
+    } catch (err) {
+      setLoading(false);
+      setErrors({ ...errors, api: err.response?.data?.message || err.response?.data?.detail || "Invalid token or error resetting password." });
+    }
   };
 
   return (
@@ -627,8 +633,8 @@ function StepPassword({ onNext, onBack }) {
           </div>
         }
       />
+      {errors.api && <div style={{ fontSize:12, color:C.red, marginBottom:16, textAlign:"center" }}>⚠ {errors.api}</div>}
 
-      {/* Password rules */}
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6, marginBottom:22 }}>
         {[
           { label:"8+ characters",    ok:pw.length >= 8 },
@@ -673,7 +679,6 @@ function StepPassword({ onNext, onBack }) {
 function StepSuccess() {
   return (
     <div style={{ textAlign:"center", padding:"20px 0", animation:"slideIn 0.4s ease" }}>
-      {/* Ring */}
       <div style={{ position:"relative", width:100, height:100, margin:"0 auto 28px" }}>
         <div style={{ position:"absolute", inset:-6, borderRadius:"50%",
           border:`2px solid rgba(14,203,129,0.35)`, animation:"ripple 1s ease-out" }} />
@@ -749,14 +754,12 @@ function LeftPanel({ step }) {
       position:"sticky", top:0, height:"100vh",
       overflow:"hidden", padding:"48px", }}>
 
-      {/* Orbs */}
       <div style={{ position:"absolute", top:-80, left:-80, width:400, height:400,
         borderRadius:"50%", background:`radial-gradient(circle,rgba(14,203,129,0.09),transparent 60%)`,
         filter:"blur(70px)", pointerEvents:"none", animation:"orb 9s ease-in-out infinite" }} />
       <div style={{ position:"absolute", bottom:-60, right:-60, width:320, height:320,
         borderRadius:"50%", background:`radial-gradient(circle,rgba(245,166,35,0.07),transparent 60%)`,
         filter:"blur(60px)", pointerEvents:"none" }} />
-      {/* Grid */}
       <div style={{ position:"absolute", inset:0,
         backgroundImage:`linear-gradient(${C.border} 1px,transparent 1px),linear-gradient(90deg,${C.border} 1px,transparent 1px)`,
         backgroundSize:"48px 48px", opacity:0.15,
@@ -764,7 +767,6 @@ function LeftPanel({ step }) {
 
       <div style={{ position:"relative", zIndex:1, width:"100%", maxWidth:320, textAlign:"center" }}>
 
-        {/* Logo */}
         <div style={{ display:"flex", alignItems:"center", gap:12,
           justifyContent:"center", marginBottom:48 }}>
           <Mark size={40} />
@@ -775,10 +777,8 @@ function LeftPanel({ step }) {
           </div>
         </div>
 
-        {/* Lock illustration */}
         <div style={{ marginBottom:32, position:"relative", height:160,
           display:"flex", alignItems:"center", justifyContent:"center" }}>
-          {/* Glow rings */}
           <div style={{ position:"absolute", inset:0,
             background:`radial-gradient(circle,rgba(14,203,129,${done?0.12:0.06}),transparent 65%)`,
             animation:"orb 7s ease-in-out infinite", transition:"all 0.5s" }} />
@@ -792,7 +792,6 @@ function LeftPanel({ step }) {
               border:`2px solid rgba(14,203,129,0.2)`, animation:"ripple 1s 0.3s ease-out" }} />
           </>)}
 
-          {/* Lock SVG */}
           <div style={{
             filter: unlocked ? `drop-shadow(0 0 20px ${C.green}55)` : "drop-shadow(0 8px 20px rgba(0,0,0,0.5))",
             animation: unlocked ? "none" : "floatRock 5s ease-in-out infinite",
@@ -805,7 +804,6 @@ function LeftPanel({ step }) {
                   <stop offset="100%" stopColor={done?"#069f5f":unlocked?"#0a8050":"#101010"}/>
                 </linearGradient>
               </defs>
-              {/* Shackle */}
               <g style={{ transformOrigin:"22px 40px",
                 transform: unlocked ? "rotate(-28deg) translateY(-5px)" : "none",
                 transition:"transform 0.55s cubic-bezier(0.34,1.56,0.64,1)" }}>
@@ -814,7 +812,6 @@ function LeftPanel({ step }) {
                   strokeWidth={8} strokeLinecap="round"
                   style={{ transition:"stroke 0.5s" }}/>
               </g>
-              {/* Body */}
               <rect x={8} y={40} width={72} height={58} rx={10}
                 fill="url(#lb2)"
                 stroke={unlocked ? "rgba(14,203,129,0.3)" : "#252525"}
@@ -823,7 +820,6 @@ function LeftPanel({ step }) {
               <rect x={8} y={40} width={72} height={3} rx={1}
                 fill={unlocked ? "rgba(14,203,129,0.6)" : "rgba(255,255,255,0.04)"}
                 style={{ transition:"fill 0.5s" }}/>
-              {/* Keyhole or check */}
               {!unlocked && <>
                 <circle cx={44} cy={66} r={9} fill="#080808" stroke="#2a2a2a" strokeWidth={1}/>
                 <rect x={40} y={70} width={8} height={13} rx={3} fill="#080808"/>
@@ -838,7 +834,6 @@ function LeftPanel({ step }) {
           </div>
         </div>
 
-        {/* Dynamic copy */}
         <h3 key={step} style={{ fontFamily:"'Bebas Neue',sans-serif",
           fontSize:"clamp(28px,3vw,40px)", letterSpacing:1, lineHeight:1,
           marginBottom:12, whiteSpace:"pre-line",
@@ -873,7 +868,6 @@ export default function ForgotPassword() {
     <div style={{ display:"flex", height:"100vh", background:C.bg, overflow:"hidden" }}>
       <LeftPanel step={step} />
 
-      {/* Right panel */}
       <div className="right-panel-forgot" style={{ flex:1, display:"flex", alignItems:"center",
         justifyContent:"center", padding:"60px 56px",
         overflowY:"auto", background:C.bg }}>
@@ -893,6 +887,8 @@ export default function ForgotPassword() {
           )}
           {step === 2 && (
             <StepPassword
+              email={email}
+              token={token}
               onNext={() => setStep(3)}
               onBack={() => setStep(1)}
             />

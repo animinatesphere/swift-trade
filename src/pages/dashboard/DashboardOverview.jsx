@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import api from "../../api/axios";
 
 const C = {
-  green:"#0ECB81", amber:"#F5A623", red:"#F6465D",
-  blue:"#3B82F6",
-  bg:"#080808", surface:"#0c0c0c", card:"#101010",
-  card2:"#141414",
-  border:"#1a1a1a", border2:"#222222",
-  text:"#ffffff", muted:"#555555", muted2:"#2e2e2e",
+  green: "#0ECB81", amber: "#F5A623", red: "#F6465D", blue: "#3B82F6",
+  bg: "#080808", surface: "#0c0c0c", card: "#101010", card2: "#141414",
+  border: "#1a1a1a", border2: "#222222",
+  text: "#ffffff", muted: "#888888", muted2: "#2e2e2e",
 };
 
 const CSS = `
@@ -48,6 +48,12 @@ const CSS = `
   .pending-in { animation:slideR 0.35s ease both; }
   .soon { opacity:0.38; cursor:not-allowed !important; pointer-events:none; }
 
+  .kyc-banner:hover { border-color:rgba(245,166,35,0.4) !important; }
+  .kyc-banner-rejected:hover { border-color:rgba(246,70,93,0.4) !important; }
+  .kyc-banner-submitted:hover { border-color:rgba(245,166,35,0.4) !important; }
+  .kyc-banner-unverified:hover { border-color:rgba(245,166,35,0.4) !important; }
+  .kyc-banner { transition:border-color 0.2s; }
+
   @media (max-width: 1024px) {
     .dashboard-topbar { padding: 0 16px !important; }
     .topbar-greet, .topbar-email { display: none !important; }
@@ -71,18 +77,7 @@ const COINS = [
   { id:"ETH",  name:"Ethereum", icon:"Ξ", color:"#627EEA", bg:"rgba(98,126,234,0.15)",  rate:3420000,  network:"ERC20" },
   { id:"USDC", name:"USD Coin", icon:"◎", color:"#0072FF", bg:"rgba(0,114,255,0.15)",   rate:1590,     network:"ERC20" },
   { id:"BNB",  name:"BNB",      icon:"⬡", color:"#F3BA2F", bg:"rgba(243,186,47,0.15)",  rate:920000,   network:"BEP20" },
-  { id:"SOL",  name:"Solana",  icon:"◎", color:"#9945FF", bg:"rgba(153,69,255,0.15)",  rate:218400,   network:"SOL"   },
-];
-
-const USER_EMAIL = "adewale@gmail.com";
-const NGN_BALANCE = 482200;
-
-const HISTORY = [
-  { id:"TRD-7840", coin:"USDT", icon:"₮", color:"#26A17B", amount:500,   ngn:795000,   date:"Today, 10:32 AM",   bank:"GTBank ••4521"  },
-  { id:"TRD-7835", coin:"BTC",  icon:"₿", color:"#F7931A", amount:0.002, ngn:196000,   date:"Yesterday, 3:14 PM",bank:"Access ••8812"  },
-  { id:"TRD-7829", coin:"ETH",  icon:"Ξ", color:"#627EEA", amount:0.05,  ngn:170000,   date:"Dec 18, 9:00 AM",   bank:"GTBank ••4521"  },
-  { id:"TRD-7821", coin:"USDT", icon:"₮", color:"#26A17B", amount:1000,  ngn:1585000,  date:"Dec 17, 2:45 PM",   bank:"Zenith ••2230"  },
-  { id:"TRD-7814", coin:"BTC",  icon:"₿", color:"#F7931A", amount:0.001, ngn:97500,    date:"Dec 15, 11:00 AM",  bank:"GTBank ••4521"  },
+  { id:"SOL",  name:"Solana",   icon:"◎", color:"#9945FF", bg:"rgba(153,69,255,0.15)",  rate:218400,   network:"SOL"   },
 ];
 
 const TICKERS = [
@@ -94,19 +89,58 @@ const TICKERS = [
   {s:"SOL/NGN", p:"₦218,400",   c:"-1.2%",up:false},
 ];
 
-// ─── SMALL UTILS ──────────────────────────────────────────
-function CopyBtn({ text }) {
-  const [ok, setOk] = useState(false);
+// ─── KYC BANNER ───────────────────────────────────────────
+function KYCBanner({ status, rejectionReason }) {
+  if (!status || status === "verified") return null;
+
+  const cfg = {
+    unverified: {
+      color: C.amber, bg: "rgba(245,166,35,0.06)", border: "rgba(245,166,35,0.2)",
+      cls: "kyc-banner-unverified",
+      icon: <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#F5A623" strokeWidth={2} strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+      title: "Identity Verification Required",
+      message: "Complete KYC to unlock withdrawals and full platform access.",
+      cta: "Verify Now →",
+    },
+    submitted: {
+      color: C.amber, bg: "rgba(245,166,35,0.05)", border: "rgba(245,166,35,0.15)",
+      cls: "kyc-banner-submitted",
+      icon: <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#F5A623" strokeWidth={2} strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+      title: "KYC Under Review",
+      message: "Your documents are being reviewed. This takes 1–3 business days.",
+      cta: "View Status →",
+    },
+    rejected: {
+      color: C.red, bg: "rgba(246,70,93,0.06)", border: "rgba(246,70,93,0.2)",
+      cls: "kyc-banner-rejected",
+      icon: <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#F6465D" strokeWidth={2} strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>,
+      title: "KYC Rejected — Action Required",
+      message: rejectionReason ? `Reason: ${rejectionReason}` : "Your submission was rejected. Please resubmit with correct documents.",
+      cta: "Resubmit →",
+    },
+  }[status];
+
+  if (!cfg) return null;
+
   return (
-    <button onClick={()=>{ navigator.clipboard.writeText(text); setOk(true); setTimeout(()=>setOk(false),2000); }}
-      className="copy-btn"
-      style={{ background:"none",border:"none",cursor:"pointer",padding:0,
-        fontSize:11,fontFamily:"'Outfit',sans-serif",fontWeight:500,
-        color:ok?C.green:C.muted,display:"flex",alignItems:"center",gap:4 }}>
-      {ok
-        ? <><svg width={11} height={11} viewBox="0 0 11 11" fill="none"><path d="M1.5 5.5l2.5 3L9 2" stroke={C.green} strokeWidth={1.5} strokeLinecap="round"/></svg>Copied</>
-        : <><svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy</>}
-    </button>
+    <Link to="/dashboard/kyc" style={{ textDecoration: "none" }}>
+      <div className={`card-in kyc-banner ${cfg.cls}`}
+        style={{ background: cfg.bg, border: `1px solid ${cfg.border}`,
+          borderRadius: 12, padding: "12px 16px",
+          display: "flex", alignItems: "center", gap: 12,
+          animationDelay: "0s" }}>
+        <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+          background: `${cfg.color}18`, border: `1px solid ${cfg.color}33`,
+          display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {cfg.icon}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: cfg.color, marginBottom: 2 }}>{cfg.title}</div>
+          <div style={{ fontSize: 11, color: C.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cfg.message}</div>
+        </div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: cfg.color, whiteSpace: "nowrap", flexShrink: 0 }}>{cfg.cta}</div>
+      </div>
+    </Link>
   );
 }
 
@@ -131,12 +165,15 @@ function Ticker() {
 }
 
 // ─── STATS ────────────────────────────────────────────────
-function Stats() {
+function Stats({ balance, stats }) {
+  const navigate = useNavigate();
+  const currentMonth = new Date().toLocaleString('en-US', { month: 'long' });
+
   const items = [
-    { label:"NGN Balance",        val:`₦${NGN_BALANCE.toLocaleString()}`, sub:"Available to withdraw", col:C.green, icon:"🏦", highlight:true },
-    { label:"Total Converted",    val:"₦3,264,000", sub:"All time",       col:"#aaa",  icon:"💹" },
-    { label:"Trades Completed",   val:"7",           sub:"Successfully",   col:"#aaa",  icon:"✅" },
-    { label:"This Month",         val:"₦1,108,400",  sub:"December",       col:C.amber, icon:"📅" },
+    { label:"NGN Balance",      val:`₦${Number(balance||0).toLocaleString("en-NG",{maximumFractionDigits:2})}`, sub:"Available to withdraw", col:C.green, icon:<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="10" width="18" height="11" rx="2"/><path d="M7 10V7a5 5 0 0110 0v3"/></svg>, highlight:true },
+    { label:"Total Withdrawn",  val:`₦${Number(stats?.totalWithdrawn||0).toLocaleString("en-NG",{maximumFractionDigits:2})}`, sub:"All time",     col:"#aaa", icon:<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> },
+    { label:"Trades Completed", val:String(stats?.completedTrades||0),           sub:"Successfully", col:"#aaa", icon:<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg> },
+    { label:"This Month",       val:`₦${Number(stats?.volumeThisMonth||0).toLocaleString("en-NG",{maximumFractionDigits:2})}`,  sub:currentMonth,    col:C.amber, icon:<svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={C.amber} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
   ];
   return (
     <div className="stats-grid" style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))",gap:12 }}>
@@ -165,7 +202,9 @@ function Stats() {
             fontSize:24,color:s.col,letterSpacing:1,lineHeight:1 }}>{s.val}</div>
           <div style={{ fontSize:11,color:s.highlight?C.green:C.muted,marginTop:4 }}>{s.sub}</div>
           {s.highlight && (
-            <button style={{ marginTop:12,background:"rgba(14,203,129,0.12)",
+            <button 
+              onClick={() => navigate("/dashboard/withdraw")}
+              style={{ marginTop:12,background:"rgba(14,203,129,0.12)",
               border:"1px solid rgba(14,203,129,0.25)",
               borderRadius:7,padding:"5px 12px",
               color:C.green,fontSize:11,fontWeight:600,
@@ -180,7 +219,7 @@ function Stats() {
 }
 
 // ─── HISTORY TABLE ────────────────────────────────────────
-function History() {
+function History({ transactions }) {
   const navigate = useNavigate();
   return (
     <div className="card-in" style={{ background:C.card,border:`1px solid ${C.border}`,
@@ -198,40 +237,49 @@ function History() {
               <span key={h} style={{ fontSize:9,color:C.muted,letterSpacing:2,textTransform:"uppercase" }}>{h}</span>
             ))}
           </div>
-          {HISTORY.map((t,i)=>(
-            <div key={t.id} className="txn-row"
-              style={{ display:"grid",gridTemplateColumns:"1.4fr 1fr 1fr 1.2fr",
-                padding:"12px 18px",borderBottom:`1px solid ${C.border}`,
-                alignItems:"center",cursor:"pointer",
-                animationDelay:`${i*0.04}s` }}>
-              <div style={{ display:"flex",alignItems:"center",gap:9 }}>
-                <div style={{ width:28,height:28,borderRadius:"50%",
-                  background:t.bg||"rgba(38,161,123,0.12)",flexShrink:0,
-                  display:"flex",alignItems:"center",justifyContent:"center",
-                  fontSize:11,fontWeight:700,color:t.color }}>{t.icon}</div>
-                <div>
-                  <div style={{ fontSize:13,fontWeight:500 }}>{t.coin}/NGN</div>
-                  <div style={{ fontSize:10,color:C.muted }}>{t.id}</div>
-                </div>
-              </div>
-              <div style={{ fontFamily:"'DM Mono',monospace",fontSize:12,color:"#bbb" }}>
-                {t.amount} {t.coin}
-              </div>
-              <div>
-                <div style={{ fontFamily:"'DM Mono',monospace",fontSize:13,color:C.green }}>
-                  ₦{t.ngn.toLocaleString()}
-                </div>
-                <div style={{ fontSize:10,color:C.muted }}>{t.bank}</div>
-              </div>
-              <div>
-                <div style={{ fontSize:11,color:C.muted }}>{t.date}</div>
-                <span style={{ fontSize:9,padding:"2px 7px",borderRadius:100,
-                  background:"rgba(14,203,129,0.08)",color:C.green,letterSpacing:1 }}>
-                  COMPLETED
-                </span>
-              </div>
+          {(!transactions || transactions.length === 0) && (
+            <div style={{ padding:"30px", textAlign:"center", color:C.muted, fontSize:12 }}>
+              No recent deposits
             </div>
-          ))}
+          )}
+          {(transactions||[]).slice(0, 5).map((t,i)=>{
+            const cDef = COINS.find(c=>c.id.toLowerCase()===t.asset?.toLowerCase()) || COINS[0];
+            return (
+              <div key={t.id} className="txn-row"
+                style={{ display:"grid",gridTemplateColumns:"1.4fr 1fr 1fr 1.2fr",
+                  padding:"12px 18px",borderBottom:`1px solid ${C.border}`,
+                  alignItems:"center",cursor:"pointer",
+                  animationDelay:`${i*0.04}s` }}>
+                <div style={{ display:"flex",alignItems:"center",gap:9 }}>
+                  <div style={{ width:28,height:28,borderRadius:"50%",
+                    background:cDef.bg,flexShrink:0,
+                    display:"flex",alignItems:"center",justifyContent:"center",
+                    fontSize:11,fontWeight:700,color:cDef.color }}>{cDef.icon}</div>
+                  <div>
+                    <div style={{ fontSize:13,fontWeight:500 }}>{cDef.id}/NGN</div>
+                    <div style={{ fontSize:10,color:C.muted }}>TRD-{t.id}</div>
+                  </div>
+                </div>
+                <div style={{ fontFamily:"'DM Mono',monospace",fontSize:12,color:"#bbb" }}>
+                  {Number(t.crypto_amount).toLocaleString(undefined, {maximumFractionDigits:6})} {cDef.id}
+                </div>
+                <div>
+                  <div style={{ fontFamily:"'DM Mono',monospace",fontSize:13,color:C.green }}>
+                    ₦{Number(t.ngn_amount).toLocaleString(undefined, {maximumFractionDigits:2})}
+                  </div>
+                  <div style={{ fontSize:10,color:C.muted }}>Rate: ₦{Number(t.rate_applied).toLocaleString()}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize:11,color:C.muted }}>{new Date(t.created_at).toLocaleDateString("en-GB", {day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})}</div>
+                  <span style={{ fontSize:9,padding:"2px 7px",borderRadius:100,
+                    background:t.status==="converted"?"rgba(14,203,129,0.08)":"rgba(245,166,35,0.08)",
+                    color:t.status==="converted"?C.green:C.amber,letterSpacing:1,textTransform:"uppercase" }}>
+                    {t.status}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -239,14 +287,8 @@ function History() {
 }
 
 // ─── RATES PANEL ──────────────────────────────────────────
-function RatesPanel({ onTrade }) {
-  const [rates, setRates] = useState(COINS);
-  useEffect(()=>{
-    const iv=setInterval(()=>{
-      setRates(p=>p.map(c=>({...c,rate:c.rate*(1+(Math.random()-0.5)*0.003)})));
-    },2500);
-    return ()=>clearInterval(iv);
-  },[]);
+function RatesPanel({ onTrade, liveCoins }) {
+  const rates = liveCoins || COINS;
   return (
     <div className="card-in" style={{ background:C.card,border:`1px solid ${C.border}`,
       borderRadius:14,overflow:"hidden",animationDelay:"0.2s",width:"100%" }}>
@@ -283,195 +325,13 @@ function RatesPanel({ onTrade }) {
   );
 }
 
-// ─── NEW TRADE MODAL ──────────────────────────────────────
-function TradeModal({ coin: initCoin, onClose }) {
-  const [coin, setCoin]   = useState(initCoin || COINS[0]);
-  const [amt, setAmt]     = useState("");
-  const [step, setStep]   = useState(1); // 1=form, 2=wallet
-  const SPREAD = 0.04;
-  const rate   = coin.rate * (1 - SPREAD);
-  const ngnOut = amt && parseFloat(amt)>0 ? parseFloat(amt)*rate : 0;
-
-  return (
-    <>
-      <div onClick={onClose} style={{ position:"fixed",inset:0,
-        background:"rgba(0,0,0,0.78)",backdropFilter:"blur(5px)",zIndex:200 }}/>
-      <div style={{ position:"fixed",top:"50%",left:"50%",
-        transform:"translate(-50%,-50%)",zIndex:201,
-        width:"90%",maxWidth:450,
-        background:C.card,border:`1px solid ${C.border2}`,
-        borderRadius:18,overflow:"hidden",
-        boxShadow:"0 32px 64px rgba(0,0,0,0.7)",
-        animation:"fadeUp 0.3s ease" }}>
-
-        {/* Header */}
-        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",
-          padding:"16px 20px",borderBottom:`1px solid ${C.border}` }}>
-          <div>
-            <div style={{ fontSize:10,color:C.muted,letterSpacing:2,marginBottom:3 }}>
-              {step===1?"STEP 1 OF 2 — SELECT COIN & AMOUNT":"STEP 2 OF 2 — SEND CRYPTO"}
-            </div>
-            <div style={{ fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:1 }}>
-              {step===1?"New Trade":"Send Payment"}
-            </div>
-          </div>
-          <button onClick={onClose}
-            style={{ background:C.card2,border:`1px solid ${C.border}`,
-              borderRadius:8,width:30,height:30,display:"flex",
-              alignItems:"center",justifyContent:"center",
-              cursor:"pointer",color:C.muted,fontSize:15,lineHeight:1 }}>✕</button>
-        </div>
-
-        <div style={{ padding:"18px 20px" }}>
-          {step===1 ? (
-            <>
-              {/* Coin grid */}
-              <div style={{ marginBottom:16 }}>
-                <div style={{ fontSize:9,color:C.muted,letterSpacing:2,marginBottom:10 }}>CHOOSE COIN</div>
-                <div style={{ display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8 }}>
-                  {COINS.map(c=>(
-                    <button key={c.id} className={`coin-btn${coin.id===c.id?" sel":""}`}
-                      onClick={()=>setCoin(c)}
-                      style={{ display:"flex",flexDirection:"column",alignItems:"center",
-                        gap:4,padding:"9px 4px",borderRadius:10,
-                        background:coin.id===c.id?"rgba(14,203,129,0.07)":C.card2,
-                        border:`1px solid ${coin.id===c.id?"rgba(14,203,129,0.3)":C.border}`,
-                        cursor:"pointer" }}>
-                      <div style={{ width:26,height:26,borderRadius:"50%",background:c.bg,
-                        display:"flex",alignItems:"center",justifyContent:"center",
-                        fontSize:11,fontWeight:700,color:c.color }}>{c.icon}</div>
-                      <span style={{ fontSize:10,fontWeight:600,
-                        color:coin.id===c.id?C.green:"#aaa" }}>{c.id}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Amount */}
-              <div style={{ marginBottom:12 }}>
-                <div style={{ fontSize:9,color:C.muted,letterSpacing:2,marginBottom:8 }}>AMOUNT</div>
-                <div style={{ position:"relative" }}>
-                  <input type="number" value={amt} onChange={e=>setAmt(e.target.value)}
-                    autoFocus placeholder="0.00"
-                    style={{ width:"100%",background:"#0a0a0a",
-                      border:`1px solid ${C.border2}`,borderRadius:10,
-                      padding:"13px 56px 13px 14px",
-                      color:"#fff",fontSize:18,
-                      fontFamily:"'DM Mono',monospace",outline:"none" }}/>
-                  <div style={{ position:"absolute",right:14,top:"50%",
-                    transform:"translateY(-50%)",
-                    fontFamily:"'DM Mono',monospace",fontSize:13,
-                    color:coin.color,fontWeight:500 }}>{coin.id}</div>
-                </div>
-              </div>
-
-              {/* NGN preview */}
-              {ngnOut>0 && (
-                <div style={{ background:"rgba(14,203,129,0.05)",
-                  border:"1px solid rgba(14,203,129,0.14)",
-                  borderRadius:10,padding:"11px 14px",marginBottom:14,
-                  animation:"fadeIn 0.2s ease" }}>
-                  {[
-                    ["You receive", `₦${ngnOut.toLocaleString("en-NG",{maximumFractionDigits:0})}`, C.green],
-                    ["Rate",        `₦${rate.toLocaleString("en-NG",{maximumFractionDigits:0})} / ${coin.id}`, "#888"],
-                    ["Spread",      "4%", C.amber],
-                  ].map(([k,v,c])=>(
-                    <div key={k} style={{ display:"flex",justifyContent:"space-between",
-                      marginBottom:5 }}>
-                      <span style={{ fontSize:12,color:C.muted }}>{k}</span>
-                      <span style={{ fontFamily:"'DM Mono',monospace",fontSize:13,color:c,
-                        fontWeight:k==="You receive"?600:400 }}>{v}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <button disabled={!amt||parseFloat(amt)<=0}
-                onClick={()=>setStep(2)} className="trade-btn"
-                style={{ width:"100%",background:C.green,color:"#000",
-                  fontWeight:700,fontSize:14,padding:"13px",
-                  borderRadius:10,border:"none",fontFamily:"'Outfit',sans-serif" }}>
-                Generate Wallet Address →
-              </button>
-            </>
-          ) : (
-            <>
-              {/* Summary chip */}
-              <div style={{ background:"rgba(14,203,129,0.05)",
-                border:"1px solid rgba(14,203,129,0.18)",
-                borderRadius:12,padding:"13px 16px",marginBottom:14 }}>
-                <div style={{ fontSize:9,color:C.green,letterSpacing:2,marginBottom:8 }}>SEND EXACTLY</div>
-                <div style={{ display:"flex",alignItems:"center",
-                  justifyContent:"space-between" }}>
-                  <div style={{ display:"flex",alignItems:"center",gap:8 }}>
-                    <div style={{ width:30,height:30,borderRadius:"50%",background:coin.bg,
-                      display:"flex",alignItems:"center",justifyContent:"center",
-                      fontSize:13,fontWeight:700,color:coin.color }}>{coin.icon}</div>
-                    <span style={{ fontFamily:"'DM Mono',monospace",fontSize:18,fontWeight:500 }}>
-                      {amt} {coin.id}
-                    </span>
-                  </div>
-                  <div style={{ textAlign:"right" }}>
-                    <div style={{ fontSize:10,color:C.muted,marginBottom:2 }}>you receive</div>
-                    <div style={{ fontFamily:"'DM Mono',monospace",fontSize:16,color:C.green,fontWeight:500 }}>
-                      ₦{ngnOut.toLocaleString("en-NG",{maximumFractionDigits:0})}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Wallet address */}
-              <div style={{ marginBottom:12 }}>
-                <div style={{ fontSize:9,color:C.muted,letterSpacing:2,marginBottom:8 }}>
-                  SEND {coin.id} TO THIS ADDRESS
-                </div>
-                <div style={{ background:"#080808",border:`1px solid ${C.border}`,
-                  borderRadius:10,padding:"12px 14px" }}>
-                  <div style={{ display:"flex",justifyContent:"space-between",
-                    alignItems:"center",marginBottom:6 }}>
-                    <span style={{ fontSize:9,color:coin.color,letterSpacing:1 }}>
-                      {coin.id} · {coin.network}
-                    </span>
-                    <CopyBtn text="TQn9Y7tgsJgxnBt7K8aVHJp5mEkRdCPLsW"/>
-                  </div>
-                  <div style={{ fontFamily:"'DM Mono',monospace",fontSize:12,
-                    color:C.green,wordBreak:"break-all",lineHeight:1.5 }}>
-                    TQn9Y7tgsJgxnBt7K8aVHJp5mEkRdCPLsW
-                  </div>
-                </div>
-                <div style={{ display:"flex",alignItems:"flex-start",gap:5,
-                  marginTop:8,fontSize:11,color:C.amber }}>
-                  <span style={{ flexShrink:0 }}>⚠</span>
-                  <span>Send only {coin.id} on {coin.network}. Sending any other coin or network will result in permanent loss.</span>
-                </div>
-              </div>
-
-              <button onClick={onClose} className="trade-btn"
-                style={{ width:"100%",background:C.green,color:"#000",
-                  fontWeight:700,fontSize:14,padding:"13px",
-                  borderRadius:10,border:"none",fontFamily:"'Outfit',sans-serif",
-                  marginBottom:8 }}>
-                I've Sent the Payment ✓
-              </button>
-              <button onClick={()=>setStep(1)} className="ghost-btn"
-                style={{ width:"100%",background:"transparent",
-                  border:`1px solid ${C.border2}`,color:C.muted,
-                  fontSize:13,padding:"10px",borderRadius:10,
-                  fontFamily:"'Outfit',sans-serif",cursor:"pointer" }}>
-                ← Change amount
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-    </>
-  );
-}
-
 // ─── TOPBAR ───────────────────────────────────────────────
-function Topbar({ onNewTrade }) {
+function Topbar({ user, onNewTrade }) {
   const h = new Date().getHours();
   const greet = h<12?"Good morning":h<17?"Good afternoon":"Good evening";
+  const firstName = user?.full_name?.split(' ')[0] || 'User';
+  const initials = user?.full_name?.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase() || 'U';
+
   return (
     <div className="dashboard-topbar" style={{ height:56, display:"flex", alignItems:"center",
       justifyContent:"space-between", padding:"0 22px",
@@ -479,7 +339,7 @@ function Topbar({ onNewTrade }) {
       background:"rgba(6,6,6,0.95)", backdropFilter:"blur(12px)" }}>
       <div style={{ display:"flex", alignItems:"center", gap:6 }}>
         <span className="topbar-greet" style={{ fontSize:13, color:C.muted }}>{greet}, </span>
-        <span style={{ fontSize:13, fontWeight:600 }}>Adewale</span>
+        <span style={{ fontSize:13, fontWeight:600 }}>{firstName}</span>
         <span className="topbar-status" style={{ marginLeft:6, display:"flex", alignItems:"center", gap:5,
           background:"rgba(14,203,129,0.06)", border:"1px solid rgba(14,203,129,0.15)",
           borderRadius:100, padding:"3px 8px" }}>
@@ -512,48 +372,90 @@ function Topbar({ onNewTrade }) {
           <div style={{ width:26,height:26,borderRadius:"50%",
             background:`linear-gradient(135deg,${C.green},${C.amber})`,
             display:"flex",alignItems:"center",justifyContent:"center",
-            fontFamily:"'Bebas Neue',sans-serif",fontSize:10,color:"#000",flexShrink:0 }}>AO</div>
+            fontFamily:"'Bebas Neue',sans-serif",fontSize:10,color:"#000",flexShrink:0 }}>{initials}</div>
           <span className="topbar-email" style={{ fontFamily:"'DM Mono',monospace",fontSize:11,
             color:"#aaa",maxWidth:160,overflow:"hidden",
-            textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{USER_EMAIL}</span>
+            textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{user?.email || "Loading..."}</span>
         </div>
       </div>
     </div>
   );
 }
 
+// ─── MAIN COMPONENT ───────────────────────────────────────
 export default function DashboardOverview() {
-  const [modal, setModal]     = useState(false);
-  const [modalCoin, setMCoin] = useState(null);
+  const navigate = useNavigate();
+  const { user }                            = useAuth();
+  const [kycStatus, setKycStatus]           = useState(null);
+  const [kycRejectionReason, setKycReason]  = useState(null);
+
+  const [ngnBalance, setNgnBalance] = useState(0);
+  const [dashboardStats, setDashboardStats] = useState({ totalWithdrawn: 0, completedTrades: 0, volumeThisMonth: 0 });
+  const [transactions, setTransactions] = useState([]);
+  const [liveCoins, setLiveCoins] = useState(COINS);
 
   useEffect(()=>{
     const s=document.createElement("style"); s.textContent=CSS; document.head.appendChild(s);
     return ()=>document.head.removeChild(s);
   },[]);
 
-  const openTrade = (coin=null)=>{ setMCoin(coin); setModal(true); };
+  const fetchData = async () => {
+    try {
+      api.get('/kyc/status').then(r => { setKycStatus(r.data.status); setKycReason(r.data.rejection_reason); }).catch(()=>{});
+
+      const [balRes, txRes, ratesRes, statsRes] = await Promise.all([
+        api.get('/wallets/balance').catch(()=>({data:{balance:0}})),
+        api.get('/transactions/deposits').catch(()=>({data:[]})),
+        api.get('/rates/').catch(()=>({data:[]})),
+        api.get('/dashboard/stats').catch(()=>({data:{totalWithdrawn:0, completedTrades:0, volumeThisMonth:0}})),
+      ]);
+
+      setNgnBalance(balRes.data.balance || 0);
+      setDashboardStats(statsRes.data || { totalWithdrawn: 0, completedTrades: 0, volumeThisMonth: 0 });
+      setTransactions(Array.isArray(txRes.data) ? txRes.data : []);
+
+      const ratesData = Array.isArray(ratesRes.data) ? ratesRes.data : [];
+      setLiveCoins(COINS.map(c => {
+        const r = ratesData.find(x => x.asset.toLowerCase() === c.id.toLowerCase());
+        return { ...c, rate: r ? parseFloat(r.user_ngn_usd_rate || r.user_rate || 0) : c.rate };
+      }));
+    } catch (e) {
+      console.error("Dashboard fetch error:", e);
+    }
+  };
+
+  useEffect(()=>{
+    fetchData();
+    const iv = setInterval(fetchData, 15000);
+    return ()=>clearInterval(iv);
+  }, []);
+
+  const goToTrade = (coin=null) => {
+    navigate(coin ? `/dashboard/trade?coin=${coin.id}` : "/dashboard/trade");
+  };
 
   return (
     <div style={{ flex:1, display:"flex", flexDirection:"column", minWidth:0 }}>
-      <Topbar onNewTrade={()=>openTrade()}/>
+      <Topbar user={user} onNewTrade={()=>goToTrade()}/>
       <Ticker/>
 
       <div style={{ flex:1, overflowY:"auto", padding:"18px 20px",
         display:"flex", flexDirection:"column", gap:14 }}>
 
+        {/* KYC Status Banner */}
+        <KYCBanner status={kycStatus} rejectionReason={kycRejectionReason} />
+
         {/* Stats row */}
-        <Stats/>
+        <Stats balance={ngnBalance} stats={dashboardStats} />
 
         {/* History + Rates */}
         <div className="content-row" style={{ display:"flex", gap:14, alignItems:"flex-start" }}>
-          <History/>
+          <History transactions={transactions} />
           <div className="rates-panel" style={{ width:268, flexShrink:0 }}>
-            <RatesPanel onTrade={openTrade}/>
+            <RatesPanel liveCoins={liveCoins} onTrade={goToTrade}/>
           </div>
         </div>
       </div>
-
-      {modal && <TradeModal coin={modalCoin} onClose={()=>{ setModal(false); setMCoin(null); }}/>}
     </div>
   );
 }

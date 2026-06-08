@@ -2,19 +2,17 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 const C = {
-  green: "#0ECB81",
-  amber: "#F5A623",
-  bg: "#080808",
-  border: "#1a1a1a",
-  muted: "#666666",
-  text: "#ffffff",
+  green: "#0ECB81", amber: "#F5A623", red: "#F6465D", blue: "#3B82F6",
+  bg: "#080808", surface: "#0c0c0c", card: "#101010", card2: "#141414",
+  border: "#1a1a1a", border2: "#222222",
+  text: "#ffffff", muted: "#888888", muted2: "#2e2e2e",
 };
 
 const LogoMark = ({ size = 36 }) => (
   <svg width={size} height={size} viewBox="0 0 64 64" style={{ display: "block" }}>
     <path d="M 32,52 C 26,40 16,24 8,8" stroke={C.green} strokeWidth="3.8" strokeLinecap="round" fill="none" />
     <path d="M 32,52 C 38,40 48,24 56,8" stroke={C.amber} strokeWidth="3.8" strokeLinecap="round" fill="none" />
-    <circle cx="32" cy="52" r="3.5" fill="white" />
+    <circle cx="32" cy="52" r="3.5" fill={C.text} />
   </svg>
 );
 
@@ -22,7 +20,7 @@ export const Logo = () => (
   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
     <LogoMark size={36} />
     <div>
-      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: "#fff", letterSpacing: 2, lineHeight: 1 }}>SWIFT</div>
+      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: C.text, letterSpacing: 2, lineHeight: 1 }}>SWIFT</div>
       <div style={{ fontSize: 7, color: C.amber, letterSpacing: 5, marginTop: 1 }}>TRADE</div>
     </div>
   </div>
@@ -65,7 +63,7 @@ export default function Navbar() {
         backdropFilter: scrolled || menuOpen ? "blur(20px)" : "none",
         transition: "all 0.3s",
       }}>
-        <Link to="/" onClick={() => setMenuOpen(false)}><Logo /></Link>
+        <Link to="/" onClick={() => setMenuOpen(false)} style={{ textDecoration:"none" }}><Logo /></Link>
 
         {isMobile ? (
           <button onClick={() => setMenuOpen(!menuOpen)} style={{

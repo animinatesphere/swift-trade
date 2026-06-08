@@ -20,7 +20,11 @@ export function Testimonials() {
           <FadeIn key={t.name} delay={i * 0.1}>
             <div className="testi-card" style={{ background:C.card, border:`1px solid ${C.border}`,
               borderRadius:14, padding:"32px 28px", transition:"border-color 0.3s,transform 0.3s", height:"100%" }}>
-              <div style={{ color:C.amber, fontSize:14, marginBottom:16, letterSpacing:2 }}>★★★★★</div>
+              <div style={{ color:C.amber, display:"flex", gap:2, marginBottom:16 }}>
+                {[...Array(5)].map((_, idx) => (
+                  <svg key={idx} width={14} height={14} viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                ))}
+              </div>
               <p style={{ fontSize:15, lineHeight:1.7, color:"#bbb", fontWeight:300, marginBottom:24 }}>{t.text}</p>
               <div style={{ display:"flex", alignItems:"center", gap:12 }}>
                 <div style={{ width:38, height:38, borderRadius:"50%", display:"flex", alignItems:"center",
