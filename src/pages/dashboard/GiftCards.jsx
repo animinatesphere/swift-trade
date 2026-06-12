@@ -901,9 +901,7 @@ function StepDetails({
   customAmt,
   setCustomAmt,
 }) {
-  const [localAmt, setLocalAmt] = useState(customAmt);
-
-  const numAmt = parseFloat(localAmt) || 0;
+  const numAmt = parseFloat(customAmt) || 0;
   const ngnOut =
     denom > 0 && country
       ? denom * country.rate
@@ -911,19 +909,9 @@ function StepDetails({
         ? numAmt * country.rate
         : 0;
 
-  // Keep local in sync if parent resets it (e.g. switching country)
-  useEffect(() => {
-    setLocalAmt(customAmt);
-  }, [customAmt]);
-
   const handleAmtChange = (e) => {
     const v = e.target.value.replace(/[^0-9.]/g, "");
-    setLocalAmt(v);
-    setDenom(0);
-  };
-
-  const handleAmtBlur = () => {
-    setCustomAmt(localAmt);
+    setCustomAmt(v);
   };
 
   return (
@@ -1039,7 +1027,6 @@ function StepDetails({
                 className={`denom-btn${denom === d ? " sel" : ""}`}
                 onClick={() => {
                   setDenom(d);
-                  setCustomAmt("");
                 }}
                 style={{
                   padding: "14px 8px",
@@ -1087,9 +1074,8 @@ function StepDetails({
               className="custom-amt-input"
               type="text"
               inputMode="decimal"
-              value={localAmt}
+              value={customAmt}
               onChange={handleAmtChange}
-              onBlur={handleAmtBlur}
               placeholder="0"
             />
           </div>
