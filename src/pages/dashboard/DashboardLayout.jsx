@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../api/axios";
+import logoImg from "../../assets/logo.png";
 
 // ─── TOKENS ───────────────────────────────────────────────
 const C = {
@@ -84,34 +85,7 @@ const CSS = `
 // ─── LOGO ───────────────────────────────────────────────
 function Mark({ size = 32 }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 64 64"
-      style={{ display: "block" }}
-    >
-      <path
-        d="M 32,52 C 26,40 16,24 8,8"
-        stroke={C.green}
-        strokeWidth="3.8"
-        strokeLinecap="round"
-        fill="none"
-      />
-      <g transform="translate(8,8) rotate(-27)">
-        <polygon points="0,-6 -3.5,3.5 3.5,3.5" fill={C.green} />
-      </g>
-      <path
-        d="M 32,52 C 38,40 48,24 56,8"
-        stroke={C.amber}
-        strokeWidth="3.8"
-        strokeLinecap="round"
-        fill="none"
-      />
-      <g transform="translate(56,8) rotate(27)">
-        <polygon points="0,-6 -3.5,3.5 3.5,3.5" fill={C.amber} />
-      </g>
-      <circle cx="32" cy="52" r="3.5" fill={C.text} />
-    </svg>
+    <img src={logoImg} alt="Swift Trade Logo" style={{ width: size, height: size, display: "block", objectFit: "contain" }} />
   );
 }
 

@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
+import CinematicLoader from './components/CinematicLoader'
 import ProtectedRoute from './components/ProtectedRoute'
 import LandingPage from './pages/LandingPage'
 import Auth from './pages/Auth'
@@ -22,9 +23,19 @@ import GiftCardsDashboard from './pages/dashboard/GiftCards'
 import KYC from './pages/dashboard/KYC'
 
 const App = () => {
+  const [showLoader, setShowLoader] = useState(() => {
+    return !sessionStorage.getItem('loader-played')
+  })
+
+  const handleLoaderComplete = () => {
+    sessionStorage.setItem('loader-played', 'true')
+    setShowLoader(false)
+  }
+
   return (
     <>
-   <Routes>
+      {showLoader && <CinematicLoader onComplete={handleLoaderComplete} />}
+      <Routes>
     <Route path="/" element={<LandingPage />} />
     <Route path="/register" element={<Auth initialPage="register" />} />
     <Route path="/login" element={<Auth initialPage="login" />} />

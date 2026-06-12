@@ -1,18 +1,9 @@
 import { C } from "../constants";
+import logoImg from "../../../assets/logo.png";
 
 export function LogoMark({ size = 40 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" style={{ display: "block" }}>
-      <defs>
-        <filter id="lg"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        <filter id="la"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      </defs>
-      <path d="M 32,52 C 26,40 16,24 8,8" stroke={C.green} strokeWidth="3.8" strokeLinecap="round" fill="none" filter="url(#lg)"/>
-      <g transform="translate(8,8) rotate(-27)"><polygon points="0,-6 -3.5,3.5 3.5,3.5" fill={C.green} filter="url(#lg)"/></g>
-      <path d="M 32,52 C 38,40 48,24 56,8" stroke={C.amber} strokeWidth="3.8" strokeLinecap="round" fill="none" filter="url(#la)"/>
-      <g transform="translate(56,8) rotate(27)"><polygon points="0,-6 -3.5,3.5 3.5,3.5" fill={C.amber} filter="url(#la)"/></g>
-      <circle cx="32" cy="52" r="3.5" fill="white"/>
-    </svg>
+    <img src={logoImg} alt="Swift Trade Logo" style={{ width: size, height: size, display: "block", objectFit: "contain" }} />
   );
 }
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import logoImg from "../assets/logo.png";
 
 const C = {
   green: "#0ECB81", amber: "#F5A623", red: "#F6465D", blue: "#3B82F6",
@@ -9,11 +10,7 @@ const C = {
 };
 
 const LogoMark = ({ size = 36 }) => (
-  <svg width={size} height={size} viewBox="0 0 64 64" style={{ display: "block" }}>
-    <path d="M 32,52 C 26,40 16,24 8,8" stroke={C.green} strokeWidth="3.8" strokeLinecap="round" fill="none" />
-    <path d="M 32,52 C 38,40 48,24 56,8" stroke={C.amber} strokeWidth="3.8" strokeLinecap="round" fill="none" />
-    <circle cx="32" cy="52" r="3.5" fill={C.text} />
-  </svg>
+  <img src={logoImg} alt="Swift Trade Logo" style={{ width: size, height: size, display: "block", objectFit: "contain" }} />
 );
 
 export const Logo = () => (

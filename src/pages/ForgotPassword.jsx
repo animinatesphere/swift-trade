@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/axios";
+import logoImg from "../assets/logo.png";
 
 const C = {
   green: "#0ECB81", amber: "#F5A623", red: "#F6465D", blue: "#3B82F6",
@@ -80,17 +81,7 @@ const CSS = `
 // ─── LOGO ─────────────────────────────────────────────────
 function Mark({ size = 38 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" style={{ display:"block" }}>
-      <defs>
-        <filter id="gfpw"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        <filter id="afpw"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-      </defs>
-      <path d="M 32,52 C 26,40 16,24 8,8" stroke={C.green} strokeWidth="3.8" strokeLinecap="round" fill="none" filter="url(#gfpw)"/>
-      <g transform="translate(8,8) rotate(-27)"><polygon points="0,-6 -3.5,3.5 3.5,3.5" fill={C.green} filter="url(#gfpw)"/></g>
-      <path d="M 32,52 C 38,40 48,24 56,8" stroke={C.amber} strokeWidth="3.8" strokeLinecap="round" fill="none" filter="url(#afpw)"/>
-      <g transform="translate(56,8) rotate(27)"><polygon points="0,-6 -3.5,3.5 3.5,3.5" fill={C.amber} filter="url(#afpw)"/></g>
-      <circle cx="32" cy="52" r="3.5" fill="white"/>
-    </svg>
+    <img src={logoImg} alt="Swift Trade Logo" style={{ width: size, height: size, display: "block", objectFit: "contain" }} />
   );
 }
 
