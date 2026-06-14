@@ -113,49 +113,18 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // If error is 401 Unauthorized and we haven't retried yet
+    // If error is 401 Unauthorized
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      const refreshToken = localStorage.getItem("refresh_token");
-
-      if (refreshToken) {
-        try {
-          // Attempt to refresh the token.
-          // Note: If the backend endpoint is exactly /auth/refresh
-          const response = await axios.post(
-            "https://swift-jet-iota.vercel.app/api/auth/refresh",
-            {
-              refresh: refreshToken,
-            },
-          );
-
-          const newAccess = response.data.access;
-          localStorage.setItem("access_token", newAccess);
-
-          if (response.data.refresh) {
-            localStorage.setItem("refresh_token", response.data.refresh);
-          }
-
-          api.defaults.headers.common["Authorization"] = `Bearer ${newAccess}`;
-          originalRequest.headers.Authorization = `Bearer ${newAccess}`;
-
-          return api(originalRequest);
-        } catch (refreshError) {
-          // Refresh failed (e.g. refresh token expired or invalid)
-          localStorage.removeItem("access_token");
-          localStorage.removeItem("refresh_token");
-          window.location.href = "/login"; // Force logout
-          return Promise.reject(refreshError);
-        }
-      } else {
-        // No refresh token — clear stale credentials and reject (don't reload if already on login)
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        if (!window.location.pathname.startsWith("/login")) {
-          window.location.href = "/login";
-        }
-        return Promise.reject(error);
+      
+      // The backend does not implement a refresh token endpoint.
+      // Clear stale credentials and force logout.
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      if (!window.location.pathname.startsWith("/login")) {
+        window.location.href = "/login";
       }
+      return Promise.reject(error);
     }
 
     return Promise.reject(error);

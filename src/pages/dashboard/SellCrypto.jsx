@@ -2177,6 +2177,7 @@ export default function SellCrypto() {
       const addrRes = await api.get("/wallets/deposit-addresses");
       const normalized = normalizeDepositAddresses(addrRes.data);
       const entry = findDepositEntry(coinId, network, normalized);
+      
       if (entry?.address) {
         setTrade((t) => ({ ...t, depositEntry: entry }));
         return { address: entry.address };
