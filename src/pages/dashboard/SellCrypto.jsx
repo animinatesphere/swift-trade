@@ -271,9 +271,7 @@ function buildLiveCoins(liveRates) {
   }));
 }
 
-function genTradeId() {
-  return "TRD-" + Math.floor(1000 + Math.random() * 9000);
-}
+// Removed genTradeId as transactions are driven by backend webhook.
 
 // ─── COPY BUTTON ──────────────────────────────────────────
 function Copy({ text }) {
@@ -553,17 +551,6 @@ function LeftPanel({ trade }) {
               <span style={{ fontSize: 10, color: C.muted, letterSpacing: 2 }}>
                 TRADE SUMMARY
               </span>
-              {trade.tradeId && (
-                <span
-                  style={{
-                    fontFamily: "'DM Mono',monospace",
-                    fontSize: 10,
-                    color: C.green,
-                  }}
-                >
-                  {trade.tradeId}
-                </span>
-              )}
             </div>
             <div style={{ padding: "14px 16px" }}>
               {rows.map((r, i) =>
@@ -1903,10 +1890,7 @@ function StepSend({ trade, onLoadAddress, onPaid }) {
           letterSpacing: "0.3px",
         }}
       >
-        Trade ID:{" "}
-        <span style={{ fontFamily: "'DM Mono',monospace", color: C.muted }}>
-          {trade.tradeId}
-        </span>
+        Waiting for network confirmation...
       </p>
     </div>
   );
@@ -1982,17 +1966,17 @@ function StepDone({ trade }) {
           display: "inline-flex",
           alignItems: "center",
           gap: 7,
-          background: "rgba(14,203,129,0.08)",
-          border: "1px solid rgba(14,203,129,0.2)",
+          background: "rgba(245,166,35,0.08)",
+          border: "1px solid rgba(245,166,35,0.2)",
           borderRadius: 100,
           padding: "4px 14px",
           fontSize: 10,
-          color: C.green,
+          color: C.amber,
           letterSpacing: 3,
           marginBottom: 18,
         }}
       >
-        TRADE SUBMITTED
+        MONITORING BLOCKCHAIN
       </div>
 
       <h2
@@ -2004,9 +1988,9 @@ function StepDone({ trade }) {
           marginBottom: 12,
         }}
       >
-        PAYMENT RECEIVED.
+        AWAITING NETWORK
         <br />
-        <span style={{ color: C.green }}>NGN INCOMING.</span>
+        <span style={{ color: C.green }}>CONFIRMATION.</span>
       </h2>
 
       <p
@@ -2018,15 +2002,14 @@ function StepDone({ trade }) {
           margin: "0 auto 28px",
         }}
       >
-        Your {trade.coin.id} payment is being processed automatically. Once the
-        network confirms the deposit,{" "}
+        Your deposit is being tracked. Once the blockchain confirms the transfer,{" "}
         <span style={{ color: C.green, fontWeight: 500 }}>
           ₦
           {trade.ngnAmount.toLocaleString("en-NG", {
             maximumFractionDigits: 0,
           })}
         </span>{" "}
-        will be instantly credited to your NGN balance.
+        will be instantly credited to your NGN balance. You can safely leave this page.
       </p>
 
       <div
@@ -2047,33 +2030,8 @@ function StepDone({ trade }) {
             marginBottom: 12,
           }}
         >
-          TRADE REFERENCE
+          DEPOSIT SUMMARY
         </div>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 4,
-          }}
-        >
-          <span
-            style={{
-              fontFamily: "'DM Mono',monospace",
-              fontSize: 20,
-              color: C.green,
-              fontWeight: 500,
-            }}
-          >
-            {trade.tradeId}
-          </span>
-          <Copy text={trade.tradeId} />
-        </div>
-        <div style={{ fontSize: 11, color: C.muted }}>
-          Save this ID to track your trade status
-        </div>
-
-        <div style={{ height: 1, background: C.border, margin: "14px 0" }} />
 
         {[
           ["You Sent", `${trade.amount} ${trade.coin.id}`],
@@ -2107,9 +2065,9 @@ function StepDone({ trade }) {
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
         <button
-          onClick={() => navigate("/dashboard/txn")}
+          onClick={() => navigate("/dashboard")}
           className="pri-btn"
           style={{
             background: C.green,
@@ -2123,24 +2081,7 @@ function StepDone({ trade }) {
             cursor: "pointer",
           }}
         >
-          Track Trade
-        </button>
-        <button
-          onClick={() => navigate("/dashboard")}
-          className="ghost-btn"
-          style={{
-            background: "transparent",
-            color: C.muted,
-            fontWeight: 500,
-            fontSize: 14,
-            padding: "13px",
-            borderRadius: 11,
-            border: `1px solid ${C.border2}`,
-            fontFamily: "'Outfit',sans-serif",
-            cursor: "pointer",
-          }}
-        >
-          Dashboard →
+          Return to Dashboard
         </button>
       </div>
     </div>
@@ -2158,7 +2099,6 @@ export default function SellCrypto() {
     amount: "",
     ngnAmount: 0,
     liveRate: 0,
-    tradeId: null,
   });
   const [liveRates, setLiveRates] = useState({});
   const [ratesLoading, setRatesLoading] = useState(true);
@@ -2283,7 +2223,7 @@ export default function SellCrypto() {
 
   const handleNextClick = () => {
     if (step === "review") {
-      update({ tradeId: genTradeId(), depositEntry: null });
+      update({ depositEntry: null });
     }
     next();
   };

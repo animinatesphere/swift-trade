@@ -819,13 +819,13 @@ function Checkbox({ checked, onChange, children }) {
         className="checkbox-box"
         onClick={() => onChange(!checked)}
         style={{
-          width: 18,
-          height: 18,
-          minWidth: 18,
-          borderRadius: 5,
-          marginTop: 1,
-          border: `1px solid ${checked ? C.green : C.border2}`,
-          background: checked ? "rgba(14,203,129,0.12)" : "transparent",
+          width: 22,
+          height: 22,
+          minWidth: 22,
+          borderRadius: 6,
+          marginTop: -1,
+          border: `1.5px solid ${checked ? C.green : "rgba(255,255,255,0.4)"}`,
+          background: checked ? C.green : "rgba(255,255,255,0.03)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -834,11 +834,11 @@ function Checkbox({ checked, onChange, children }) {
         }}
       >
         {checked && (
-          <svg width={10} height={10} viewBox="0 0 10 10">
+          <svg width={12} height={12} viewBox="0 0 10 10">
             <path
               d="M1.5 5L4 7.5L8.5 2.5"
-              stroke={C.green}
-              strokeWidth={1.5}
+              stroke="#000"
+              strokeWidth={2}
               strokeLinecap="round"
               strokeLinejoin="round"
               fill="none"

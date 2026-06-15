@@ -186,11 +186,12 @@ function LeftPanel({ amount, bank, step, ngnBalance }) {
                 { label:"Account",   val: bank ? `••${bank.number}` : null },
                 { label:"Est. Time", val: amount > 0 ? "5–15 minutes" : null },
               ].map(r => (
-                <div key={r.label} style={{ display:"flex", justifyContent:"space-between",
+                <div key={r.label} style={{ display:"flex", justifyContent:"space-between", gap: 16,
                   padding:"9px 0", borderBottom:`1px solid ${C.border}` }}>
-                  <span style={{ fontSize:11, color:C.muted }}>{r.label}</span>
+                  <span style={{ fontSize:11, color:C.muted, flexShrink: 0 }}>{r.label}</span>
                   <span style={{ fontFamily:"'DM Mono',monospace", fontSize:12,
-                    color: r.val ? (r.green ? C.green : "#ccc") : C.muted2 }}>
+                    color: r.val ? (r.green ? C.green : "#ccc") : C.muted2,
+                    textAlign: "right", wordBreak: "break-word" }}>
                     {r.val || "—"}
                   </span>
                 </div>
@@ -426,7 +427,7 @@ function StepBank({ selected, onSelect, onNext, banks }) {
 }
 
 // ─── STEP 3: REVIEW ───────────────────────────────────────
-function StepReview({ amount, bank, onConfirm, loading }) {
+function StepReview({ amount, bank, onConfirm, loading, pin, setPin, error }) {
   const meta = bankMeta(bank.name);
   return (
     <div className="step-form">
@@ -494,11 +495,40 @@ function StepReview({ amount, bank, onConfirm, loading }) {
         ))}
       </div>
 
-      <button onClick={onConfirm} disabled={loading} className="pri-btn"
+      {/* PIN Input */}
+      <div style={{ marginBottom: 24, textAlign: "center" }}>
+        <div style={{ fontSize:10, color:C.muted, letterSpacing:2, marginBottom:10 }}>TRANSACTION PIN</div>
+        <input 
+          type="password" 
+          maxLength={4} 
+          value={pin} 
+          onChange={e => setPin(e.target.value.replace(/\D/g, ''))} 
+          style={{ 
+            width: 140, 
+            background: C.card2, 
+            border: `1px solid ${C.border2}`, 
+            color: "#fff", 
+            padding: "14px", 
+            borderRadius: 8, 
+            letterSpacing: 16, 
+            fontFamily: "'DM Mono',monospace", 
+            fontSize: 24, 
+            textAlign: "center" 
+          }} 
+          placeholder="••••" 
+        />
+        {error && (
+          <div style={{ color: C.red, fontSize: 12, marginTop: 10, animation: "fadeIn 0.2s ease" }}>
+            {error}
+          </div>
+        )}
+      </div>
+
+      <button onClick={onConfirm} disabled={loading || pin.length !== 4} className="pri-btn"
         style={{ width:"100%", background:C.green, color:"#000",
           fontWeight:700, fontSize:15, padding:"15px", borderRadius:12,
           border:"none", fontFamily:"'Outfit',sans-serif",
-          display:"flex", alignItems:"center", justifyContent:"center", gap:10, cursor:"pointer" }}>
+          display:"flex", alignItems:"center", justifyContent:"center", gap:10, cursor: loading || pin.length !== 4 ? "not-allowed" : "pointer" }}>
         {loading
           ? <><div style={{ width:18, height:18, borderRadius:"50%",
               border:"2.5px solid rgba(0,0,0,0.2)", borderTopColor:"#000",
@@ -595,6 +625,9 @@ export default function Withdraw() {
   const [banks, setBanks] = useState([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [fetchError, setFetchError] = useState("");
+  const [pinIsSet, setPinIsSet] = useState(null);
+  const [pin, setPin] = useState("");
+  const [submitError, setSubmitError] = useState("");
 
   useEffect(() => {
     const s = document.createElement("style"); s.textContent = CSS;
@@ -611,6 +644,7 @@ export default function Withdraw() {
           api.get("/wallets/bank-accounts")
         ]);
         setNgnBalance(Number(balRes.data.balance) || 0);
+        setPinIsSet(balRes.data.pin_is_set);
         const bankData = Array.isArray(banksRes.data) ? banksRes.data : [];
         const formattedBanks = bankData.map(b => ({
           id: b.id,
@@ -633,17 +667,27 @@ export default function Withdraw() {
     fetchData();
   }, []);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setRefId("WD-" + Math.floor(1000 + Math.random() * 9000));
+    setSubmitError("");
+    try {
+      const res = await api.post("/transactions/withdraw", {
+        amount: parseFloat(amount),
+        bank_account_id: bank.id,
+        pin: pin
+      });
+      setRefId(res.data.reference || "WD-SUCCESS");
       setStep("done");
-    }, 1600);
+    } catch (err) {
+      console.error(err);
+      setSubmitError(err.response?.data?.detail || "Withdrawal failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = () => {
-    setStep("amount"); setAmount(""); setRefId("");
+    setStep("amount"); setAmount(""); setRefId(""); setPin(""); setSubmitError("");
     setBank(banks.find(b => b.isDefault) || banks[0] || null);
   };
 
@@ -670,6 +714,20 @@ export default function Withdraw() {
           <button onClick={() => window.location.reload()} className="pri-btn"
             style={{ background: C.green, color: "#000", fontWeight: 700, fontSize: 13, padding: "10px 24px", borderRadius: 10, border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
             Retry
+          </button>
+        </div>
+      ) : pinIsSet === false ? (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 32, background: C.bg }}>
+          <div style={{ width: 80, height: 80, borderRadius: "50%", background: "rgba(245,166,35,0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+            <svg width={36} height={36} viewBox="0 0 24 24" fill="none" stroke={C.amber} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
+          </div>
+          <h2 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 32, letterSpacing: 1, margin: 0, textAlign: "center" }}>SECURITY PIN REQUIRED</h2>
+          <p style={{ color: C.muted, fontSize: 14, textAlign: "center", maxWidth: 340, lineHeight: 1.6, margin: 0 }}>
+            You must create a 4-digit Transaction PIN to secure your NGN withdrawals.
+          </p>
+          <button onClick={() => window.location.href = "/dashboard/settings"} className="pri-btn"
+            style={{ background: C.green, color: "#000", fontWeight: 700, fontSize: 14, padding: "12px 28px", borderRadius: 10, border: "none", cursor: "pointer", fontFamily: "'Outfit',sans-serif", marginTop: 8 }}>
+            Go to Settings →
           </button>
         </div>
       ) : (
@@ -723,7 +781,7 @@ export default function Withdraw() {
 
             {step === "review" && (
               <StepReview amount={amount} bank={bank}
-                onConfirm={handleConfirm} loading={loading}/>
+                onConfirm={handleConfirm} loading={loading} pin={pin} setPin={setPin} error={submitError} />
             )}
 
             {step === "done" && (

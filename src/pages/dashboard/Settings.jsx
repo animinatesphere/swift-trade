@@ -267,12 +267,73 @@ function ChangePasswordModal({ onClose }) {
   );
 }
 
+// ─── SET PIN MODAL ────────────────────────────────────────
+function SetTransactionPinModal({ onClose, onSuccess, isUpdate }) {
+  const [pin, setPin] = useState("");
+  const [otp, setOtp] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (pin.length !== 4) {
+      alert("PIN must be exactly 4 digits.");
+      return;
+    }
+    if (isUpdate && otp.length !== 6) {
+      alert("Access code must be exactly 6 digits.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const payload = { pin };
+      if (isUpdate) payload.otp = otp;
+      await api.post("/wallets/transaction-pin", payload);
+      alert(isUpdate ? "Transaction PIN updated successfully!" : "Transaction PIN set successfully!");
+      onSuccess();
+    } catch (err) {
+      alert(err.response?.data?.detail || "Failed to set PIN.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 100, backdropFilter: "blur(2px)" }} />
+      <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "90%", maxWidth: 400, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, zIndex: 101, overflow: "hidden", animation: "fadeUp 0.3s ease" }}>
+        <div style={{ padding: "20px 24px", borderBottom: `1px solid ${C.border}` }}>
+          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 24, letterSpacing: 1 }}>{isUpdate ? "Update Transaction PIN" : "Set Transaction PIN"}</div>
+        </div>
+        <form onSubmit={handleSubmit} style={{ padding: 24 }}>
+          {isUpdate && (
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: "block", fontSize: 12, color: C.muted, marginBottom: 8, textAlign: "center" }}>6-Digit Access Code (from email)</label>
+              <input type="text" required maxLength={6} value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, ''))} style={{ width: "100%", background: C.card, border: `1px solid ${C.border2}`, color: "#fff", padding: "14px", borderRadius: 8, letterSpacing: 10, fontFamily: "'DM Mono',monospace", fontSize: 20, textAlign: "center" }} placeholder="••••••" />
+            </div>
+          )}
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ display: "block", fontSize: 12, color: C.muted, marginBottom: 8, textAlign: "center" }}>{isUpdate ? "New 4-Digit PIN" : "4-Digit PIN"}</label>
+            <input type="password" required maxLength={4} value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, ''))} style={{ width: "100%", background: C.card, border: `1px solid ${C.border2}`, color: "#fff", padding: "14px", borderRadius: 8, letterSpacing: 16, fontFamily: "'DM Mono',monospace", fontSize: 24, textAlign: "center" }} placeholder="••••" />
+            {!isUpdate && <div style={{ fontSize: 11, color: C.muted, marginTop: 12, textAlign: "center", lineHeight: 1.5 }}>This PIN will be required to authorize any NGN withdrawals from your wallet.</div>}
+          </div>
+          <div style={{ display: "flex", gap: 12 }}>
+            <button type="button" onClick={onClose} style={{ flex: 1, padding: "12px", background: "transparent", border: `1px solid ${C.border2}`, color: "#fff", borderRadius: 8, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>Cancel</button>
+            <button type="submit" disabled={loading || pin.length !== 4 || (isUpdate && otp.length !== 6)} style={{ flex: 1, padding: "12px", background: C.green, border: "none", color: "#000", fontWeight: 700, borderRadius: 8, cursor: loading || pin.length !== 4 || (isUpdate && otp.length !== 6) ? "not-allowed" : "pointer", fontFamily: "'Outfit',sans-serif" }}>{loading ? "Saving..." : "Save PIN"}</button>
+          </div>
+        </form>
+      </div>
+    </>
+  );
+}
+
 // ─── MAIN COMPONENT ───────────────────────────────────────
 export default function Settings() {
   const { user: contextUser, logout } = useAuth();
   const [userData, setUserData] = useState(contextUser);
   const [showPwdModal, setShowPwdModal] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(false);
   const [kycData, setKycData] = useState(null);
+  const [walletData, setWalletData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [notifs, setNotifs] = useState({
     email: true,
@@ -286,12 +347,14 @@ export default function Settings() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [userRes, kycRes] = await Promise.all([
+        const [userRes, kycRes, walletRes] = await Promise.all([
           api.get("/auth/me"),
-          api.get("/kyc/status")
+          api.get("/kyc/status"),
+          api.get("/wallets/balance").catch(() => ({ data: null }))
         ]);
         setUserData(userRes.data);
         setKycData(kycRes.data);
+        if (walletRes.data) setWalletData(walletRes.data);
       } catch (error) {
         console.error("Failed to fetch data:", error);
         // Fall back to context user
@@ -321,9 +384,27 @@ export default function Settings() {
     }
   };
 
+  const handleUpdatePinClick = async () => {
+    if (!walletData?.pin_is_set) {
+      setShowPinModal(true);
+      return;
+    }
+    try {
+      setLoading(true);
+      await api.post("/wallets/transaction-pin/request-update");
+      alert("Access code sent to your email!");
+      setShowPinModal(true);
+    } catch (err) {
+      alert(err.response?.data?.detail || "Failed to request PIN update.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       {showPwdModal && <ChangePasswordModal onClose={() => setShowPwdModal(false)} />}
+      {showPinModal && <SetTransactionPinModal isUpdate={walletData?.pin_is_set} onClose={() => setShowPinModal(false)} onSuccess={() => { setShowPinModal(false); setWalletData(prev => ({ ...prev, pin_is_set: true })); }} />}
       {/* Topbar */}
       <div
         className="topbar-container"
@@ -660,6 +741,48 @@ export default function Settings() {
                 }}
               >
                 Change Password →
+              </button>
+            </div>
+          </Section>
+
+          {/* Transaction PIN */}
+          <Section
+            title="TRANSACTION PIN"
+            icon={
+              <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0110 0v4" />
+              </svg>
+            }
+            delay="0.16s"
+          >
+            <div style={{ padding: "16px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4, color: "#fff" }}>
+                  {walletData?.pin_is_set ? "PIN is active" : "PIN is not set"}
+                </div>
+                <div style={{ fontSize: 12, color: C.muted, maxWidth: 280, lineHeight: 1.4 }}>
+                  {walletData?.pin_is_set 
+                    ? "Your withdrawals are currently secured by a 4-digit PIN." 
+                    : "You must create a 4-digit Transaction PIN before you can withdraw."}
+                </div>
+              </div>
+              <button
+                onClick={handleUpdatePinClick}
+                className="pri-btn"
+                style={{
+                  background: walletData?.pin_is_set ? "transparent" : C.green,
+                  color: walletData?.pin_is_set ? C.green : "#000",
+                  border: walletData?.pin_is_set ? `1px solid ${C.green}` : "none",
+                  padding: "10px 20px",
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontFamily: "'Outfit',sans-serif"
+                }}
+              >
+                {walletData?.pin_is_set ? "Change PIN" : "Create PIN"}
               </button>
             </div>
           </Section>

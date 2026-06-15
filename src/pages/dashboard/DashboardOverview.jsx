@@ -287,7 +287,7 @@ function History({ transactions }) {
 }
 
 // ─── RATES PANEL ──────────────────────────────────────────
-function RatesPanel({ onTrade, liveCoins }) {
+function RatesPanel({ onTrade, liveCoins, loading }) {
   const rates = liveCoins || COINS;
   return (
     <div className="card-in" style={{ background:C.card,border:`1px solid ${C.border}`,
@@ -296,11 +296,23 @@ function RatesPanel({ onTrade, liveCoins }) {
         padding:"14px 16px",borderBottom:`1px solid ${C.border}` }}>
         <span style={{ fontSize:12,fontWeight:600,letterSpacing:1 }}>LIVE RATES</span>
         <div style={{ display:"flex",alignItems:"center",gap:4 }}>
-          <span style={{ width:5,height:5,borderRadius:"50%",background:C.green,
-            animation:"pulse 2s infinite",display:"inline-block" }} />
-          <span style={{ fontFamily:"'DM Mono',monospace",fontSize:9,color:C.green }}>LIVE</span>
+          {loading ? (
+            <div style={{ width:12, height:12, borderRadius:"50%", border:"1.5px solid rgba(14,203,129,0.2)", borderTopColor:C.green, animation:"spin 0.8s linear infinite" }} />
+          ) : (
+            <>
+              <span style={{ width:5,height:5,borderRadius:"50%",background:C.green,
+                animation:"pulse 2s infinite",display:"inline-block" }} />
+              <span style={{ fontFamily:"'DM Mono',monospace",fontSize:9,color:C.green }}>LIVE</span>
+            </>
+          )}
         </div>
       </div>
+      <div style={{ position:"relative" }}>
+        {loading && (
+          <div style={{ position:"absolute",inset:0,background:"rgba(16,16,16,0.6)",backdropFilter:"blur(2px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:10 }}>
+            <div style={{ width:24,height:24,borderRadius:"50%",border:"2px solid rgba(14,203,129,0.2)",borderTopColor:C.green,animation:"spin 0.8s linear infinite" }} />
+          </div>
+        )}
       {rates.map(c=>(
         <div key={c.id} className="rate-row"
           style={{ display:"flex",alignItems:"center",gap:10,
@@ -321,6 +333,7 @@ function RatesPanel({ onTrade, liveCoins }) {
           </div>
         </div>
       ))}
+      </div>
     </div>
   );
 }
@@ -393,6 +406,7 @@ export default function DashboardOverview() {
   const [dashboardStats, setDashboardStats] = useState({ totalWithdrawn: 0, completedTrades: 0, volumeThisMonth: 0 });
   const [transactions, setTransactions] = useState([]);
   const [liveCoins, setLiveCoins] = useState(COINS);
+  const [isLoadingRates, setIsLoadingRates] = useState(true);
 
   useEffect(()=>{
     const s=document.createElement("style"); s.textContent=CSS; document.head.appendChild(s);
@@ -419,8 +433,10 @@ export default function DashboardOverview() {
         const r = ratesData.find(x => x.asset.toLowerCase() === c.id.toLowerCase());
         return { ...c, rate: r ? parseFloat(r.user_ngn_usd_rate || r.user_rate || 0) : c.rate };
       }));
+      setIsLoadingRates(false);
     } catch (e) {
       console.error("Dashboard fetch error:", e);
+      setIsLoadingRates(false);
     }
   };
 
@@ -452,7 +468,7 @@ export default function DashboardOverview() {
         <div className="content-row" style={{ display:"flex", gap:14, alignItems:"flex-start" }}>
           <History transactions={transactions} />
           <div className="rates-panel" style={{ width:268, flexShrink:0 }}>
-            <RatesPanel liveCoins={liveCoins} onTrade={goToTrade}/>
+            <RatesPanel liveCoins={liveCoins} onTrade={goToTrade} loading={isLoadingRates} />
           </div>
         </div>
       </div>
