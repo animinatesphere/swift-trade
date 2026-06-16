@@ -32,7 +32,7 @@ const CSS = `
   @keyframes slideIn  { from{opacity:0;transform:translateX(32px)} to{opacity:1;transform:translateX(0)} }
   @keyframes pulse    { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.75)} }
 
-  .nav-item           { transition:all 0.15s; border-left:2px solid transparent; text-decoration:none; display:flex; }
+  .nav-item           { transition:all 0.15s; border-left:2px solid transparent; text-decoration:none; display:flex; padding: clamp(10px, 2vw, 14px) 0; }
   .nav-item:hover     { background:var(--c-card2) !important; color:var(--c-text) !important; }
   .nav-item.act       { background:rgba(14,203,129,0.08) !important; color:#0ECB81 !important; border-left-color:#0ECB81 !important; }
   .soon               { opacity:0.38; pointer-events:none; }
@@ -44,6 +44,10 @@ const CSS = `
     color: var(--c-text);
     font-size: 24px;
     cursor: pointer;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px;
+    -webkit-tap-highlight-color: transparent;
   }
 
   @media (max-width: 1024px) {
@@ -56,6 +60,8 @@ const CSS = `
       transform: translateX(-100%);
       transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 20px 0 50px rgba(0,0,0,0.5);
+      width: 100% !important;
+      max-width: 280px;
     }
     .sidebar-container.open {
       transform: translateX(0);
@@ -79,13 +85,34 @@ const CSS = `
       display: block;
     }
   }
+
+  @media (max-width: 768px) {
+    .sidebar-container { width: 100% !important; max-width: 75vw; }
+    .nav-item { font-size: clamp(13px, 2.5vw, 14px); }
+    .logo-text { font-size: clamp(16px, 3vw, 19px) !important; }
+  }
+
+  @media (max-width: 480px) {
+    .sidebar-container { max-width: 85vw; }
+    .nav-item { padding: 12px 0 !important; }
+  }
+
   @keyframes fadeIn { from{opacity:0} to{opacity:1} }
 `;
 
 // ─── LOGO ───────────────────────────────────────────────
 function Mark({ size = 32 }) {
   return (
-    <img src={logoImg} alt="Swift Trade Logo" style={{ width: size, height: size, display: "block", objectFit: "contain" }} />
+    <img
+      src={logoImg}
+      alt="Swift Trade Logo"
+      style={{
+        width: size,
+        height: size,
+        display: "block",
+        objectFit: "contain",
+      }}
+    />
   );
 }
 

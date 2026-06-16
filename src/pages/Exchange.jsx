@@ -62,22 +62,30 @@ const GLOBAL_CSS = `
   .network-pill.active  { background: rgba(14,203,129,0.1) !important; border-color: rgba(14,203,129,0.3) !important; color: #0ECB81 !important; }
 
   @media (max-width: 1024px) {
-    .exchange-grid { flex-direction: column !important; gap: 40px !important; }
+    .exchange-grid { flex-direction: column !important; gap: clamp(30px, 4vw, 40px) !important; }
     .side-panel { width: 100% !important; order: 2 !important; }
-    .widget-container { width: 100% !important; order: 1 !important; margin-bottom: 20px !important; }
-    .hero-flex { flex-direction: column !important; align-items: flex-start !important; gap: 24px !important; }
+    .widget-container { width: 100% !important; order: 1 !important; margin-bottom: clamp(16px, 3vw, 20px) !important; }
+    .hero-flex { flex-direction: column !important; align-items: flex-start !important; gap: clamp(16px, 3vw, 24px) !important; }
     .stat-chips { justify-content: flex-start !important; width: 100% !important; }
-    .main-wrapper { padding: 40px 20px !important; }
-    .hero-padding { padding: 44px 20px 0 !important; }
+    .main-wrapper { padding: clamp(30px, 4vw, 40px) clamp(16px, 2vw, 20px) !important; }
+    .hero-padding { padding: clamp(30px, 4vw, 44px) clamp(16px, 2vw, 20px) 0 !important; }
   }
 
-  @media (max-width: 640px) {
-    .hero-flex h1 { fontSize: 36px !important; }
-    .stat-chips { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
-    .stat-chips > div { padding: 8px 12px !important; }
-    .main-wrapper { padding: 24px 16px !important; }
+  @media (max-width: 768px) {
+    .hero-flex h1 { fontSize: clamp(24px, 5vw, 40px) !important; }
+    .stat-chips { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: clamp(8px, 2vw, 12px) !important; }
+    .stat-chips > div { padding: clamp(8px, 2vw, 10px) clamp(10px, 2vw, 12px) !important; }
+    .main-wrapper { padding: clamp(20px, 3vw, 24px) clamp(14px, 2vw, 16px) !important; }
     .widget-container { max-width: 100% !important; }
     .side-panel-desktop { display: none !important; }
+  }
+
+  @media (max-width: 480px) {
+    .exchange-grid { gap: clamp(20px, 3vw, 30px) !important; }
+    .main-wrapper { padding: clamp(16px, 2vw, 20px) !important; }
+    .hero-flex h1 { font-size: clamp(20px, 4vw, 32px) !important; }
+    .stat-chips { grid-template-columns: 1fr !important; }
+    .confirm-btn { min-height: 48px !important; padding: clamp(12px, 2vw, 14px) !important; }
   }
 `;
 

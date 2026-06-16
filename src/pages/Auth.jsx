@@ -80,6 +80,23 @@ const GLOBAL_CSS = `
 
   @media (max-width: 1024px) {
     .auth-left-panel { display: none !important; }
+    .auth-form { padding: clamp(20px, 4vw, 28px) clamp(20px, 4vw, 28px) !important; }
+    .form-title { font-size: clamp(20px, 5vw, 28px) !important; }
+  }
+
+  @media (max-width: 768px) {
+    .auth-form { padding: clamp(16px, 3vw, 20px) !important; }
+    .form-title { font-size: clamp(18px, 4vw, 24px) !important; }
+    .input-field { padding: clamp(10px, 2vw, 12px) clamp(12px, 2vw, 14px) !important; font-size: 16px !important; }
+    .submit-btn { min-height: 44px !important; font-size: clamp(14px, 2vw, 16px) !important; }
+  }
+
+  @media (max-width: 480px) {
+    .auth-form { padding: clamp(14px, 2vw, 16px) !important; }
+    .form-title { font-size: clamp(16px, 3vw, 20px) !important; }
+    .input-field { padding: 10px 12px !important; font-size: 16px !important; }
+    .submit-btn { min-height: 48px !important; padding: clamp(12px, 2vw, 14px) !important; }
+    .ticker-track { font-size: clamp(11px, 2vw, 13px) !important; }
   }
 `;
 
@@ -121,7 +138,16 @@ const MINI_RATES = [
 // ─── LOGO ─────────────────────────────────────────────────
 function LogoMark({ size = 40 }) {
   return (
-    <img src={logoImg} alt="Swift Trade Logo" style={{ width: size, height: size, display: "block", objectFit: "contain" }} />
+    <img
+      src={logoImg}
+      alt="Swift Trade Logo"
+      style={{
+        width: size,
+        height: size,
+        display: "block",
+        objectFit: "contain",
+      }}
+    />
   );
 }
 

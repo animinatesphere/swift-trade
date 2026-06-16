@@ -53,19 +53,25 @@ const GLOBAL_CSS = `
   @media (max-width: 1024px) {
     .rates-header { flex-direction: column !important; align-items: flex-start !important; gap: 24px !important; }
     .rates-layout { grid-template-columns: 1fr !important; }
-    .rates-table-container { overflow-x: auto !important; margin: 0 -20px !important; padding: 0 20px !important; }
+    .rates-table-container { overflow-x: auto !important; margin: 0 clamp(-14px, -2vw, -20px) !important; padding: 0 clamp(14px, 2vw, 20px) !important; }
     .rates-table { min-width: 800px !important; }
-    .calc-panel { position: static !important; width: 100% !important; margin-top: 40px !important; }
-    .main-wrapper { padding: 40px 20px !important; }
-    .hero-padding { padding: 44px 20px 0 !important; }
-    .info-grid { grid-template-columns: 1fr 1fr !important; }
+    .calc-panel { position: static !important; width: 100% !important; margin-top: clamp(30px, 4vw, 40px) !important; }
+    .main-wrapper { padding: clamp(30px, 4vw, 40px) clamp(16px, 2vw, 20px) !important; }
+    .hero-padding { padding: clamp(36px, 4vw, 44px) clamp(16px, 2vw, 20px) 0 !important; }
+    .info-grid { grid-template-columns: 1fr 1fr !important; gap: clamp(16px, 3vw, 24px) !important; }
   }
 
   @media (max-width: 640px) {
-    .rates-header h1 { font-size: 32px !important; }
+    .rates-header h1 { font-size: clamp(24px, 5vw, 32px) !important; }
     .info-grid { grid-template-columns: 1fr !important; }
-    .tab-pill { padding: 8px 16px !important; fontSize: 12px !important; }
-    .footer-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
+    .tab-pill { padding: clamp(8px, 2vw, 10px) clamp(14px, 3vw, 16px) !important; font-size: clamp(11px, 2vw, 12px) !important; }
+    .footer-grid { grid-template-columns: 1fr !important; gap: clamp(30px, 4vw, 40px) !important; }
+  }
+
+  @media (max-width: 480px) {
+    .rates-table-container { margin: 0 -14px !important; padding: 0 14px !important; }
+    .main-wrapper { padding: clamp(16px, 3vw, 20px) clamp(12px, 2vw, 16px) !important; }
+    .hero-padding { padding: clamp(24px, 3vw, 32px) clamp(12px, 2vw, 16px) 0 !important; }
   }
 `;
 
