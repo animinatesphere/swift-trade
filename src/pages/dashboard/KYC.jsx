@@ -41,18 +41,20 @@ const CSS = `
 
   .kyc-card { animation:fadeUp 0.4s ease both; }
 
-  .doc-btn { transition:all 0.18s; border:1px solid #1a1a1a; cursor:pointer; }
+  .doc-btn { transition:all 0.18s; border:1px solid #1a1a1a; cursor:pointer; padding:12px 8px; }
   .doc-btn:hover { border-color:#333 !important; background:#181818 !important; }
+  .doc-btn:active { transform: scale(0.98); }
   .doc-btn.selected { border-color:rgba(14,203,129,0.4) !important; background:rgba(14,203,129,0.07) !important; }
 
-  .kyc-input { transition:border-color 0.2s; }
+  .kyc-input { transition:border-color 0.2s; -webkit-appearance:none; appearance:none; font-size:16px; }
   .kyc-input:focus { outline:none; border-color:rgba(14,203,129,0.5) !important; }
   .kyc-input::placeholder { color:#333; }
 
-  .drop-zone { transition:all 0.2s; }
+  .drop-zone { transition:all 0.2s; min-height:120px; }
   .drop-zone.drag-over { border-color:rgba(14,203,129,0.5) !important; background:rgba(14,203,129,0.04) !important; }
 
-  .submit-btn { transition:all 0.2s; }
+  .submit-btn { transition:all 0.2s; min-height:50px; font-size:16px; -webkit-appearance:none; }
+  .submit-btn:active:not(:disabled) { transform:scale(0.98); }
   .submit-btn:hover:not(:disabled) { background:#0fdf8e !important; transform:translateY(-1px); box-shadow:0 10px 28px rgba(14,203,129,0.3) !important; }
   .submit-btn:disabled { opacity:0.38; cursor:not-allowed; }
 
@@ -61,6 +63,56 @@ const CSS = `
     background-size: 400px 100%;
     animation: shimmer 1.2s infinite;
     border-radius: 8px;
+  }
+
+  /* ── Mobile Responsiveness ── */
+  @media (max-width: 768px) {
+    .kyc-card { margin-left: -8px; margin-right: -8px; }
+    
+    /* Adjust padding for mobile */
+    body { padding: 0; }
+    
+    /* Better touch targets for mobile */
+    .doc-btn { padding: 14px 10px; min-height: 48px; display: flex; justify-content: center; align-items: center; }
+    .submit-btn { min-height: 48px; padding: 14px !important; font-size: 15px; }
+    
+    /* Better spacing on mobile */
+    .drop-zone { padding: 20px 16px !important; min-height: 140px; }
+    
+    /* Responsive grid for document types */
+    .doc-type-grid { grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)) !important; gap: 12px !important; }
+  }
+
+  @media (max-width: 480px) {
+    /* Extra small screens */
+    .kyc-card { max-width: 100% !important; margin: 0 !important; }
+    
+    /* Larger text for readability */
+    .kyc-input { font-size: 16px; padding: 14px 12px !important; }
+    .submit-btn { font-size: 14px; padding: 12px !important; }
+    
+    /* Stack layout vertically */
+    .doc-btn { padding: 12px 8px; font-size: 10px; }
+    
+    /* Better touch spacing */
+    .drop-zone { padding: 16px 12px !important; min-height: 130px; }
+    
+    /* Responsive SVG sizes */
+    svg { max-width: 100%; height: auto; }
+    
+    /* Text sizes */
+    h1 { font-size: 24px !important; }
+    h2 { font-size: 20px !important; }
+    
+    /* Better info boxes on mobile */
+    .info-box { padding: 12px 10px !important; gap: 8px !important; margin-bottom: 12px !important; }
+  }
+
+  @media (max-width: 360px) {
+    /* Ultra small screens (iPhone SE, etc) */
+    .kyc-input { font-size: 16px; padding: 12px 10px !important; }
+    .submit-btn { font-size: 13px; }
+    .doc-btn { padding: 10px 6px; font-size: 9px; gap: 4px !important; }
   }
 `;
 
@@ -336,11 +388,12 @@ function DropZone({ file, onChange }) {
       style={{
         border: `2px dashed ${file ? "rgba(14,203,129,0.4)" : C.border2}`,
         borderRadius: 12,
-        padding: "24px 20px",
+        padding: "clamp(16px, 4vw, 24px) clamp(14px, 3vw, 20px)",
         textAlign: "center",
         cursor: "pointer",
         background: file ? "rgba(14,203,129,0.03)" : "#090909",
         transition: "all 0.2s",
+        minHeight: "clamp(100px, 30vw, 200px)",
       }}
     >
       <input
@@ -525,7 +578,7 @@ function KYCForm({ defaultDocType, defaultDocNumber, onSuccess }) {
       <div style={{ marginBottom: 20 }}>
         <div
           style={{
-            fontSize: 10,
+            fontSize: "clamp(9px, 2vw, 10px)",
             color: C.muted,
             letterSpacing: 2,
             marginBottom: 10,
@@ -534,10 +587,12 @@ function KYCForm({ defaultDocType, defaultDocNumber, onSuccess }) {
           DOCUMENT TYPE
         </div>
         <div
+          className="doc-type-grid"
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(3,1fr)",
-            gap: 8,
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(clamp(90px, 25%, 120px), 1fr))",
+            gap: "clamp(8px, 2vw, 8px)",
           }}
         >
           {DOC_TYPES.map((d) => (
@@ -610,9 +665,9 @@ function KYCForm({ defaultDocType, defaultDocNumber, onSuccess }) {
             background: "#0a0a0a",
             border: `1px solid ${C.border2}`,
             borderRadius: 10,
-            padding: "12px 14px",
+            padding: "clamp(12px, 3vw, 12px) clamp(12px, 3vw, 14px)",
             color: C.text,
-            fontSize: 14,
+            fontSize: 16,
             fontFamily: "'DM Mono',monospace",
           }}
         />
@@ -748,8 +803,8 @@ function KYCForm({ defaultDocType, defaultDocNumber, onSuccess }) {
           background: C.green,
           color: "#000",
           fontWeight: 700,
-          fontSize: 14,
-          padding: "14px",
+          fontSize: "clamp(14px, 3vw, 14px)",
+          padding: "clamp(12px, 3vw, 14px)",
           borderRadius: 10,
           border: "none",
           fontFamily: "'Outfit',sans-serif",
@@ -758,6 +813,7 @@ function KYCForm({ defaultDocType, defaultDocNumber, onSuccess }) {
           alignItems: "center",
           justifyContent: "center",
           gap: 8,
+          minHeight: 48,
         }}
       >
         {loading ? (
@@ -1342,16 +1398,19 @@ export default function KYC() {
       style={{
         flex: 1,
         overflowY: "auto",
-        padding: "24px 24px",
+        padding: "clamp(16px, 5vw, 24px)",
         background: C.bg,
         minHeight: 0,
       }}
     >
       {/* Page header */}
-      <div className="kyc-card" style={{ marginBottom: 24 }}>
+      <div
+        className="kyc-card"
+        style={{ marginBottom: "clamp(16px, 4vw, 24px)" }}
+      >
         <div
           style={{
-            fontSize: 9,
+            fontSize: "clamp(8px, 2vw, 9px)",
             color: C.muted,
             letterSpacing: 3,
             marginBottom: 6,
@@ -1363,7 +1422,7 @@ export default function KYC() {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 10,
+            gap: "clamp(8px, 3vw, 14px)",
             justifyContent: "space-between",
             flexWrap: "wrap",
           }}
@@ -1371,7 +1430,7 @@ export default function KYC() {
           <h1
             style={{
               fontFamily: "'Bebas Neue',sans-serif",
-              fontSize: "clamp(26px,3vw,38px)",
+              fontSize: "clamp(20px, 6vw, 38px)",
               letterSpacing: 1,
               margin: 0,
             }}
@@ -1387,7 +1446,8 @@ export default function KYC() {
                 background: STATUS_CONFIG[kycStatus]?.bg,
                 border: `1px solid ${STATUS_CONFIG[kycStatus]?.border}`,
                 borderRadius: 100,
-                padding: "5px 12px",
+                padding: "5px clamp(8px, 2vw, 12px)",
+                minWidth: "fit-content",
               }}
             >
               {kycStatus === "verified" && (
@@ -1439,7 +1499,7 @@ export default function KYC() {
               )}
               <span
                 style={{
-                  fontSize: 11,
+                  fontSize: "clamp(9px, 2vw, 11px)",
                   fontWeight: 600,
                   color: STATUS_CONFIG[kycStatus]?.color,
                   letterSpacing: 1,
@@ -1456,14 +1516,18 @@ export default function KYC() {
       {/* Main card */}
       <div
         className="kyc-card"
-        style={{ maxWidth: 560, animationDelay: "0.08s" }}
+        style={{
+          maxWidth: "min(560px, 100%)",
+          margin: "0 auto",
+          animationDelay: "0.08s",
+        }}
       >
         <div
           style={{
             background: C.card,
             border: `1px solid ${C.border}`,
             borderRadius: 16,
-            padding: "28px 28px",
+            padding: "clamp(20px, 5vw, 28px)",
             minHeight: 360,
           }}
         >
@@ -1533,17 +1597,22 @@ export default function KYC() {
       {kycStatus && kycStatus !== "verified" && (
         <div
           className="kyc-card"
-          style={{ maxWidth: 560, marginTop: 14, animationDelay: "0.14s" }}
+          style={{
+            maxWidth: "min(560px, 100%)",
+            margin: "clamp(12px, 3vw, 14px) auto 0",
+            animationDelay: "0.14s",
+          }}
         >
           <div
+            className="info-box"
             style={{
               background: C.card,
               border: `1px solid ${C.border}`,
               borderRadius: 12,
-              padding: "14px 18px",
+              padding: "clamp(12px, 3vw, 14px) clamp(14px, 3vw, 18px)",
               display: "flex",
-              alignItems: "center",
-              gap: 12,
+              alignItems: "flex-start",
+              gap: "clamp(8px, 2vw, 12px)",
             }}
           >
             <svg
@@ -1554,13 +1623,19 @@ export default function KYC() {
               stroke={C.amber}
               strokeWidth={1.8}
               strokeLinecap="round"
-              style={{ flexShrink: 0 }}
+              style={{ flexShrink: 0, marginTop: 4 }}
             >
               <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
               <line x1="12" y1="9" x2="12" y2="13" />
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
-            <span style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
+            <span
+              style={{
+                fontSize: "clamp(11px, 2vw, 12px)",
+                color: C.muted,
+                lineHeight: 1.5,
+              }}
+            >
               Withdrawals are <span style={{ color: C.amber }}>locked</span>{" "}
               until KYC is approved. Complete verification to unlock all
               features.

@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #0ECB81;
-  --secondary: #F5A623;
+  --primary: #0ecb81;
+  --secondary: #f5a623;
   --bg: #080808;
   --surface: #111111;
-  --border: #1E1E1E;
-  --text-primary: #FFFFFF;
+  --border: #1e1e1e;
+  --text-primary: #ffffff;
   --text-muted: #888888;
-  --negative: #F6465D;
+  --negative: #f6465d;
   --accent-glow: rgba(14, 203, 129, 0.2);
   --amber-glow: rgba(245, 166, 35, 0.2);
 
-  --sans: 'Inter', system-ui, -apple-system, sans-serif;
-  
+  --sans: "Inter", system-ui, -apple-system, sans-serif;
+
   color-scheme: dark;
   background: var(--bg);
   color: var(--text-primary);
@@ -21,10 +21,70 @@
   -webkit-font-smoothing: antialiased;
 }
 
-body {
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
   margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+body {
   background: var(--bg);
   overflow-x: hidden;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mobile input optimizations */
+input,
+textarea,
+select,
+button {
+  -webkit-appearance: none;
+  appearance: none;
+  font-size: 16px; /* Prevents iOS auto-zoom */
+  font-family: inherit;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="number"],
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Better touch targets */
+button,
+a,
+input[type="button"],
+input[type="submit"],
+[role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+  -webkit-tap-highlight-color: transparent;
+  tap-highlight-color: transparent;
+}
+
+/* Ensure full viewport height on iOS */
+@supports (height: 100dvh) {
+  html,
+  body,
+  #root {
+    height: 100dvh;
+  }
 }
 
 /* ── Global interactive cursor ─────────────────────────── */

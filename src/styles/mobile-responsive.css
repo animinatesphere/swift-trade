@@ -1,0 +1,307 @@
+/* ────────────────────────────────────────────────────────────────
+   MOBILE RESPONSIVE UTILITIES - Applied Globally
+   ──────────────────────────────────────────────────────────────── */
+
+/* Reset and base mobile-first styles */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Prevent zoom on input focus (iOS) */
+input,
+textarea,
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  font-size: 16px; /* Prevents auto-zoom on iOS */
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Better touch targets */
+button,
+a,
+input[type="button"],
+input[type="submit"],
+input[type="radio"],
+input[type="checkbox"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Flexible container layouts */
+.container {
+  width: 100%;
+  max-width: 100%;
+  padding: 0 clamp(12px, 4vw, 24px);
+  margin: 0 auto;
+}
+
+.container-sm {
+  max-width: 480px;
+}
+
+.container-md {
+  max-width: 768px;
+}
+
+.container-lg {
+  max-width: 1200px;
+}
+
+/* Responsive grid */
+.grid {
+  display: grid;
+  gap: clamp(12px, 3vw, 20px);
+}
+
+.grid-2 {
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(clamp(150px, 45vw, 300px), 1fr)
+  );
+}
+
+.grid-3 {
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(clamp(120px, 30%, 250px), 1fr)
+  );
+}
+
+.grid-4 {
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(clamp(100px, 25%, 200px), 1fr)
+  );
+}
+
+/* Responsive typography */
+h1 {
+  font-size: clamp(24px, 6vw, 48px);
+  margin: clamp(12px, 3vw, 20px) 0;
+}
+
+h2 {
+  font-size: clamp(20px, 5vw, 36px);
+  margin: clamp(12px, 3vw, 18px) 0;
+}
+
+h3 {
+  font-size: clamp(16px, 4vw, 28px);
+  margin: clamp(10px, 2vw, 16px) 0;
+}
+
+p {
+  font-size: clamp(14px, 2.5vw, 16px);
+  line-height: 1.6;
+  margin: clamp(8px, 2vw, 12px) 0;
+}
+
+/* Responsive spacing */
+.mt-1 {
+  margin-top: clamp(4px, 1vw, 8px);
+}
+.mt-2 {
+  margin-top: clamp(8px, 2vw, 12px);
+}
+.mt-3 {
+  margin-top: clamp(12px, 3vw, 20px);
+}
+.mt-4 {
+  margin-top: clamp(16px, 4vw, 28px);
+}
+
+.mb-1 {
+  margin-bottom: clamp(4px, 1vw, 8px);
+}
+.mb-2 {
+  margin-bottom: clamp(8px, 2vw, 12px);
+}
+.mb-3 {
+  margin-bottom: clamp(12px, 3vw, 20px);
+}
+.mb-4 {
+  margin-bottom: clamp(16px, 4vw, 28px);
+}
+
+.p-1 {
+  padding: clamp(4px, 1vw, 8px);
+}
+.p-2 {
+  padding: clamp(8px, 2vw, 12px);
+}
+.p-3 {
+  padding: clamp(12px, 3vw, 20px);
+}
+.p-4 {
+  padding: clamp(16px, 4vw, 28px);
+}
+
+/* Responsive flex layouts */
+.flex {
+  display: flex;
+  align-items: center;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mobile-first media queries */
+
+/* Tablets (768px and up) */
+@media (min-width: 768px) {
+  .hide-mobile {
+    display: none;
+  }
+
+  .container {
+    padding: 0 20px;
+  }
+
+  .grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Large screens (1024px and up) */
+@media (min-width: 1024px) {
+  .container {
+    padding: 0 32px;
+  }
+}
+
+/* Extra large screens (1440px and up) */
+@media (min-width: 1440px) {
+  .container {
+    max-width: 1280px;
+  }
+}
+
+/* Small mobile phones (less than 360px) */
+@media (max-width: 359px) {
+  h1 {
+    font-size: 20px;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+
+  h3 {
+    font-size: 16px;
+  }
+
+  p {
+    font-size: 13px;
+  }
+
+  button,
+  input {
+    font-size: 15px;
+  }
+
+  .hide-mobile-xs {
+    display: none !important;
+  }
+}
+
+/* Landscape mode adjustments */
+@media (max-height: 500px) {
+  .spacer-large {
+    margin-top: clamp(8px, 2vw, 12px) !important;
+    margin-bottom: clamp(8px, 2vw, 12px) !important;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) {
+  button:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  button:active {
+    transform: scale(0.98);
+  }
+
+  /* Better feedback on touch */
+  .btn-hover:active {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+}
+
+/* High resolution screens */
+@media (min-resolution: 192dpi) {
+  svg {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* Notch support (iPhone X+) */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+
+  .safe-area {
+    padding-left: max(0, env(safe-area-inset-left));
+    padding-right: max(0, env(safe-area-inset-right));
+  }
+}
+
+/* Accessibility: Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  input,
+  textarea {
+    background-color: #0a0a0a;
+    color: #ffffff;
+    border-color: #1a1a1a;
+  }
+
+  input::placeholder {
+    color: #666666;
+  }
+}
