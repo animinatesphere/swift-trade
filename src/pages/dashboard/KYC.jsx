@@ -23,8 +23,7 @@ const C = {
 
 // ── Cloudinary config ─────────────────────────────────────
 // Unsigned upload preset for KYC documents (no API secret exposed)
-const CLOUD_NAME =
-  import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "swiftrade-app";
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "dbhelafgg";
 const UPLOAD_PRESET =
   import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "swiftrade-app";
 
