@@ -70,10 +70,12 @@ const CSS = `
     .stats-grid { grid-template-columns: 1fr !important; gap: clamp(12px, 3vw, 20px) !important; }
     .content-row { flex-direction: column !important; gap: clamp(12px, 3vw, 20px) !important; }
     .rates-panel { width: 100% !important; }
+    .user-pill { padding: 4px !important; }
   }
 
   @media (max-width: 768px) {
-    .card-in { padding: clamp(16px, 3vw, 20px) !important; }
+    .padded-card { padding: clamp(16px, 3vw, 20px) !important; }
+    .dashboard-content { padding: clamp(14px, 3vw, 18px) clamp(14px, 3vw, 20px) !important; gap: clamp(10px, 2vw, 14px) !important; }
     .dashboard-topbar { gap: clamp(8px, 2vw, 12px) !important; }
     .topbar-status span { font-size: clamp(11px, 2vw, 13px) !important; }
     .trade-btn { padding: clamp(8px, 2vw, 10px) !important; min-height: 40px !important; }
@@ -85,14 +87,27 @@ const CSS = `
     .topbar-status span:last-child { display: none !important; }
     .trade-btn-text { display: none !important; }
     .trade-btn { padding: 8px !important; border-radius: 8px !important; min-height: 44px !important; }
-    .card-in { padding: clamp(14px, 2vw, 18px) !important; }
+    .padded-card { padding: clamp(14px, 2vw, 18px) !important; }
+    .txn-table { min-width: 0 !important; }
+    .txn-header-row { display: none !important; }
+    .txn-grid {
+      grid-template-columns: 1fr 1fr !important;
+      row-gap: 8px !important;
+      column-gap: 10px !important;
+      align-items: start !important;
+    }
+    .txn-cell-trade { grid-column: 1 !important; grid-row: 1 !important; }
+    .txn-cell-date { grid-column: 2 !important; grid-row: 1 !important; text-align: right !important; }
+    .txn-cell-sent { grid-column: 1 !important; grid-row: 2 !important; }
+    .txn-cell-received { grid-column: 2 !important; grid-row: 2 !important; text-align: right !important; }
   }
 
   @media (max-width: 480px) {
-    .dashboard-topbar { flex-direction: column !important; gap: clamp(8px, 2vw, 12px) !important; align-items: flex-start !important; }
     .stats-grid { grid-template-columns: 1fr !important; gap: clamp(12px, 3vw, 16px) !important; }
-    .card-in { padding: clamp(12px, 2vw, 16px) !important; }
+    .padded-card { padding: clamp(12px, 2vw, 16px) !important; }
+    .dashboard-content { padding: clamp(10px, 3vw, 14px) !important; gap: clamp(8px, 2vw, 10px) !important; }
     .ticker-wrap { font-size: clamp(11px, 2vw, 13px) !important; }
+    .icon-btn { width: 38px !important; height: 38px !important; }
   }
 `;
 
@@ -247,7 +262,7 @@ function KYCBanner({ status, rejectionReason }) {
   return (
     <Link to="/dashboard/kyc" style={{ textDecoration: "none" }}>
       <div
-        className={`card-in kyc-banner ${cfg.cls}`}
+        className={`card-in padded-card kyc-banner ${cfg.cls}`}
         style={{
           background: cfg.bg,
           border: `1px solid ${cfg.border}`,
@@ -483,7 +498,7 @@ function Stats({ balance, stats }) {
       {items.map((s, i) => (
         <div
           key={s.label}
-          className="card-in"
+          className="card-in padded-card"
           style={{
             background: s.highlight
               ? "linear-gradient(135deg,rgba(14,203,129,0.1),rgba(14,203,129,0.04))"
@@ -533,7 +548,7 @@ function Stats({ balance, stats }) {
           <div
             style={{
               fontFamily: "'Bebas Neue',sans-serif",
-              fontSize: 24,
+              fontSize: "clamp(20px, 5vw, 24px)",
               color: s.col,
               letterSpacing: 1,
               lineHeight: 1,
@@ -609,9 +624,10 @@ function History({ transactions }) {
           View all →
         </span>
       </div>
-      <div style={{ overflowX: "auto" }}>
-        <div style={{ minWidth: 500 }}>
+      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div className="txn-table" style={{ minWidth: 500 }}>
           <div
+            className="txn-grid txn-header-row"
             style={{
               display: "grid",
               gridTemplateColumns: "1.4fr 1fr 1fr 1.2fr",
@@ -653,7 +669,7 @@ function History({ transactions }) {
             return (
               <div
                 key={t.id}
-                className="txn-row"
+                className="txn-row txn-grid"
                 style={{
                   display: "grid",
                   gridTemplateColumns: "1.4fr 1fr 1fr 1.2fr",
@@ -664,7 +680,10 @@ function History({ transactions }) {
                   animationDelay: `${i * 0.04}s`,
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                <div
+                  className="txn-cell-trade"
+                  style={{ display: "flex", alignItems: "center", gap: 9 }}
+                >
                   <div
                     style={{
                       width: 28,
@@ -692,6 +711,7 @@ function History({ transactions }) {
                   </div>
                 </div>
                 <div
+                  className="txn-cell-sent"
                   style={{
                     fontFamily: "'DM Mono',monospace",
                     fontSize: 12,
@@ -703,7 +723,7 @@ function History({ transactions }) {
                   })}{" "}
                   {cDef.id}
                 </div>
-                <div>
+                <div className="txn-cell-received">
                   <div
                     style={{
                       fontFamily: "'DM Mono',monospace",
@@ -720,7 +740,7 @@ function History({ transactions }) {
                     Rate: ₦{Number(t.rate_applied).toLocaleString()}
                   </div>
                 </div>
-                <div>
+                <div className="txn-cell-date">
                   <div style={{ fontSize: 11, color: C.muted }}>
                     {new Date(t.created_at).toLocaleDateString("en-GB", {
                       day: "numeric",
@@ -928,11 +948,24 @@ function Topbar({ user, onNewTrade }) {
         backdropFilter: "blur(12px)",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <span className="topbar-greet" style={{ fontSize: 13, color: C.muted }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          minWidth: 0,
+          overflow: "hidden",
+        }}
+      >
+        <span
+          className="topbar-greet"
+          style={{ fontSize: 13, color: C.muted, whiteSpace: "nowrap" }}
+        >
           {greet},{" "}
         </span>
-        <span style={{ fontSize: 13, fontWeight: 600 }}>{firstName}</span>
+        <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap" }}>
+          {firstName}
+        </span>
         <span
           className="topbar-status"
           style={{
@@ -968,7 +1001,9 @@ function Topbar({ user, onNewTrade }) {
           </span>
         </span>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <div
+        style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}
+      >
         <button
           onClick={onNewTrade}
           className="trade-btn"
@@ -1042,6 +1077,7 @@ function Topbar({ user, onNewTrade }) {
           />
         </button>
         <div
+          className="user-pill"
           style={{
             display: "flex",
             alignItems: "center",
@@ -1128,11 +1164,9 @@ export default function DashboardOverview() {
         api.get("/wallets/balance").catch(() => ({ data: { balance: 0 } })),
         api.get("/transactions/deposits").catch(() => ({ data: [] })),
         api.get("/rates/").catch(() => ({ data: [] })),
-        api
-          .get("/dashboard/stats")
-          .catch(() => ({
-            data: { totalWithdrawn: 0, completedTrades: 0, volumeThisMonth: 0 },
-          })),
+        api.get("/dashboard/stats").catch(() => ({
+          data: { totalWithdrawn: 0, completedTrades: 0, volumeThisMonth: 0 },
+        })),
       ]);
 
       setNgnBalance(balRes.data.balance || 0);
@@ -1184,6 +1218,7 @@ export default function DashboardOverview() {
       <Ticker />
 
       <div
+        className="dashboard-content"
         style={{
           flex: 1,
           overflowY: "auto",
