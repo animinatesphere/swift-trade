@@ -996,7 +996,7 @@ function StepAmount({
   const timerColor =
     ratesRefreshIn > 20 ? C.green : ratesRefreshIn > 10 ? C.amber : C.red;
   const pct = (ratesRefreshIn / RATES_REFRESH) * 100;
-  const minNGN = 5000;
+  const minNGN = liveRate;
   const tooLow = ngnAmount > 0 && ngnAmount < minNGN;
 
   return (
@@ -1251,7 +1251,7 @@ function StepAmount({
               strokeLinecap="round"
             />
           </svg>
-          Minimum trade is ₦5,000
+          Minimum trade is ₦{minNGN.toLocaleString("en-NG", { maximumFractionDigits: 0 })}
         </div>
       )}
 
@@ -2207,7 +2207,7 @@ export default function SellCrypto() {
       return (
         !!trade.amount &&
         parseFloat(trade.amount) > 0 &&
-        trade.ngnAmount >= 5000 &&
+        trade.ngnAmount >= trade.liveRate &&
         trade.liveRate > 0
       );
     if (step === "review") return true;
