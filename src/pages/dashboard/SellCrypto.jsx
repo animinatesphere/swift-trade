@@ -134,7 +134,7 @@ const COINS = [
     icon: "₮",
     color: "#26A17B",
     bg: "rgba(38,161,123,0.15)",
-    networks: ["TRC20", "ERC20"],
+    networks: ["TRC20", "ERC20", "BEP20"],
   },
   {
     id: "BTC",
@@ -253,15 +253,7 @@ function findDepositEntry(coinId, network, depositAddresses) {
   const addrs = depositAddresses[coinId?.toLowerCase()] || [];
   if (!network) return addrs.find((a) => a.address) || null;
   const target = normNet(network);
-  return (
-    addrs.find((a) => normNet(a.network) === target) ||
-    addrs.find(
-      (a) =>
-        normNet(a.network).includes(target) ||
-        target.includes(normNet(a.network)),
-    ) ||
-    null
-  );
+  return addrs.find((a) => normNet(a.network) === target) || null;
 }
 
 function buildLiveCoins(liveRates) {
