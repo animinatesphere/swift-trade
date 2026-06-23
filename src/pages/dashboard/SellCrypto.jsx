@@ -2002,14 +2002,16 @@ function StepDone({ trade }) {
           margin: "0 auto 28px",
         }}
       >
-        Your deposit is being tracked. Once the blockchain confirms the transfer,{" "}
+        Your deposit is being tracked. Once the blockchain confirms the
+        transfer,{" "}
         <span style={{ color: C.green, fontWeight: 500 }}>
           ₦
           {trade.ngnAmount.toLocaleString("en-NG", {
             maximumFractionDigits: 0,
           })}
         </span>{" "}
-        will be instantly credited to your NGN balance. You can safely leave this page.
+        will be instantly credited to your NGN balance. You can safely leave
+        this page.
       </p>
 
       <div
@@ -2117,7 +2119,7 @@ export default function SellCrypto() {
       const addrRes = await api.get("/wallets/deposit-addresses");
       const normalized = normalizeDepositAddresses(addrRes.data);
       const entry = findDepositEntry(coinId, network, normalized);
-      
+
       if (entry?.address) {
         setTrade((t) => ({ ...t, depositEntry: entry }));
         return { address: entry.address };
