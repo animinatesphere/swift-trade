@@ -134,7 +134,7 @@ const COINS = [
     icon: "₮",
     color: "#26A17B",
     bg: "rgba(38,161,123,0.15)",
-    networks: ["TRC20", "ERC20"],
+    networks: ["TRC20", "ERC20", "BEP20", "SOLANA"],
   },
   {
     id: "BTC",
@@ -253,15 +253,7 @@ function findDepositEntry(coinId, network, depositAddresses) {
   const addrs = depositAddresses[coinId?.toLowerCase()] || [];
   if (!network) return addrs.find((a) => a.address) || null;
   const target = normNet(network);
-  return (
-    addrs.find((a) => normNet(a.network) === target) ||
-    addrs.find(
-      (a) =>
-        normNet(a.network).includes(target) ||
-        target.includes(normNet(a.network)),
-    ) ||
-    null
-  );
+  return addrs.find((a) => normNet(a.network) === target) || null;
 }
 
 function buildLiveCoins(liveRates) {
@@ -996,7 +988,7 @@ function StepAmount({
   const timerColor =
     ratesRefreshIn > 20 ? C.green : ratesRefreshIn > 10 ? C.amber : C.red;
   const pct = (ratesRefreshIn / RATES_REFRESH) * 100;
-  const minNGN = 5000;
+  const minNGN = liveRate;
   const tooLow = ngnAmount > 0 && ngnAmount < minNGN;
 
   return (
@@ -1251,7 +1243,7 @@ function StepAmount({
               strokeLinecap="round"
             />
           </svg>
-          Minimum trade is ₦5,000
+          Minimum trade is ₦{minNGN.toLocaleString("en-NG", { maximumFractionDigits: 0 })}
         </div>
       )}
 
@@ -2209,7 +2201,7 @@ export default function SellCrypto() {
       return (
         !!trade.amount &&
         parseFloat(trade.amount) > 0 &&
-        trade.ngnAmount >= 5000 &&
+        trade.ngnAmount >= trade.liveRate &&
         trade.liveRate > 0
       );
     if (step === "review") return true;

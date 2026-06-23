@@ -7,7 +7,7 @@ const C = {
   amber: "#F5A623",
   red: "#F6465D",
   blue: "#3B82F6",
-  bg: "#080808",
+  bg: "#080809",
   surface: "#0c0c0c",
   card: "#101010",
   card2: "#141414",
@@ -18,6 +18,7 @@ const C = {
   muted2: "#2e2e2e",
 };
 
+// test
 const CSS = `
   @keyframes fadeUp  { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
   @keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:0.3} }
@@ -565,27 +566,26 @@ export default function Settings() {
                         kycData?.status === "verified"
                           ? "rgba(14,203,129,0.1)"
                           : kycData?.status === "rejected"
-                          ? "rgba(246,70,93,0.1)"
-                          : kycData?.status === "submitted"
-                          ? "rgba(59,130,246,0.1)"
-                          : "rgba(245,166,35,0.1)",
-                      border: `1px solid ${
-                        kycData?.status === "verified"
+                            ? "rgba(246,70,93,0.1)"
+                            : kycData?.status === "submitted"
+                              ? "rgba(59,130,246,0.1)"
+                              : "rgba(245,166,35,0.1)",
+                      border: `1px solid ${kycData?.status === "verified"
                           ? "rgba(14,203,129,0.2)"
                           : kycData?.status === "rejected"
-                          ? "rgba(246,70,93,0.2)"
-                          : kycData?.status === "submitted"
-                          ? "rgba(59,130,246,0.2)"
-                          : "rgba(245,166,35,0.2)"
-                      }`,
+                            ? "rgba(246,70,93,0.2)"
+                            : kycData?.status === "submitted"
+                              ? "rgba(59,130,246,0.2)"
+                              : "rgba(245,166,35,0.2)"
+                        }`,
                       color:
                         kycData?.status === "verified"
                           ? C.green
                           : kycData?.status === "rejected"
-                          ? C.red
-                          : kycData?.status === "submitted"
-                          ? C.blue
-                          : C.amber,
+                            ? C.red
+                            : kycData?.status === "submitted"
+                              ? C.blue
+                              : C.amber,
                       fontWeight: 600,
                       letterSpacing: 1,
                     }}
@@ -593,10 +593,10 @@ export default function Settings() {
                     {kycData?.status === "verified"
                       ? "✓ VERIFIED"
                       : kycData?.status === "rejected"
-                      ? "✗ REJECTED"
-                      : kycData?.status === "submitted"
-                      ? "⧗ PENDING"
-                      : "UNVERIFIED"}
+                        ? "✗ REJECTED"
+                        : kycData?.status === "submitted"
+                          ? "⧗ PENDING"
+                          : "UNVERIFIED"}
                   </span>
                   <span
                     style={{
@@ -673,19 +673,19 @@ export default function Settings() {
                 kycData?.status === "verified"
                   ? "Verified"
                   : kycData?.status === "rejected"
-                  ? "Rejected"
-                  : kycData?.status === "submitted"
-                  ? "Pending Verification"
-                  : "Unverified"
+                    ? "Rejected"
+                    : kycData?.status === "submitted"
+                      ? "Pending Verification"
+                      : "Unverified"
               }
               tag={
                 kycData?.status === "verified"
                   ? { label: "VERIFIED", color: "green" }
                   : kycData?.status === "rejected"
-                  ? { label: "REJECTED", color: "red" }
-                  : kycData?.status === "submitted"
-                  ? { label: "PENDING", color: "blue" }
-                  : { label: "UNVERIFIED", color: "amber" }
+                    ? { label: "REJECTED", color: "red" }
+                    : kycData?.status === "submitted"
+                      ? { label: "PENDING", color: "blue" }
+                      : { label: "UNVERIFIED", color: "amber" }
               }
             />
             {kycData?.rejection_reason && (
@@ -694,9 +694,9 @@ export default function Settings() {
                 value={kycData.rejection_reason}
               />
             )}
-            <FieldRow 
-              label="ID Type" 
-              value={kycData?.document_type || "Not provided"} 
+            <FieldRow
+              label="ID Type"
+              value={kycData?.document_type || "Not provided"}
             />
           </Section>
 
@@ -762,8 +762,8 @@ export default function Settings() {
                   {walletData?.pin_is_set ? "PIN is active" : "PIN is not set"}
                 </div>
                 <div style={{ fontSize: 12, color: C.muted, maxWidth: 280, lineHeight: 1.4 }}>
-                  {walletData?.pin_is_set 
-                    ? "Your withdrawals are currently secured by a 4-digit PIN." 
+                  {walletData?.pin_is_set
+                    ? "Your withdrawals are currently secured by a 4-digit PIN."
                     : "You must create a 4-digit Transaction PIN before you can withdraw."}
                 </div>
               </div>
