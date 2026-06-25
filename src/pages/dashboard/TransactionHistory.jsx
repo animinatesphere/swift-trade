@@ -94,6 +94,39 @@ const CSS = `
     .detail-panel {
       width: 100% !important;
     }
+    .table-min-width {
+      min-width: 0 !important;
+    }
+    .txn-header-row {
+      display: none !important;
+    }
+    .txn-type-cell {
+      display: none !important;
+    }
+    .txn-grid-row {
+      grid-template-columns: 1fr 1fr !important;
+      row-gap: 8px !important;
+      column-gap: 10px !important;
+      align-items: start !important;
+    }
+    .txn-cell-trade {
+      grid-column: 1 / -1 !important;
+      grid-row: 1 !important;
+    }
+    .txn-cell-amount {
+      grid-column: 1 !important;
+      grid-row: 2 !important;
+    }
+    .txn-cell-date {
+      grid-column: 2 !important;
+      grid-row: 2 !important;
+      text-align: right !important;
+    }
+    .txn-cell-status {
+      grid-column: 1 / -1 !important;
+      grid-row: 3 !important;
+      justify-content: flex-end !important;
+    }
   }
 `;
 
@@ -520,7 +553,7 @@ export default function TransactionHistory() {
 
         <div className="table-container">
           <div className="table-min-width">
-            <div style={{ display:"grid",
+            <div className="txn-header-row" style={{ display:"grid",
               gridTemplateColumns:"1.8fr 1fr 1fr 1.2fr 1fr",
               padding:"10px 18px", borderBottom:`1px solid ${C.border}` }}>
               {["Transaction","Type","Amount","Date","Status"].map((h,i)=>(
@@ -557,7 +590,7 @@ export default function TransactionHistory() {
               const isSel  = selected?.id===t.id;
               return (
                 <div key={t.id}
-                  className={`txn-row${isSel?" selected":""}`}
+                  className={`txn-row txn-grid-row${isSel?" selected":""}`}
                   onClick={()=>setSelected(isSel?null:t)}
                   style={{ display:"grid",
                     gridTemplateColumns:"1.8fr 1fr 1fr 1.2fr 1fr",
@@ -567,7 +600,7 @@ export default function TransactionHistory() {
                     alignItems:"center", cursor:"pointer",
                     animation:`fadeUp 0.35s ${i*0.03}s ease both` }}>
 
-                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                  <div className="txn-cell-trade" style={{ display:"flex", alignItems:"center", gap:10 }}>
                     <div style={{ width:32,height:32,borderRadius:9,
                       background:meta.bg, flexShrink:0,
                       display:"flex",alignItems:"center",justifyContent:"center",
@@ -582,13 +615,13 @@ export default function TransactionHistory() {
                     </div>
                   </div>
 
-                  <div>
+                  <div className="txn-type-cell">
                     <span style={{ fontSize:10,fontWeight:600,padding:"3px 8px",
                       borderRadius:100,color:meta.color,background:meta.bg,
                       letterSpacing:"0.5px" }}>{meta.label}</span>
                   </div>
 
-                  <div>
+                  <div className="txn-cell-amount">
                     <div style={{ fontFamily:"'DM Mono',monospace",fontSize:13,
                       color:t.type==="withdrawal"?C.red:C.green,fontWeight:500 }}>
                       {t.type==="withdrawal"?"-":""}{fmtNGN(t.ngnAmt)}
@@ -600,11 +633,11 @@ export default function TransactionHistory() {
                     )}
                   </div>
 
-                  <div style={{ fontSize:11,color:C.muted }}>
+                  <div className="txn-cell-date" style={{ fontSize:11,color:C.muted }}>
                     {fmtDate(t.date)}
                   </div>
 
-                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                  <div className="txn-cell-status" style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
                     <span style={{ fontSize:10,fontWeight:600,padding:"3px 9px",
                       borderRadius:100,color:status.color,background:status.bg,
                       display:"flex",alignItems:"center",gap:4 }}>
