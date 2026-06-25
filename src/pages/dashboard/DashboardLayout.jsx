@@ -665,7 +665,17 @@ export default function DashboardLayout() {
               color: C.text,
             }}
           >
-            SWIFT TRADE
+            {(() => {
+              if (location.pathname.includes("/dashboard/settings")) return "Settings";
+              if (location.pathname.includes("/dashboard/trade")) return "New Trade";
+              if (location.pathname.includes("/dashboard/withdraw")) return "Withdraw";
+              if (location.pathname.includes("/dashboard/txn")) return "Transactions";
+              if (location.pathname.includes("/dashboard/giftcards")) return "Gift Cards";
+              if (location.pathname.includes("/dashboard/kyc")) return "KYC Verification";
+              if (location.pathname.includes("/dashboard/bank")) return "Bank Accounts";
+              if (location.pathname.includes("/dashboard/support")) return "Support";
+              return "Dashboard";
+            })()}
           </div>
         </div>
 

@@ -37,6 +37,12 @@ const CSS = `
   }
 
   @media (max-width: 768px) {
+    .settings-content-wrapper {
+      padding: 16px 14px !important;
+    }
+    .settings-card {
+      padding: 18px 16px !important;
+    }
     .profile-hero-content {
       flex-direction: column !important;
       align-items: center !important;
@@ -455,11 +461,11 @@ export default function Settings() {
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
+      <div className="settings-content-wrapper" style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
         <div style={{ maxWidth: 680, margin: "0 auto" }}>
           {/* Profile hero */}
           <div
-            className="card-in"
+            className="card-in settings-card"
             style={{
               background: C.card,
               border: `1px solid ${C.border}`,
