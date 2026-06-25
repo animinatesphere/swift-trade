@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getApiErrorMessage, parseApiFieldErrors } from "../api/axios";
 import logoImg from "../assets/logo.png";
@@ -1366,6 +1366,9 @@ function LoginForm({ onSwitch }) {
   const formRef = useRef(null);
 
   const { login } = useAuth();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const isExpired = searchParams.get("expired") === "true";
 
   const handleSubmit = async () => {
     if (!form.email || !form.password) {
@@ -1428,6 +1431,23 @@ function LoginForm({ onSwitch }) {
           Access your wallet, rates and withdrawal tools.
         </p>
       </div>
+
+      {isExpired && (
+        <div
+          style={{
+            background: "rgba(245,166,35,0.08)",
+            border: "1px solid rgba(245,166,35,0.2)",
+            color: C.amber,
+            fontSize: 13,
+            padding: "12px 16px",
+            borderRadius: 10,
+            marginBottom: 20,
+            textAlign: "center",
+          }}
+        >
+          Session expired, please login again
+        </div>
+      )}
 
       <Field
         label="EMAIL ADDRESS"

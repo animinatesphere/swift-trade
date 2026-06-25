@@ -490,10 +490,13 @@ function IdVerificationForm({ defaultDocType, onVerified }) {
 
   const handleSubmit = async () => {
     setError("");
-    if (!docNumber.trim() || docNumber.trim().length < 5) {
-      return setError(
-        "Please enter a valid ID number (at least 5 characters).",
-      );
+    const trimmedNum = docNumber.trim();
+    if (docType === "nin" || docType === "bvn") {
+      if (trimmedNum.length !== 11 || !/^\d+$/.test(trimmedNum)) {
+        return setError(`Please enter a valid 11-digit ${docType.toUpperCase()}.`);
+      }
+    } else if (!trimmedNum || trimmedNum.length < 5) {
+      return setError("Please enter a valid ID number (at least 5 characters).");
     }
     if (docType === "drivers_license") {
       if (!dob) return setError("Please enter your date of birth.");
