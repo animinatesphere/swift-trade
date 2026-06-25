@@ -21,6 +21,10 @@ const CSS = `
   @media (max-width: 1024px) {
     .topbar-notif { display: none !important; }
   }
+  
+  @media (max-width: 640px) {
+    .notif-stats-icons { display: none !important; }
+  }
 `;
 
 const NOTIF_TYPES = {
@@ -105,7 +109,7 @@ export default function Notifications() {
             </div>
             <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>Unread notifications</div>
           </div>
-          <div style={{ display: "flex", gap: 20 }}>
+          <div className="notif-stats-icons" style={{ display: "flex", gap: 20 }}>
             {Object.entries(NOTIF_TYPES).map(([k, v]) => {
               const cnt = notifs.filter(n => n.type === k).length;
               if (!cnt) return null;
