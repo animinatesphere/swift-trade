@@ -86,19 +86,12 @@ const CSS = `
   @media (max-width: 640px) {
     .topbar-status span:last-child { display: none !important; }
     .padded-card { padding: clamp(14px, 2vw, 18px) !important; }
-    .txn-table { min-width: 0 !important; width: 100% !important; }
-    .txn-header-row { display: none !important; }
-    .txn-grid {
-      grid-template-columns: 1fr auto !important;
-      row-gap: 12px !important;
-      column-gap: 10px !important;
-      align-items: start !important;
-      padding: 16px 14px !important;
-    }
-    .txn-cell-trade { grid-column: 1 !important; grid-row: 1 !important; }
-    .txn-cell-date { grid-column: 2 !important; grid-row: 1 !important; text-align: right !important; display: flex !important; flex-direction: column; align-items: flex-end; gap: 6px; }
-    .txn-cell-sent { grid-column: 1 !important; grid-row: 2 !important; display: flex !important; align-items: center; }
-    .txn-cell-received { grid-column: 2 !important; grid-row: 2 !important; text-align: right !important; display: flex !important; flex-direction: column; align-items: flex-end; gap: 4px; }
+    /* Mobile txn history: hide the desktop scrollable table wrapper */
+    .txn-desktop { display: none !important; }
+    /* Show mobile card list instead */
+    .txn-mobile { display: block !important; }
+    /* Fix dashboard content overflow */
+    .dashboard-content { overflow-x: hidden !important; }
   }
 
   @media (max-width: 480px) {
@@ -592,6 +585,14 @@ function Stats({ balance, stats }) {
 // ─── HISTORY TABLE ────────────────────────────────────────
 function History({ transactions }) {
   const navigate = useNavigate();
+  const isEmpty = !transactions || transactions.length === 0;
+
+  const EmptyState = () => (
+    <div style={{ padding: "30px", textAlign: "center", color: C.muted, fontSize: 12 }}>
+      No recent transactions
+    </div>
+  );
+
   return (
     <div
       className="card-in"
@@ -602,173 +603,96 @@ function History({ transactions }) {
         overflow: "hidden",
         animationDelay: "0.15s",
         flex: 1,
+        minWidth: 0,
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "14px 18px",
-          borderBottom: `1px solid ${C.border}`,
-        }}
-      >
-        <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: 1 }}>
-          TRANSACTION HISTORY
-        </span>
-        <span
-          style={{ fontSize: 11, color: C.green, cursor: "pointer" }}
-          onClick={() => navigate("/dashboard/txn")}
-        >
-          View all →
-        </span>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", borderBottom: `1px solid ${C.border}` }}>
+        <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: 1 }}>TRANSACTION HISTORY</span>
+        <span style={{ fontSize: 11, color: C.green, cursor: "pointer" }} onClick={() => navigate("/dashboard/txn")}>View all →</span>
       </div>
-      <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-        <div className="txn-table" style={{ minWidth: 500 }}>
-          <div
-            className="txn-grid txn-header-row"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1.4fr 1fr 1fr 1.2fr",
-              padding: "8px 18px",
-              borderBottom: `1px solid ${C.border}`,
-            }}
-          >
+
+      {/* ─── DESKTOP TABLE (hidden on mobile via CSS) ─── */}
+      <div className="txn-desktop" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div style={{ minWidth: 500 }}>
+          {/* header row */}
+          <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1.2fr", padding: "8px 18px", borderBottom: `1px solid ${C.border}` }}>
             {["Trade", "You Sent", "You Received", "Date"].map((h) => (
-              <span
-                key={h}
-                style={{
-                  fontSize: 9,
-                  color: C.muted,
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
-                }}
-              >
-                {h}
-              </span>
+              <span key={h} style={{ fontSize: 9, color: C.muted, letterSpacing: 2, textTransform: "uppercase" }}>{h}</span>
             ))}
           </div>
-          {(!transactions || transactions.length === 0) && (
-            <div
-              style={{
-                padding: "30px",
-                textAlign: "center",
-                color: C.muted,
-                fontSize: 12,
-              }}
-            >
-              No recent deposits
-            </div>
-          )}
+          {isEmpty && <EmptyState />}
           {(transactions || []).slice(0, 5).map((t, i) => {
-            const cDef =
-              COINS.find(
-                (c) => c.id.toLowerCase() === t.asset?.toLowerCase(),
-              ) || COINS[0];
+            const cDef = COINS.find((c) => c.id.toLowerCase() === t.asset?.toLowerCase()) || COINS[0];
+            const statusConverted = t.status === "converted";
             return (
-              <div
-                key={t.id}
-                className="txn-row txn-grid"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1.4fr 1fr 1fr 1.2fr",
-                  padding: "12px 18px",
-                  borderBottom: `1px solid ${C.border}`,
-                  alignItems: "center",
-                  cursor: "pointer",
-                  animationDelay: `${i * 0.04}s`,
-                }}
-              >
-                <div
-                  className="txn-cell-trade"
-                  style={{ display: "flex", alignItems: "center", gap: 9 }}
-                >
-                  <div
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: "50%",
-                      background: cDef.bg,
-                      flexShrink: 0,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: cDef.color,
-                    }}
-                  >
-                    {cDef.icon}
-                  </div>
+              <div key={t.id} className="txn-row"
+                style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1.2fr", padding: "12px 18px", borderBottom: `1px solid ${C.border}`, alignItems: "center", cursor: "pointer", animationDelay: `${i * 0.04}s` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: cDef.bg, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: cDef.color }}>{cDef.icon}</div>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 500 }}>
-                      {cDef.id}/NGN
-                    </div>
-                    <div style={{ fontSize: 10, color: C.muted }}>
-                      TRD-{t.id}
-                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 500 }}>{cDef.id}/NGN</div>
+                    <div style={{ fontSize: 10, color: C.muted }}>TRD-{t.id}</div>
                   </div>
                 </div>
-                <div
-                  className="txn-cell-sent"
-                  style={{
-                    fontFamily: "'DM Mono',monospace",
-                    fontSize: 12,
-                    color: "#bbb",
-                  }}
-                >
-                  {Number(t.crypto_amount).toLocaleString(undefined, {
-                    maximumFractionDigits: 6,
-                  })}{" "}
-                  {cDef.id}
+                <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "#bbb" }}>
+                  {Number(t.crypto_amount).toLocaleString(undefined, { maximumFractionDigits: 6 })} {cDef.id}
                 </div>
-                <div className="txn-cell-received">
-                  <div
-                    style={{
-                      fontFamily: "'DM Mono',monospace",
-                      fontSize: 13,
-                      color: C.green,
-                    }}
-                  >
-                    ₦
-                    {Number(t.ngn_amount).toLocaleString(undefined, {
-                      maximumFractionDigits: 2,
-                    })}
-                  </div>
-                  <div style={{ fontSize: 10, color: C.muted }}>
-                    Rate: ₦{Number(t.rate_applied).toLocaleString()}
-                  </div>
+                <div>
+                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 13, color: C.green }}>₦{Number(t.ngn_amount).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+                  <div style={{ fontSize: 10, color: C.muted }}>Rate: ₦{Number(t.rate_applied).toLocaleString()}</div>
                 </div>
-                <div className="txn-cell-date">
-                  <div style={{ fontSize: 11, color: C.muted }}>
-                    {new Date(t.created_at).toLocaleDateString("en-GB", {
-                      day: "numeric",
-                      month: "short",
-                      hour: "numeric",
-                      minute: "2-digit",
-                    })}
-                  </div>
-                  <span
-                    style={{
-                      fontSize: 9,
-                      padding: "2px 7px",
-                      borderRadius: 100,
-                      background:
-                        t.status === "converted"
-                          ? "rgba(14,203,129,0.08)"
-                          : "rgba(245,166,35,0.08)",
-                      color: t.status === "converted" ? C.green : C.amber,
-                      letterSpacing: 1,
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    {t.status}
-                  </span>
+                <div>
+                  <div style={{ fontSize: 11, color: C.muted }}>{new Date(t.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}</div>
+                  <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 100, background: statusConverted ? "rgba(14,203,129,0.08)" : "rgba(245,166,35,0.08)", color: statusConverted ? C.green : C.amber, letterSpacing: 1, textTransform: "uppercase" }}>{t.status}</span>
                 </div>
               </div>
             );
           })}
         </div>
+      </div>
+
+      {/* ─── MOBILE CARDS (shown only on mobile via CSS) ─── */}
+      <div className="txn-mobile" style={{ display: "none" }}>
+        {isEmpty && <EmptyState />}
+        {(transactions || []).slice(0, 5).map((t, i) => {
+          const cDef = COINS.find((c) => c.id.toLowerCase() === t.asset?.toLowerCase()) || COINS[0];
+          const statusConverted = t.status === "converted";
+          return (
+            <div key={t.id} className="txn-row"
+              style={{ padding: "14px 16px", borderBottom: `1px solid ${C.border}`, cursor: "pointer" }}>
+              {/* Row 1: coin info + status badge */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: cDef.bg, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: cDef.color }}>{cDef.icon}</div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>{cDef.id}/NGN</div>
+                    <div style={{ fontSize: 10, color: C.muted, fontFamily: "'DM Mono',monospace" }}>TRD-{t.id}</div>
+                  </div>
+                </div>
+                <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 100, background: statusConverted ? "rgba(14,203,129,0.1)" : "rgba(245,166,35,0.1)", color: statusConverted ? C.green : C.amber, letterSpacing: 1, textTransform: "uppercase", fontWeight: 600 }}>{t.status}</span>
+              </div>
+              {/* Row 2: amounts left/right + date */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                <div>
+                  <div style={{ fontSize: 9, color: C.muted, letterSpacing: 1, marginBottom: 2 }}>YOU SENT</div>
+                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "#bbb" }}>
+                    {Number(t.crypto_amount).toLocaleString(undefined, { maximumFractionDigits: 6 })} {cDef.id}
+                  </div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 9, color: C.muted, letterSpacing: 1, marginBottom: 2 }}>YOU RECEIVED</div>
+                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 13, color: C.green, fontWeight: 600 }}>₦{Number(t.ngn_amount).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+                </div>
+              </div>
+              {/* Row 3: date + rate */}
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+                <div style={{ fontSize: 10, color: C.muted }}>{new Date(t.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</div>
+                <div style={{ fontSize: 10, color: C.muted }}>Rate: ₦{Number(t.rate_applied).toLocaleString()}</div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -920,6 +844,7 @@ function RatesPanel({ onTrade, liveCoins, loading }) {
 
 // ─── TOPBAR ───────────────────────────────────────────────
 function Topbar({ user, onNewTrade }) {
+  const navigate = useNavigate();
   const h = new Date().getHours();
   const greet =
     h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
@@ -1037,6 +962,7 @@ function Topbar({ user, onNewTrade }) {
         </button>
         <button
           className="icon-btn"
+          onClick={() => navigate("/dashboard/notifications")}
           style={{
             width: 34,
             height: 34,

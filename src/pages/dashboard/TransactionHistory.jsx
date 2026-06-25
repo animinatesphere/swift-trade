@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 
 const C = {
@@ -386,6 +386,7 @@ export default function TransactionHistory() {
   const [selected, setSelected]   = useState(null);
   const [sortDir, setSortDir]     = useState(-1);
   const { setIsMobileOpen }       = useOutletContext() || {};
+  const navigate                  = useNavigate();
 
   const [transactions, setTransactions] = useState([]);
   const [stats, setStats] = useState(null);
@@ -483,6 +484,7 @@ export default function TransactionHistory() {
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
           <button className="topbar-icon"
+            onClick={() => navigate("/dashboard/notifications")}
             style={{ width:34,height:34,borderRadius:8,background:C.card,
               border:`1px solid ${C.border}`,display:"flex",alignItems:"center",
               justifyContent:"center",cursor:"pointer",color:C.muted,position:"relative" }}>

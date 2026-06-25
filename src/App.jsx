@@ -21,6 +21,7 @@ import Withdraw from './pages/dashboard/Withdraw'
 import Settings from './pages/dashboard/Settings'
 import GiftCardsDashboard from './pages/dashboard/GiftCards'
 import KYC from './pages/dashboard/KYC'
+import Notifications from './pages/dashboard/Notifications'
 
 const App = () => {
   const [showLoader, setShowLoader] = useState(() => {
@@ -56,6 +57,7 @@ const App = () => {
         <Route path="settings" element={<Settings />} />
         <Route path="giftcards" element={<GiftCardsDashboard />} />
         <Route path="kyc" element={<KYC />} />
+        <Route path="notifications" element={<Notifications />} />
       </Route>
     </Route>
    </Routes>
