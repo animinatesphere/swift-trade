@@ -80,23 +80,25 @@ const CSS = `
     .dashboard-content { padding: clamp(14px, 3vw, 18px) clamp(14px, 3vw, 20px) !important; gap: clamp(10px, 2vw, 14px) !important; }
     .dashboard-topbar { gap: clamp(8px, 2vw, 12px) !important; }
     .topbar-status span { font-size: clamp(10px, 2vw, 12px) !important; }
+    .rates-panel { display: none !important; }
   }
 
   @media (max-width: 640px) {
     .topbar-status span:last-child { display: none !important; }
     .padded-card { padding: clamp(14px, 2vw, 18px) !important; }
-    .txn-table { min-width: 0 !important; }
+    .txn-table { min-width: 0 !important; width: 100% !important; }
     .txn-header-row { display: none !important; }
     .txn-grid {
-      grid-template-columns: 1fr 1fr !important;
-      row-gap: 8px !important;
+      grid-template-columns: 1fr auto !important;
+      row-gap: 12px !important;
       column-gap: 10px !important;
       align-items: start !important;
+      padding: 16px 14px !important;
     }
     .txn-cell-trade { grid-column: 1 !important; grid-row: 1 !important; }
-    .txn-cell-date { grid-column: 2 !important; grid-row: 1 !important; text-align: right !important; display: flex !important; flex-direction: column; align-items: flex-end; gap: 4px; }
-    .txn-cell-sent { grid-column: 1 !important; grid-row: 2 !important; }
-    .txn-cell-received { grid-column: 2 !important; grid-row: 2 !important; text-align: right !important; display: flex !important; flex-direction: column; align-items: flex-end; gap: 2px; }
+    .txn-cell-date { grid-column: 2 !important; grid-row: 1 !important; text-align: right !important; display: flex !important; flex-direction: column; align-items: flex-end; gap: 6px; }
+    .txn-cell-sent { grid-column: 1 !important; grid-row: 2 !important; display: flex !important; align-items: center; }
+    .txn-cell-received { grid-column: 2 !important; grid-row: 2 !important; text-align: right !important; display: flex !important; flex-direction: column; align-items: flex-end; gap: 4px; }
   }
 
   @media (max-width: 480px) {
