@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
+import api from "../../api/axios";
 
 const C = {
   green: "#0ECB81", amber: "#F5A623", red: "#F6465D", blue: "#3B82F6",
@@ -35,36 +36,67 @@ const NOTIF_TYPES = {
   giftcard:   { color: "#F5A623", bg: "rgba(245,166,35,0.1)",  label: "Gift Card",  icon: <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5" rx="1"/><line x1="12" y1="22" x2="12" y2="7"/></svg> },
 };
 
-// ── Sample / mock notifications (real data would come from API) ──
-const MOCK_NOTIFICATIONS = [
-  { id: 1, type: "trade",      title: "Trade Completed",       body: "Your USDT → NGN trade of ₦145,000 has been confirmed.",    time: "2 min ago",   read: false },
-  { id: 2, type: "kyc",        title: "KYC Under Review",      body: "Your identity documents are currently being reviewed. This takes 1–3 business days.", time: "1 hr ago",  read: false },
-  { id: 3, type: "withdrawal", title: "Withdrawal Initiated",  body: "₦50,000 has been sent to your GTBank account ending in 7834.", time: "3 hrs ago",  read: false },
-  { id: 4, type: "system",     title: "Security Alert",        body: "A new login was detected from Lagos, Nigeria. If this wasn't you, please change your password.", time: "Yesterday", read: true },
-  { id: 5, type: "trade",      title: "Trade Completed",       body: "Your BTC → NGN trade of ₦320,500 has been confirmed.",     time: "Yesterday",   read: true },
-  { id: 6, type: "giftcard",   title: "Gift Card Approved",    body: "Your $100 Amazon gift card has been processed. ₦158,000 credited to your balance.", time: "2 days ago", read: true },
-  { id: 7, type: "system",     title: "Welcome to Swift Trade","body": "Your account is set up and ready. Start trading crypto for naira instantly.", time: "3 days ago", read: true },
-];
-
-function timeLabel(str) { return str; }
+// ── Server data will replace MOCK_NOTIFICATIONS ──
 
 export default function Notifications() {
-  const [notifs, setNotifs] = useState(MOCK_NOTIFICATIONS);
+  const [notifs, setNotifs] = useState([]);
   const [filter, setFilter]   = useState("all");
+  const [loading, setLoading] = useState(true);
   const { setIsMobileOpen }   = useOutletContext() || {};
+
+  const fetchNotifs = async () => {
+    try {
+      const res = await api.get("/notifications/");
+      setNotifs(res.data);
+    } catch (err) {
+      console.error("Failed to load notifications", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const s = document.createElement("style");
     s.textContent = CSS;
     document.head.appendChild(s);
+    fetchNotifs();
     return () => document.head.removeChild(s);
   }, []);
 
   const unreadCount = notifs.filter(n => !n.read).length;
 
-  const markAllRead = () => setNotifs(n => n.map(x => ({ ...x, read: true })));
-  const markRead    = (id) => setNotifs(n => n.map(x => x.id === id ? { ...x, read: true } : x));
-  const deleteNotif = (id) => setNotifs(n => n.filter(x => x.id !== id));
+  const markAllRead = async () => {
+    try {
+      await api.post("/notifications/mark-all-read");
+      setNotifs(n => n.map(x => ({ ...x, read: true })));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const markRead = async (id) => {
+    const target = notifs.find(n => n.id === id);
+    if (target?.read) return; // Already read
+    
+    // Optimistic update
+    setNotifs(n => n.map(x => x.id === id ? { ...x, read: true } : x));
+    try {
+      await api.patch(`/notifications/${id}/read`);
+    } catch (err) {
+      // Revert if failed
+      setNotifs(n => n.map(x => x.id === id ? { ...x, read: false } : x));
+      console.error(err);
+    }
+  };
+
+  const deleteNotif = async (id) => {
+    try {
+      await api.delete(`/notifications/${id}`);
+      setNotifs(n => n.filter(x => x.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const filtered = filter === "all" ? notifs : filter === "unread" ? notifs.filter(n => !n.read) : notifs;
 
