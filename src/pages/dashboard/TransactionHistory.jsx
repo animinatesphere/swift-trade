@@ -121,6 +121,10 @@ const CSS = `
       grid-column: 2 !important;
       grid-row: 2 !important;
       text-align: right !important;
+      display: flex !important;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
     }
     .txn-cell-status {
       grid-column: 1 / -1 !important;

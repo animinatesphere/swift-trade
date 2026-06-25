@@ -65,8 +65,10 @@ const CSS = `
 
   @media (max-width: 1024px) {
     .dashboard-topbar { padding: clamp(12px, 3vw, 16px) !important; }
-    .topbar-greet, .topbar-email { display: none !important; }
-    .topbar-status { margin-left: 0 !important; font-size: clamp(12px, 2vw, 14px) !important; }
+    .topbar-greet { font-size: clamp(10px, 2vw, 12px) !important; display: inline !important; }
+    .topbar-email { font-size: clamp(9px, 1.8vw, 11px) !important; display: inline-block !important; max-width: 90px !important; }
+    .trade-btn { display: none !important; }
+    .topbar-status { margin-left: 0 !important; font-size: clamp(10px, 2vw, 12px) !important; }
     .stats-grid { grid-template-columns: 1fr !important; gap: clamp(12px, 3vw, 20px) !important; }
     .content-row { flex-direction: column !important; gap: clamp(12px, 3vw, 20px) !important; }
     .rates-panel { width: 100% !important; }
@@ -77,16 +79,11 @@ const CSS = `
     .padded-card { padding: clamp(16px, 3vw, 20px) !important; }
     .dashboard-content { padding: clamp(14px, 3vw, 18px) clamp(14px, 3vw, 20px) !important; gap: clamp(10px, 2vw, 14px) !important; }
     .dashboard-topbar { gap: clamp(8px, 2vw, 12px) !important; }
-    .topbar-status span { font-size: clamp(11px, 2vw, 13px) !important; }
-    .trade-btn { padding: clamp(8px, 2vw, 10px) !important; min-height: 40px !important; }
-    .trade-btn-text { display: none !important; }
-    .trade-btn { border-radius: 8px !important; }
+    .topbar-status span { font-size: clamp(10px, 2vw, 12px) !important; }
   }
 
   @media (max-width: 640px) {
     .topbar-status span:last-child { display: none !important; }
-    .trade-btn-text { display: none !important; }
-    .trade-btn { padding: 8px !important; border-radius: 8px !important; min-height: 44px !important; }
     .padded-card { padding: clamp(14px, 2vw, 18px) !important; }
     .txn-table { min-width: 0 !important; }
     .txn-header-row { display: none !important; }
@@ -97,9 +94,9 @@ const CSS = `
       align-items: start !important;
     }
     .txn-cell-trade { grid-column: 1 !important; grid-row: 1 !important; }
-    .txn-cell-date { grid-column: 2 !important; grid-row: 1 !important; text-align: right !important; }
+    .txn-cell-date { grid-column: 2 !important; grid-row: 1 !important; text-align: right !important; display: flex !important; flex-direction: column; align-items: flex-end; gap: 4px; }
     .txn-cell-sent { grid-column: 1 !important; grid-row: 2 !important; }
-    .txn-cell-received { grid-column: 2 !important; grid-row: 2 !important; text-align: right !important; }
+    .txn-cell-received { grid-column: 2 !important; grid-row: 2 !important; text-align: right !important; display: flex !important; flex-direction: column; align-items: flex-end; gap: 2px; }
   }
 
   @media (max-width: 480px) {
