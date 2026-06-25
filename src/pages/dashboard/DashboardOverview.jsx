@@ -70,7 +70,7 @@ const CSS = `
     .trade-btn { display: none !important; }
     .topbar-status { margin-left: 0 !important; font-size: clamp(10px, 2vw, 12px) !important; }
     .stats-grid { grid-template-columns: 1fr !important; gap: clamp(12px, 3vw, 20px) !important; }
-    .content-row { flex-direction: column !important; gap: clamp(12px, 3vw, 20px) !important; }
+    .content-row { flex-direction: column !important; align-items: stretch !important; gap: clamp(12px, 3vw, 20px) !important; }
     .rates-panel { width: 100% !important; }
     .user-pill { padding: 4px !important; }
   }
