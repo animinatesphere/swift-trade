@@ -37,6 +37,7 @@ body,
 
 body {
   background: var(--bg);
+  overflow: hidden;
   overflow-x: hidden;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -114,4 +115,42 @@ textarea {
 button svg,
 a svg {
   pointer-events: none;
+}
+
+/* ── Dashboard mobile fixes ──────────────────────────────── */
+
+/* Sidebar: fixed on mobile, must never overflow below the screen */
+.sidebar-container {
+  overflow: hidden;
+  max-height: 100vh;
+  max-height: 100dvh;
+}
+
+@supports (height: 100dvh) {
+  .sidebar-container {
+    height: 100dvh !important;
+  }
+  @media (max-width: 1024px) {
+    /* When open, sidebar slides in and is clamped to viewport */
+    .sidebar-container.open {
+      height: 100dvh !important;
+      overflow: hidden !important;
+    }
+  }
+}
+
+/* Transaction history: desktop table shown by default, mobile cards hidden */
+.txn-mobile  { display: none; }
+.txn-desktop { display: block; }
+
+@media (max-width: 640px) {
+  /* Swap: hide desktop table, show mobile cards */
+  .txn-desktop { display: none !important; }
+  .txn-mobile  { display: block !important; }
+
+  /* Fix any horizontal overflow on dashboard */
+  .dashboard-content {
+    overflow-x: hidden !important;
+    max-width: 100vw;
+  }
 }

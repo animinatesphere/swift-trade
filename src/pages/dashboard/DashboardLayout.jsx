@@ -24,10 +24,9 @@ const C = {
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-  html, body { height:100%; overflow:hidden; }
   ::-webkit-scrollbar { width:5px; }
   ::-webkit-scrollbar-track { background:transparent; }
-  ::-webkit-scrollbar-thumb { background:var(--c-border2); border-radius:4px; }
+  ::-webkit-scrollbar-thumb { background:#222; border-radius:4px; }
 
   @keyframes slideIn  { from{opacity:0;transform:translateX(32px)} to{opacity:1;transform:translateX(0)} }
   @keyframes pulse    { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.75)} }
@@ -363,7 +362,7 @@ export default function DashboardLayout() {
     <div
       style={{
         display: "flex",
-        height: "100vh",
+        height: "100%",
         background: C.bg,
         overflow: "hidden",
       }}
@@ -383,8 +382,10 @@ export default function DashboardLayout() {
           borderRight: `1px solid ${C.border}`,
           display: "flex",
           flexDirection: "column",
-          height: "100vh",
+          height: "100%",
+          maxHeight: "100vh",
           flexShrink: 0,
+          overflow: "hidden",
         }}
       >
         <div
