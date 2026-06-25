@@ -653,7 +653,7 @@ function History({ transactions }) {
       </div>
 
       {/* ─── MOBILE CARDS (shown only on mobile via CSS) ─── */}
-      <div className="txn-mobile" style={{ display: "none" }}>
+      <div className="txn-mobile">
         {isEmpty && <EmptyState />}
         {(transactions || []).slice(0, 5).map((t, i) => {
           const cDef = COINS.find((c) => c.id.toLowerCase() === t.asset?.toLowerCase()) || COINS[0];
