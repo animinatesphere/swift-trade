@@ -115,7 +115,7 @@ const CSS = `
 
   @media (max-width: 640px) {
     .coins-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(2, 1fr);
     }
     .form-area {
       padding: 20px 16px 40px;
