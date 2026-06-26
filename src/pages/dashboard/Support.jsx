@@ -58,6 +58,13 @@ const CSS = `
     }
     .faq-cats-row {
       width: 100% !important;
+      display: grid !important;
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)) !important;
+      overflow-x: visible !important;
+    }
+    .faq-cat-btn {
+      width: 100% !important;
+      text-align: center !important;
     }
     .tabs-row {
       width: 100% !important;
@@ -230,7 +237,7 @@ export default function Support() {
                 </div>
                 <div className="faq-cats-row" style={{ display:"flex", gap:6, overflowX:"auto", paddingBottom:2 }}>
                   {CATS.map(c => (
-                    <button key={c} onClick={() => setCat(c)} style={{ padding:"7px 12px", borderRadius:100, fontSize:11, fontWeight:500, cursor:"pointer", background: cat===c ? "rgba(14,203,129,0.1)" : "transparent", border: `1px solid ${cat===c ? "rgba(14,203,129,0.3)" : C.border2}`, color: cat===c ? C.green : C.muted, fontFamily:"'Outfit',sans-serif", transition:"all 0.15s", whiteSpace:"nowrap" }}>{c}</button>
+                    <button key={c} onClick={() => setCat(c)} className="faq-cat-btn" style={{ padding:"7px 12px", borderRadius:100, fontSize:11, fontWeight:500, cursor:"pointer", background: cat===c ? "rgba(14,203,129,0.1)" : "transparent", border: `1px solid ${cat===c ? "rgba(14,203,129,0.3)" : C.border2}`, color: cat===c ? C.green : C.muted, fontFamily:"'Outfit',sans-serif", transition:"all 0.15s", whiteSpace:"nowrap" }}>{c}</button>
                   ))}
                 </div>
               </div>
