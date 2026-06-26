@@ -39,9 +39,37 @@ const CSS = `
     }
   }
 
+  @media (max-width: 768px) {
+    .support-content {
+      padding: 16px !important;
+    }
+    .channels-grid {
+      grid-template-columns: 1fr 1fr !important;
+    }
+  }
+
   @media (max-width: 640px) {
     .channels-grid {
       grid-template-columns: 1fr !important;
+    }
+    .faq-search-row {
+      flex-direction: column !important;
+      align-items: stretch !important;
+    }
+    .faq-cats-row {
+      width: 100% !important;
+    }
+    .tabs-row {
+      width: 100% !important;
+    }
+    .tabs-row button {
+      flex: 1;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .support-content {
+      padding: 14px !important;
     }
   }
 `;
@@ -83,17 +111,22 @@ function FaqItem({ item, delay }) {
   );
 }
 
+const SUPPORT_EMAIL = "support@swiftrade.com";
+
 function TicketForm() {
-  const [form, setForm]     = useState({ type:"", ref:"", message:"" });
+  const [form, setForm]     = useState({ ref:"", message:"" });
   const [loading, setLoading] = useState(false);
   const [sent, setSent]     = useState(false);
 
   const set = k => e => setForm(f => ({ ...f, [k]:e.target.value }));
-  const canSubmit = form.type && form.message.trim().length > 10;
+  const canSubmit = form.message.trim().length > 10;
 
   const submit = () => {
     setLoading(true);
-    setTimeout(() => { setLoading(false); setSent(true); }, 1400);
+    const subject = `Support Ticket${form.ref ? ` — ${form.ref.trim()}` : ""}`;
+    const body = `${form.message.trim()}${form.ref ? `\n\nReference ID: ${form.ref.trim()}` : ""}`;
+    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setTimeout(() => { setLoading(false); setSent(true); }, 800);
   };
 
   if (sent) return (
@@ -103,27 +136,16 @@ function TicketForm() {
           <path d="M5 14l6 7L23 9" stroke={C.green} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={60} style={{ animation:"checkDraw 0.5s 0.3s ease forwards", strokeDashoffset:60 }}/>
         </svg>
       </div>
-      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, letterSpacing:1, marginBottom:8 }}>TICKET SUBMITTED</div>
-      <p style={{ color:C.muted, fontSize:13, lineHeight:1.7, marginBottom:20 }}>We'll reply to your registered email within 2 hours.</p>
-      <button onClick={() => { setSent(false); setForm({ type:"", ref:"", message:"" }); }} style={{ background:"none", border: `1px solid ${C.border2}`, color:C.muted, fontSize:12, padding:"8px 20px", borderRadius:8, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Submit Another</button>
+      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:22, letterSpacing:1, marginBottom:8 }}>EMAIL APP OPENED</div>
+      <p style={{ color:C.muted, fontSize:13, lineHeight:1.7, marginBottom:20 }}>
+        Hit send in your email app to deliver your message to {SUPPORT_EMAIL}. We'll reply within 2 hours.
+      </p>
+      <button onClick={() => { setSent(false); setForm({ ref:"", message:"" }); }} style={{ background:"none", border: `1px solid ${C.border2}`, color:C.muted, fontSize:12, padding:"8px 20px", borderRadius:8, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Submit Another</button>
     </div>
   );
 
   return (
     <div style={{ padding:"20px" }}>
-      <div style={{ marginBottom:14 }}>
-        <label style={{ display:"block", fontSize:10, color:C.muted, letterSpacing:2, marginBottom:7 }}>ISSUE TYPE</label>
-        <select value={form.type} onChange={set("type")} className="st-select" style={{ width:"100%", background:C.card2, border: `1px solid ${C.border2}`, borderRadius:10, padding:"12px 14px", color: form.type ? "#fff" : C.muted, fontSize:14, fontFamily:"'Outfit',sans-serif", cursor:"pointer" }}>
-          <option value="">Select issue type...</option>
-          <option>Trade not completed</option>
-          <option>Wrong amount received</option>
-          <option>Gift card not verified</option>
-          <option>Withdrawal delayed</option>
-          <option>Account / login issue</option>
-          <option>Bank account problem</option>
-          <option>Other</option>
-        </select>
-      </div>
       <div style={{ marginBottom:14 }}>
         <label style={{ display:"block", fontSize:10, color:C.muted, letterSpacing:2, marginBottom:7 }}>TRADE / REFERENCE ID (optional)</label>
         <input className="st-input" value={form.ref} onChange={set("ref")} placeholder="e.g. TRD-7841, GC-4421, WD-1024" style={{ width:"100%", background:C.card2, border: `1px solid ${C.border2}`, borderRadius:10, padding:"12px 14px", color:"#fff", fontSize:14, fontFamily:"'DM Mono',monospace", letterSpacing:1 }}/>
@@ -134,7 +156,7 @@ function TicketForm() {
         <div style={{ fontSize:11, color:form.message.length > 10 ? C.muted : C.muted2, marginTop:5, textAlign:"right" }}>{form.message.length} chars</div>
       </div>
       <button onClick={submit} disabled={!canSubmit || loading} className="pri-btn" style={{ width:"100%", background:canSubmit ? C.green : C.border, color:canSubmit ? "#000" : C.muted, fontWeight:700, fontSize:14, padding:"13px", borderRadius:10, border:"none", fontFamily:"'Outfit',sans-serif", display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
-        {loading ? <><div style={{ width:16, height:16, borderRadius:"50%", border:"2px solid rgba(0,0,0,0.2)", borderTopColor:"#000", animation:"spin 0.8s linear infinite" }}/>Sending...</> : "Submit Ticket →"}
+        {loading ? <><div style={{ width:16, height:16, borderRadius:"50%", border:"2px solid rgba(0,0,0,0.2)", borderTopColor:"#000", animation:"spin 0.8s linear infinite" }}/>Opening email...</> : "Submit Ticket →"}
       </button>
     </div>
   );
@@ -156,9 +178,8 @@ export default function Support() {
     .filter(f => !search || f.q.toLowerCase().includes(search.toLowerCase()) || f.a.toLowerCase().includes(search.toLowerCase()));
 
   const CHANNELS = [
-    { icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>, label:"WhatsApp", sub:"Fastest response", action:"Chat with us", color:C.green, href:"#" },
-    { icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>, label:"Email", sub:"Reply within 2hrs", action:"Send an email", color:"#aaa", href:"#" },
-    { icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M4 4l16 16M4 20L20 4"/><circle cx="12" cy="12" r="10"/></svg>, label:"Twitter/X", sub:"Public & DMs", action:"Tweet at us", color:"#aaa", href:"#" },
+    { icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>, label:"WhatsApp", sub:"Fastest response", action:"Chat with us", color:C.green, href:"https://wa.me/2349161814877", target:"_blank" },
+    { icon:<svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>, label:"Email", sub:"Reply within 2hrs", action:"Send an email", color:"#aaa", href:`mailto:${SUPPORT_EMAIL}` },
   ];
 
   return (
@@ -177,11 +198,11 @@ export default function Support() {
         </div>
       </div>
 
-      <div style={{ flex:1, overflowY:"auto", padding:"24px 28px" }}>
+      <div className="support-content" style={{ flex:1, overflowY:"auto", padding:"24px 28px" }}>
         <div style={{ maxWidth:900, margin:"0 auto" }}>
-          <div className="channels-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:28, animation:"fadeUp 0.4s ease" }}>
+          <div className="channels-grid" style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:12, marginBottom:28, animation:"fadeUp 0.4s ease" }}>
             {CHANNELS.map(ch => (
-              <a key={ch.label} href={ch.href} className="channel-card" style={{ background:C.card, border: `1px solid ${C.border}`, borderRadius:12, padding:"16px 18px", display:"flex", alignItems:"center", gap:14, textDecoration:"none", cursor:"pointer" }}>
+              <a key={ch.label} href={ch.href} target={ch.target} rel={ch.target ? "noopener noreferrer" : undefined} className="channel-card" style={{ background:C.card, border: `1px solid ${C.border}`, borderRadius:12, padding:"16px 18px", display:"flex", alignItems:"center", gap:14, textDecoration:"none", cursor:"pointer" }}>
                 <span style={{ flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>{ch.icon}</span>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontSize:14, fontWeight:600, color:"#ddd", marginBottom:2 }}>{ch.label}</div>
@@ -192,7 +213,7 @@ export default function Support() {
             ))}
           </div>
 
-          <div style={{ display:"flex", background:C.card2, border: `1px solid ${C.border}`, borderRadius:10, padding:3, gap:2, marginBottom:20, width:"fit-content" }}>
+          <div className="tabs-row" style={{ display:"flex", background:C.card2, border: `1px solid ${C.border}`, borderRadius:10, padding:3, gap:2, marginBottom:20, width:"fit-content" }}>
             {[{v:"faq",l:"FAQ"},{v:"ticket",l:"Submit a Ticket"}].map(t => (
               <button key={t.v} onClick={() => setTab(t.v)} style={{ padding:"7px 20px", borderRadius:8, border:"none", fontSize:13, fontWeight:600, cursor:"pointer", background: tab===t.v ? C.card : "transparent", color: tab===t.v ? "#fff" : C.muted, fontFamily:"'Outfit',sans-serif", boxShadow: tab===t.v ? "0 1px 4px rgba(0,0,0,0.3)" : "none", transition:"all 0.15s" }}>{t.l}</button>
             ))}
@@ -200,14 +221,14 @@ export default function Support() {
 
           {tab === "faq" && (
             <div style={{ animation:"fadeIn 0.25s ease" }}>
-              <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:16 }}>
+              <div className="faq-search-row" style={{ display:"flex", gap:10, alignItems:"center", marginBottom:16 }}>
                 <div style={{ position:"relative", flex:1 }}>
                   <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth={2} strokeLinecap="round" style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)" }}>
                     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                   </svg>
                   <input value={search} onChange={e => setSearch(e.target.value)} className="search-input" placeholder="Search questions..." style={{ width:"100%", background:C.card, border: `1px solid ${C.border2}`, borderRadius:9, padding:"9px 14px 9px 34px", color:"#fff", fontSize:13, fontFamily:"'Outfit',sans-serif" }}/>
                 </div>
-                <div style={{ display:"flex", gap:6, overflowX:"auto", paddingBottom:2 }}>
+                <div className="faq-cats-row" style={{ display:"flex", gap:6, overflowX:"auto", paddingBottom:2 }}>
                   {CATS.map(c => (
                     <button key={c} onClick={() => setCat(c)} style={{ padding:"7px 12px", borderRadius:100, fontSize:11, fontWeight:500, cursor:"pointer", background: cat===c ? "rgba(14,203,129,0.1)" : "transparent", border: `1px solid ${cat===c ? "rgba(14,203,129,0.3)" : C.border2}`, color: cat===c ? C.green : C.muted, fontFamily:"'Outfit',sans-serif", transition:"all 0.15s", whiteSpace:"nowrap" }}>{c}</button>
                   ))}
