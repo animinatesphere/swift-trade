@@ -286,9 +286,9 @@ function DetailPanel({ txn, onClose }) {
                 {txn.rate && (
                   <div style={{ display:"flex",justifyContent:"space-between",
                     alignItems:"center",padding:"13px 16px" }}>
-                    <span style={{ fontSize:12,color:C.muted }}>Exchange Rate</span>
+                    <span style={{ fontSize:12,color:C.muted }}>Rate per {txn.coin || "coin"}</span>
                     <span style={{ fontFamily:"'DM Mono',monospace",fontSize:13,
-                      color:C.muted }}>{fmtNGN(txn.rate)}</span>
+                      color:"#ccc" }}>₦{Number(txn.rate).toLocaleString("en-NG", { maximumFractionDigits: 2 })} / {txn.coin || "coin"}</span>
                   </div>
                 )}
               </>

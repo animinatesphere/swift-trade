@@ -384,7 +384,7 @@ function Ticker() {
 }
 
 // ─── STATS ────────────────────────────────────────────────
-function Stats({ balance, stats }) {
+function Stats({ balance, stats, loading }) {
   const navigate = useNavigate();
   const currentMonth = new Date().toLocaleString("en-US", { month: "long" });
 
@@ -557,6 +557,11 @@ function Stats({ balance, stats }) {
           >
             {s.sub}
           </div>
+          {s.highlight && loading && (
+            <div style={{ position:"absolute", inset:0, background:"rgba(6,6,6,0.55)", backdropFilter:"blur(2px)", display:"flex", alignItems:"center", justifyContent:"center", borderRadius:12, zIndex:5 }}>
+              <div style={{ width:20, height:20, borderRadius:"50%", border:"2px solid rgba(14,203,129,0.2)", borderTopColor:C.green, animation:"spin 0.8s linear infinite" }}/>
+            </div>
+          )}
           {s.highlight && (
             <button
               onClick={() => navigate("/dashboard/withdraw")}
@@ -1166,7 +1171,7 @@ export default function DashboardOverview() {
         <KYCBanner status={kycStatus} rejectionReason={kycRejectionReason} />
 
         {/* Stats row */}
-        <Stats balance={ngnBalance} stats={dashboardStats} />
+        <Stats balance={ngnBalance} stats={dashboardStats} loading={isLoadingRates} />
 
         {/* History + Rates */}
         <div

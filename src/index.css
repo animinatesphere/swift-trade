@@ -39,9 +39,6 @@ body {
   background: var(--bg);
   overflow: hidden;
   overflow-x: hidden;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -77,6 +74,8 @@ input[type="submit"],
   min-width: 44px;
   -webkit-tap-highlight-color: transparent;
   tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* Ensure full viewport height on iOS */
