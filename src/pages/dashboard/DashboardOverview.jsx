@@ -1102,7 +1102,8 @@ export default function DashboardOverview() {
           volumeThisMonth: 0,
         },
       );
-      setTransactions(Array.isArray(txRes.data) ? txRes.data : []);
+      const rawTx = txRes.data?.items || txRes.data || [];
+      setTransactions(Array.isArray(rawTx) ? rawTx : []);
 
       const ratesData = Array.isArray(ratesRes.data) ? ratesRes.data : [];
       setLiveCoins(

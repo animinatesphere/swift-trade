@@ -278,11 +278,19 @@ function DetailPanel({ txn, onClose }) {
                   </div>
                 </div>
                 <div style={{ display:"flex",justifyContent:"space-between",
-                  alignItems:"center",padding:"13px 16px" }}>
+                  alignItems:"center",padding:"13px 16px",borderBottom:`1px solid ${C.border}` }}>
                   <span style={{ fontSize:12,color:C.muted }}>You received</span>
                   <span style={{ fontFamily:"'DM Mono',monospace",fontSize:16,
                     color:C.green,fontWeight:600 }}>{fmtNGN(txn.ngnAmt)}</span>
                 </div>
+                {txn.rate && (
+                  <div style={{ display:"flex",justifyContent:"space-between",
+                    alignItems:"center",padding:"13px 16px" }}>
+                    <span style={{ fontSize:12,color:C.muted }}>Exchange Rate</span>
+                    <span style={{ fontFamily:"'DM Mono',monospace",fontSize:13,
+                      color:C.muted }}>{fmtNGN(txn.rate)}</span>
+                  </div>
+                )}
               </>
             )}
             {isGC && (
@@ -422,6 +430,7 @@ export default function TransactionHistory() {
           coin: t.coin || null,
           network: t.network || null,
           cryptoAmt: t.crypto_amount ? Number(t.crypto_amount) : null,
+          rate: t.rate ? Number(t.rate) : null,
           description: t.description || "",
         }));
 
@@ -557,7 +566,12 @@ export default function TransactionHistory() {
           </div>
         </div>
 
-        <div className="table-container">
+        <div className="table-container" style={{ position: "relative", minHeight: 200 }}>
+          {loading && (
+            <div style={{ position:"absolute", inset:0, background:"rgba(16,16,16,0.6)", backdropFilter:"blur(2px)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:10 }}>
+              <div style={{ width:24, height:24, borderRadius:"50%", border:"2px solid rgba(14,203,129,0.2)", borderTopColor:C.green, animation:"spin 0.8s linear infinite" }}/>
+            </div>
+          )}
           <div className="table-min-width">
             <div className="txn-header-row" style={{ display:"grid",
               gridTemplateColumns:"1.8fr 1fr 1fr 1.2fr 1fr",
@@ -579,11 +593,7 @@ export default function TransactionHistory() {
               ))}
             </div>
 
-            {loading ? (
-              <div style={{ textAlign:"center", padding:"56px 0" }}>
-                <div style={{ fontSize:14, color:C.muted }}>Loading transactions...</div>
-              </div>
-            ) : filtered.length===0 ? (
+            {filtered.length===0 ? (
               <div style={{ textAlign:"center", padding:"56px 0" }}>
                 <div style={{ display:"flex", justifyContent:"center", marginBottom:12, color:C.muted2 }}>
                   <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>

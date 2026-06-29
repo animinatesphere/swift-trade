@@ -1564,29 +1564,13 @@ export default function Withdraw() {
   };
 
   return (
-    <div className="withdraw-container">
-      {isLoadingData ? (
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: C.muted,
-          }}
-        >
-          <div
-            style={{
-              width: 24,
-              height: 24,
-              borderRadius: "50%",
-              border: "2px solid rgba(14,203,129,0.2)",
-              borderTopColor: C.green,
-              animation: "spin 0.8s linear infinite",
-            }}
-          />
+    <div className="withdraw-container" style={{ position: "relative" }}>
+      {isLoadingData && (
+        <div style={{ position:"absolute", inset:0, background:"rgba(16,16,16,0.6)", backdropFilter:"blur(2px)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:10 }}>
+          <div style={{ width:24, height:24, borderRadius:"50%", border:"2px solid rgba(14,203,129,0.2)", borderTopColor:C.green, animation:"spin 0.8s linear infinite" }}/>
         </div>
-      ) : fetchError ? (
+      )}
+      {fetchError ? (
         <div
           style={{
             flex: 1,

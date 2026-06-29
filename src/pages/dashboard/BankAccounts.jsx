@@ -725,7 +725,12 @@ export default function BankAccounts() {
           </button>
         </div>
 
-        <div className="bank-scroll">
+        <div className="bank-scroll" style={{ position: "relative", minHeight: 300 }}>
+          {loadingInitial && (
+            <div style={{ position:"absolute", inset:0, background:"rgba(16,16,16,0.6)", backdropFilter:"blur(2px)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:10, borderRadius: 16 }}>
+              <div style={{ width:24, height:24, borderRadius:"50%", border:"2px solid rgba(14,203,129,0.2)", borderTopColor:C.green, animation:"spin 0.8s linear infinite" }}/>
+            </div>
+          )}
           <div className="stats-row" style={{ display:"grid",
             gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:24 }}>
             {[
@@ -743,11 +748,7 @@ export default function BankAccounts() {
             ))}
           </div>
 
-          {loadingInitial ? (
-            <div style={{ display:"flex", justifyContent:"center", padding:"40px 0" }}>
-              <div style={{ width:24, height:24, borderRadius:"50%", border:"2px solid rgba(14,203,129,0.2)", borderTopColor:C.green, animation:"spin 0.8s linear infinite" }}/>
-            </div>
-          ) : banks.length === 0 ? (
+          {banks.length === 0 ? (
             <div style={{ textAlign:"center", padding:"64px 20px", animation:"fadeUp 0.4s ease" }}>
               <div style={{ width:64, height:64, borderRadius:"50%", margin:"0 auto 16px",
                 background:"rgba(14,203,129,0.06)", border:"1px solid rgba(14,203,129,0.12)",

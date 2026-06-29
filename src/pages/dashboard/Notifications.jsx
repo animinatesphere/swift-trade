@@ -186,7 +186,12 @@ export default function Notifications() {
         </div>
 
         {/* ── Notification list ── */}
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden" }}>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", position: "relative", minHeight: 200 }}>
+          {loading && (
+            <div style={{ position:"absolute", inset:0, background:"rgba(16,16,16,0.6)", backdropFilter:"blur(2px)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:10 }}>
+              <div style={{ width:24, height:24, borderRadius:"50%", border:"2px solid rgba(14,203,129,0.2)", borderTopColor:C.green, animation:"spin 0.8s linear infinite" }}/>
+            </div>
+          )}
           {filtered.length === 0 && (
             <div style={{ padding: "60px 20px", textAlign: "center" }}>
               <div style={{ fontSize: 32, marginBottom: 12 }}>🔔</div>
