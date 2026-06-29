@@ -652,7 +652,7 @@ function History({ transactions, loading }) {
                 </div>
                 <div>
                   <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 13, color: C.green }}>₦{Number(t.ngn_amount).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
-                  <div style={{ fontSize: 10, color: C.muted }}>Rate: ₦{Number(t.rate_applied).toLocaleString()}</div>
+                  <div style={{ fontSize: 10, color: C.muted }}>Rate: ₦{Number(t.rate_applied).toLocaleString()} / $</div>
                 </div>
                 <div>
                   <div style={{ fontSize: 11, color: C.muted }}>{new Date(t.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}</div>
@@ -700,7 +700,7 @@ function History({ transactions, loading }) {
               {/* Row 3: date + rate */}
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
                 <div style={{ fontSize: 10, color: C.muted }}>{new Date(t.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</div>
-                <div style={{ fontSize: 10, color: C.muted }}>Rate: ₦{Number(t.rate_applied).toLocaleString()}</div>
+                <div style={{ fontSize: 10, color: C.muted }}>Rate: ₦{Number(t.rate_applied).toLocaleString()} / $</div>
               </div>
             </div>
           );
