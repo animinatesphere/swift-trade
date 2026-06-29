@@ -583,7 +583,7 @@ function Stats({ balance, stats }) {
 }
 
 // ─── HISTORY TABLE ────────────────────────────────────────
-function History({ transactions }) {
+function History({ transactions, loading }) {
   const navigate = useNavigate();
   const isEmpty = !transactions || transactions.length === 0;
 
@@ -611,6 +611,13 @@ function History({ transactions }) {
         <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: 1 }}>TRANSACTION HISTORY</span>
         <span style={{ fontSize: 11, color: C.green, cursor: "pointer" }} onClick={() => navigate("/dashboard/txn")}>View all →</span>
       </div>
+
+      <div style={{ position: "relative", minHeight: 200, flex: 1 }}>
+        {loading && (
+          <div style={{ position:"absolute", inset:0, background:"rgba(16,16,16,0.6)", backdropFilter:"blur(2px)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:10 }}>
+            <div style={{ width:24, height:24, borderRadius:"50%", border:"2px solid rgba(14,203,129,0.2)", borderTopColor:C.green, animation:"spin 0.8s linear infinite" }}/>
+          </div>
+        )}
 
       {/* ─── DESKTOP TABLE (hidden on mobile via CSS) ─── */}
       <div className="txn-desktop" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
@@ -693,6 +700,7 @@ function History({ transactions }) {
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );
@@ -1165,7 +1173,7 @@ export default function DashboardOverview() {
           className="content-row"
           style={{ display: "flex", gap: 14, alignItems: "flex-start" }}
         >
-          <History transactions={transactions} />
+          <History transactions={transactions} loading={isLoadingRates} />
           <div className="rates-panel" style={{ width: 268, flexShrink: 0 }}>
             <RatesPanel
               liveCoins={liveCoins}
