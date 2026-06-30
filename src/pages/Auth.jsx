@@ -1570,9 +1570,27 @@ function LoginForm({ onSwitch }) {
           Create a free account →
         </Link>
       </div>
+
+      <div style={{ textAlign: "center", marginTop: 16 }}>
+        <span style={{ fontSize: 13, color: C.muted }}>
+          Registered but didn&apos;t get the verification email?{" "}
+        </span>
+        <Link
+          to="/verify-email"
+          style={{
+            color: C.green,
+            fontSize: 13,
+            fontWeight: 600,
+            textDecoration: "none",
+          }}
+        >
+          Verify email →
+        </Link>
+      </div>
     </div>
   );
 }
+
 
 // ─── REGISTER FORM ────────────────────────────────────────
 function RegisterForm({ onSwitch }) {
@@ -1591,9 +1609,28 @@ function RegisterForm({ onSwitch }) {
   const [step, setStep] = useState("form");
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [registerPayload, setRegisterPayload] = useState(null);
+  const [pendingEmail, setPendingEmail] = useState("");
   const formRef = useRef(null);
 
   const { register } = useAuth();
+
+  // ── On mount: check for an interrupted verification session
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("swift_pending_verification");
+      if (raw) {
+        const { email } = JSON.parse(raw);
+        if (email) {
+          setPendingEmail(email);
+        }
+      }
+    } catch (_) { /* ignore */ }
+  }, []);
+
+  const resumePendingVerification = () => {
+    setRegisteredEmail(pendingEmail);
+    setStep("otp");
+  };
 
   const validateForm = () => {
     const next = {
@@ -1646,8 +1683,14 @@ function RegisterForm({ onSwitch }) {
     setErrors({});
     try {
       const data = await register(payload);
-      setRegisteredEmail(data?.email || payload.email);
+      const resolvedEmail = data?.email || payload.email;
+      setRegisteredEmail(resolvedEmail);
       setRegisterPayload(payload);
+      // ── persist so user can return to OTP screen after navigating away
+      sessionStorage.setItem(
+        "swift_pending_verification",
+        JSON.stringify({ email: resolvedEmail, ts: Date.now() }),
+      );
       setStep("otp");
     } catch (err) {
       const { fields, general } = parseApiFieldErrors(err);
@@ -1668,8 +1711,15 @@ function RegisterForm({ onSwitch }) {
       <OTPScreen
         email={registeredEmail || form.email}
         registerPayload={registerPayload}
-        onSuccess={() => setStep("success")}
-        onBack={() => setStep("form")}
+        onSuccess={() => {
+          sessionStorage.removeItem("swift_pending_verification");
+          setStep("success");
+        }}
+        onBack={() => {
+          sessionStorage.removeItem("swift_pending_verification");
+          setPendingEmail("");
+          setStep("form");
+        }}
       />
     );
   }
@@ -1677,6 +1727,63 @@ function RegisterForm({ onSwitch }) {
 
   return (
     <div ref={formRef} className="auth-form">
+
+      {/* ── Pending verification banner ── */}
+      {pendingEmail && (
+        <div
+          style={{
+            background: "rgba(14,203,129,0.06)",
+            border: "1px solid rgba(14,203,129,0.25)",
+            borderRadius: 12,
+            padding: "14px 18px",
+            marginBottom: 22,
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          <span style={{ fontSize: 20, lineHeight: 1 }}>✉️</span>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 13, color: "#ccc", marginBottom: 4, lineHeight: 1.4 }}>
+              Waiting to verify <strong style={{ color: "#fff" }}>{pendingEmail}</strong>
+            </p>
+            <button
+              onClick={resumePendingVerification}
+              style={{
+                background: "none",
+                border: "none",
+                color: C.green,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+                padding: 0,
+                textDecoration: "underline",
+              }}
+            >
+              Enter code →
+            </button>
+          </div>
+          <button
+            onClick={() => {
+              sessionStorage.removeItem("swift_pending_verification");
+              setPendingEmail("");
+            }}
+            title="Dismiss"
+            style={{
+              background: "none",
+              border: "none",
+              color: C.muted,
+              fontSize: 20,
+              cursor: "pointer",
+              lineHeight: 1,
+              padding: "0 4px",
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       <div style={{ marginBottom: 28 }}>
         <div
           style={{
@@ -1854,6 +1961,164 @@ function RegisterForm({ onSwitch }) {
     </div>
   );
 }
+// ─── VERIFY EMAIL FORM ──────────────────────────────────────
+function VerifyEmailForm() {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [step, setStep] = useState("form");
+  const { resendVerificationEmail } = useAuth();
+
+  const handleSubmit = async () => {
+    if (!email.trim()) {
+      setError("Email is required");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      await resendVerificationEmail(email.trim().toLowerCase());
+      setStep("otp");
+    } catch (err) {
+      const msg = getApiErrorMessage(err, "Could not send verification email. Try again.");
+      if (msg.toLowerCase().includes("already verified")) {
+        setError("This account is already verified. You can log in.");
+      } else {
+        setError(msg);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (step === "otp") {
+    return (
+      <OTPScreen
+        email={email.trim().toLowerCase()}
+        registerPayload={null}
+        onSuccess={() => setStep("success")}
+        onBack={() => setStep("form")}
+      />
+    );
+  }
+  if (step === "success") return <SuccessView />;
+
+  return (
+    <div className="auth-form">
+      <div style={{ marginBottom: 28 }}>
+        <div
+          style={{
+            fontSize: 11,
+            color: C.muted,
+            letterSpacing: 3,
+            marginBottom: 10,
+          }}
+        >
+          SECURITY
+        </div>
+        <h1
+          style={{
+            fontFamily: "'Bebas Neue',sans-serif",
+            fontSize: 46,
+            letterSpacing: 1,
+            lineHeight: 0.92,
+            marginBottom: 12,
+          }}
+        >
+          VERIFY YOUR
+          <br />
+          EMAIL
+        </h1>
+        <p style={{ color: C.muted, fontSize: 14, fontWeight: 300 }}>
+          Enter your email to receive a verification code.
+        </p>
+      </div>
+
+      {error && (
+        <div
+          style={{
+            background: "rgba(246,70,93,0.08)",
+            border: "1px solid rgba(246,70,93,0.2)",
+            color: C.red,
+            fontSize: 13,
+            padding: "12px 16px",
+            borderRadius: 10,
+            marginBottom: 20,
+            textAlign: "center",
+          }}
+        >
+          ⚠ {error}
+        </div>
+      )}
+
+      <Field
+        small
+        label="EMAIL ADDRESS"
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="you@example.com"
+        autoFocus
+      />
+
+      <button
+        onClick={handleSubmit}
+        disabled={loading}
+        className="submit-btn"
+        style={{
+          width: "100%",
+          background: C.green,
+          color: "#000",
+          fontWeight: 700,
+          fontSize: 15,
+          padding: "15px",
+          borderRadius: 12,
+          border: "none",
+          marginBottom: 24,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 10,
+        }}
+      >
+        {loading ? (
+          <>
+            <div
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: "50%",
+                border: "2px solid rgba(0,0,0,0.3)",
+                borderTopColor: "#000",
+                animation: "spin 0.8s linear infinite",
+              }}
+            />
+            Sending code...
+          </>
+        ) : (
+          "Send Verification Code →"
+        )}
+      </button>
+
+      <div style={{ textAlign: "center" }}>
+        <Link
+          to="/login"
+          style={{
+            color: C.muted,
+            fontSize: 14,
+            fontWeight: 500,
+            textDecoration: "none",
+            transition: "color 0.2s",
+          }}
+          onMouseOver={(e) => (e.target.style.color = "#fff")}
+          onMouseOut={(e) => (e.target.style.color = C.muted)}
+        >
+          ← Back to Log In
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 // ─── AUTH PAGE ────────────────────────────────────────────
 export default function AuthPage({ initialPage = "login" }) {
@@ -1878,7 +2143,13 @@ export default function AuthPage({ initialPage = "login" }) {
         }}
       >
         <div style={{ width: "100%", maxWidth: 420 }}>
-          {initialPage === "login" ? <LoginForm /> : <RegisterForm />}
+          {initialPage === "login" ? (
+            <LoginForm />
+          ) : initialPage === "verify" ? (
+            <VerifyEmailForm />
+          ) : (
+            <RegisterForm />
+          )}
         </div>
       </div>
     </div>
