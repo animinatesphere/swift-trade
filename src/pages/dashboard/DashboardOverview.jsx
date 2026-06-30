@@ -644,7 +644,7 @@ function History({ transactions, loading }) {
                   <div style={{ width: 28, height: 28, borderRadius: "50%", background: cDef.bg, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: cDef.color }}>{cDef.icon}</div>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 500 }}>{cDef.id}/NGN</div>
-                    <div style={{ fontSize: 10, color: C.muted }}>TRD-{t.id}</div>
+                    <div style={{ fontSize: 10, color: C.muted }}>{t.reference || `TRD-${t.id}`}</div>
                   </div>
                 </div>
                 <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "#bbb" }}>
@@ -679,7 +679,7 @@ function History({ transactions, loading }) {
                   <div style={{ width: 32, height: 32, borderRadius: "50%", background: cDef.bg, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: cDef.color }}>{cDef.icon}</div>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 600 }}>{cDef.id}/NGN</div>
-                    <div style={{ fontSize: 10, color: C.muted, fontFamily: "'DM Mono',monospace" }}>TRD-{t.id}</div>
+                    <div style={{ fontSize: 10, color: C.muted, fontFamily: "'DM Mono',monospace" }}>{t.reference || `TRD-${t.id}`}</div>
                   </div>
                 </div>
                 <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 100, background: statusConverted ? "rgba(14,203,129,0.1)" : "rgba(245,166,35,0.1)", color: statusConverted ? C.green : C.amber, letterSpacing: 1, textTransform: "uppercase", fontWeight: 600 }}>{t.status}</span>
