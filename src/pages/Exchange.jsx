@@ -122,7 +122,7 @@ const ASSETS = [
     bg: "rgba(38,161,123,0.15)",
     rateNGN: 1592,
     change: -0.3,
-    networks: ["TRC20", "ERC20"],
+    networks: ["ERC20", "BEP20"],
   },
   {
     id: "USDC",

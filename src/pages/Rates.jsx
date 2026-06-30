@@ -116,7 +116,7 @@ const BASE_ASSETS = [
     change24h: -0.3,
     vol: "₦9.1B",
     mcap: "Stablecoin",
-    networks: ["TRC20", "ERC20"],
+    networks: ["ERC20", "BEP20"],
   },
   {
     id: "USDC",

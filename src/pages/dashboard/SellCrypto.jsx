@@ -134,7 +134,7 @@ const COINS = [
     icon: "₮",
     color: "#26A17B",
     bg: "rgba(38,161,123,0.15)",
-    networks: ["TRC20", "ERC20", "BEP20", "SOLANA"],
+    networks: ["ERC20", "BEP20"],
   },
   {
     id: "BTC",
