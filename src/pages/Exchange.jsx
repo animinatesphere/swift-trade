@@ -133,7 +133,7 @@ const ASSETS = [
     bg: "rgba(0,114,255,0.15)",
     rateNGN: 1590,
     change: +0.1,
-    networks: ["ERC20", "SOL"],
+    networks: ["ERC20"],
   },
   {
     id: "BNB",
@@ -145,17 +145,6 @@ const ASSETS = [
     rateNGN: 920000,
     change: +3.1,
     networks: ["BEP20"],
-  },
-  {
-    id: "SOL",
-    name: "Solana",
-    symbol: "SOL",
-    icon: "◎",
-    color: "#9945FF",
-    bg: "rgba(153,69,255,0.15)",
-    rateNGN: 218400,
-    change: -1.2,
-    networks: ["SOL"],
   },
   {
     id: "XRP",

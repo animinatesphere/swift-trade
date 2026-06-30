@@ -129,7 +129,7 @@ const BASE_ASSETS = [
     change24h: +0.1,
     vol: "₦2.3B",
     mcap: "Stablecoin",
-    networks: ["ERC20", "SOL"],
+    networks: ["ERC20"],
   },
   {
     id: "BNB",
@@ -143,19 +143,6 @@ const BASE_ASSETS = [
     vol: "₦820M",
     mcap: "Large Cap",
     networks: ["BEP20"],
-  },
-  {
-    id: "SOL",
-    name: "Solana",
-    symbol: "SOL",
-    icon: "◎",
-    color: "#9945FF",
-    bg: "rgba(153,69,255,0.15)",
-    baseRate: 218400,
-    change24h: -1.2,
-    vol: "₦610M",
-    mcap: "Large Cap",
-    networks: ["SOL"],
   },
   {
     id: "XRP",

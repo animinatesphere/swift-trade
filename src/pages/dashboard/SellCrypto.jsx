@@ -158,7 +158,7 @@ const COINS = [
     icon: "◎",
     color: "#0072FF",
     bg: "rgba(0,114,255,0.15)",
-    networks: ["ERC20", "SOL"],
+    networks: ["ERC20"],
   },
   {
     id: "BNB",
@@ -167,14 +167,6 @@ const COINS = [
     color: "#F3BA2F",
     bg: "rgba(243,186,47,0.15)",
     networks: ["BEP20"],
-  },
-  {
-    id: "SOL",
-    name: "Solana",
-    icon: "◎",
-    color: "#9945FF",
-    bg: "rgba(153,69,255,0.15)",
-    networks: ["SOL"],
   },
 ];
 
