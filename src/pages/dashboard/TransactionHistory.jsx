@@ -167,6 +167,14 @@ function fmtDate(str) {
 }
 function fmtNGN(n) { return "\u20a6"+Number(n).toLocaleString("en-NG",{maximumFractionDigits:0}); }
 
+function statusLabel(t) {
+  if (t.type === "withdrawal") {
+    if (t.status === "pending") return "Pending Review";
+    if (t.status === "failed" || t.status === "reversed") return "Rejected";
+  }
+  return (STATUS_META[t.status] || STATUS_META.pending).label;
+}
+
 function Copy({ text, small }) {
   const [ok, setOk] = useState(false);
   return (
@@ -207,7 +215,9 @@ function DetailPanel({ txn, onClose }) {
 
   if(txn.status==="failed"||txn.status==="reversed") {
     timeline.forEach((t,i)=>{ if(i>1) t.done=false; });
-    timeline[2] = { label:"Transaction failed", sub:"Contact support with your reference ID", done:true, failed:true };
+    timeline[2] = isWD
+      ? { label:"Withdrawal rejected", sub:"Funds refunded to your wallet balance", done:true, failed:true }
+      : { label:"Transaction failed", sub:"Contact support with your reference ID", done:true, failed:true };
     timeline.splice(3);
   }
 
@@ -259,7 +269,7 @@ function DetailPanel({ txn, onClose }) {
                 <span style={{ width:5,height:5,borderRadius:"50%",
                   background:C.amber,animation:"pulse 1.5s infinite",display:"inline-block" }}/>
               )}
-              {status.label}
+              {statusLabel(txn)}
             </span>
           </div>
 
@@ -378,7 +388,9 @@ function DetailPanel({ txn, onClose }) {
               display:"flex",gap:8,alignItems:"flex-start" }}>
               <span style={{ fontSize:13,flexShrink:0 }}>{"\u26a0"}</span>
               <span style={{ fontSize:12,color:"#e88",lineHeight:1.6 }}>
-                This transaction failed. Contact support with reference <span style={{ color:"#fff",fontFamily:"'DM Mono',monospace" }}>{txn.ref}</span> for assistance.
+                {isWD
+                  ? <>This withdrawal was rejected after review. <span style={{ color:"#fff",fontFamily:"'DM Mono',monospace" }}>{fmtNGN(txn.ngnAmt)}</span> has been refunded to your wallet balance.</>
+                  : <>This transaction failed. Contact support with reference <span style={{ color:"#fff",fontFamily:"'DM Mono',monospace" }}>{txn.ref}</span> for assistance.</>}
               </span>
             </div>
           )}
@@ -662,7 +674,7 @@ export default function TransactionHistory() {
                           background:C.amber,animation:"pulse 1.5s infinite",
                           display:"inline-block" }}/>
                       )}
-                      {status.label}
+                      {statusLabel(t)}
                     </span>
                     <svg width={12} height={12} viewBox="0 0 24 24" fill="none"
                       stroke={C.muted2} strokeWidth={2} strokeLinecap="round">

@@ -364,7 +364,7 @@ function LeftPanel({ amount, bank, step, ngnBalance }) {
                 },
                 { label: "Bank", val: bank ? `${bank.name}` : null },
                 { label: "Account", val: bank ? `••${bank.number}` : null },
-                { label: "Est. Time", val: amount > 0 ? "5–15 minutes" : null },
+                { label: "Status", val: amount > 0 ? "Pending review" : null },
               ].map((r) => (
                 <div
                   key={r.label}
@@ -449,15 +449,16 @@ function LeftPanel({ amount, bank, step, ngnBalance }) {
                 height={13}
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke={C.green}
+                stroke={C.amber}
                 strokeWidth={2}
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
               </svg>
             ),
-            text: "Arrives in 5–15 minutes",
+            text: "Reviewed manually by our team",
           },
           {
             icon: (
@@ -1144,7 +1145,7 @@ function StepReview({ amount, bank, onConfirm, loading, pin, setPin, error }) {
           ["Amount", `₦${Number(amount).toLocaleString()}`],
           ["Fee", "₦0.00 — Free"],
           ["You Receive", `₦${Number(amount).toLocaleString()}`],
-          ["Est. Time", "5–15 minutes"],
+          ["Review Time", "Manual review by our team"],
         ].map(([k, v]) => (
           <div
             key={k}
@@ -1179,6 +1180,40 @@ function StepReview({ amount, bank, onConfirm, loading, pin, setPin, error }) {
             </span>
           </div>
         ))}
+      </div>
+
+      {/* Manual review note */}
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          alignItems: "flex-start",
+          background: "rgba(245,166,35,0.05)",
+          border: "1px solid rgba(245,166,35,0.15)",
+          borderRadius: 10,
+          padding: "11px 14px",
+          marginBottom: 20,
+        }}
+      >
+        <svg
+          width={13}
+          height={13}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke={C.amber}
+          strokeWidth={2}
+          strokeLinecap="round"
+          style={{ flexShrink: 0, marginTop: 2 }}
+        >
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        <span style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+          Your balance is debited immediately, but withdrawals are reviewed
+          manually before funds are sent. If rejected, the amount is
+          refunded to your wallet.
+        </span>
       </div>
 
       {/* PIN Input */}
@@ -1300,7 +1335,7 @@ function StepDone({ amount, bank, refId, onReset }) {
             position: "absolute",
             inset: -8,
             borderRadius: "50%",
-            border: `2px solid rgba(14,203,129,0.4)`,
+            border: `2px solid rgba(245,166,35,0.4)`,
             animation: "ripple 0.8s ease-out",
           }}
         />
@@ -1309,7 +1344,7 @@ function StepDone({ amount, bank, refId, onReset }) {
             position: "absolute",
             inset: -8,
             borderRadius: "50%",
-            border: `2px solid rgba(14,203,129,0.2)`,
+            border: `2px solid rgba(245,166,35,0.2)`,
             animation: "ripple 0.8s 0.25s ease-out",
           }}
         />
@@ -1318,27 +1353,29 @@ function StepDone({ amount, bank, refId, onReset }) {
             width: 96,
             height: 96,
             borderRadius: "50%",
-            background: "rgba(14,203,129,0.1)",
-            border: `2px solid ${C.green}`,
+            background: "rgba(245,166,35,0.1)",
+            border: `2px solid ${C.amber}`,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             animation: "successIn 0.5s ease",
-            boxShadow: `0 0 40px rgba(14,203,129,0.2)`,
+            boxShadow: `0 0 40px rgba(245,166,35,0.2)`,
           }}
         >
-          <svg width={40} height={40} viewBox="0 0 40 40" fill="none">
-            <path
-              d="M8 20l8 9L32 12"
-              stroke={C.green}
-              strokeWidth={3}
+          <svg width={40} height={40} viewBox="0 0 24 24" fill="none">
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+              stroke={C.amber}
+              strokeWidth={2}
+            />
+            <polyline
+              points="12 6 12 12 16 14"
+              stroke={C.amber}
+              strokeWidth={2}
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeDasharray={70}
-              style={{
-                animation: "checkDraw 0.5s 0.3s ease forwards",
-                strokeDashoffset: 70,
-              }}
             />
           </svg>
         </div>
@@ -1349,17 +1386,17 @@ function StepDone({ amount, bank, refId, onReset }) {
           display: "inline-flex",
           alignItems: "center",
           gap: 7,
-          background: "rgba(14,203,129,0.08)",
-          border: "1px solid rgba(14,203,129,0.2)",
+          background: "rgba(245,166,35,0.08)",
+          border: "1px solid rgba(245,166,35,0.2)",
           borderRadius: 100,
           padding: "4px 14px",
           fontSize: 10,
-          color: C.green,
+          color: C.amber,
           letterSpacing: 3,
           marginBottom: 16,
         }}
       >
-        WITHDRAWAL SUBMITTED
+        PENDING REVIEW
       </div>
 
       <h2
@@ -1371,9 +1408,9 @@ function StepDone({ amount, bank, refId, onReset }) {
           marginBottom: 12,
         }}
       >
-        ON ITS
+        REQUEST
         <br />
-        <span style={{ color: C.green }}>WAY TO YOU!</span>
+        <span style={{ color: C.amber }}>RECEIVED</span>
       </h2>
 
       <p
@@ -1388,8 +1425,9 @@ function StepDone({ amount, bank, refId, onReset }) {
         <span style={{ color: C.green, fontWeight: 600 }}>
           ₦{Number(amount).toLocaleString()}
         </span>{" "}
-        is being sent to your {bank.name} account ending in ••{bank.number}.
-        Expected within 5–15 minutes.
+        has been debited from your wallet and your withdrawal to{" "}
+        {bank.name} account ending in ••{bank.number} is now pending
+        review. You'll be notified once it's approved and sent.
       </p>
 
       {/* Ref */}
@@ -1533,6 +1571,7 @@ export default function Withdraw() {
         pin: pin,
       });
       setRefId(res.data.reference || "WD-SUCCESS");
+      setNgnBalance((prev) => Math.max(prev - parseFloat(amount), 0));
       setStep("done");
     } catch (err) {
       console.error(err);
@@ -1769,7 +1808,7 @@ export default function Withdraw() {
                     width: 5,
                     height: 5,
                     borderRadius: "50%",
-                    background: C.green,
+                    background: C.amber,
                     animation: "pulse 2s infinite",
                     display: "inline-block",
                   }}
@@ -1778,10 +1817,10 @@ export default function Withdraw() {
                   style={{
                     fontFamily: "'DM Mono',monospace",
                     fontSize: 9,
-                    color: C.green,
+                    color: C.amber,
                   }}
                 >
-                  INSTANT TRANSFER
+                  MANUAL REVIEW
                 </span>
               </div>
             </div>
