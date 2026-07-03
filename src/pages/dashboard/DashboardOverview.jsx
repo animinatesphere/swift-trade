@@ -216,12 +216,12 @@ function KYCBanner({ status, rejectionReason }) {
           <polyline points="12 6 12 12 16 14" />
         </svg>
       ),
-      title: "KYC Under Review",
+      title: "KYC Pending Review",
       message:
         "Your documents are being reviewed. This takes 1–3 business days.",
       cta: "View Status →",
     },
-    rejected: {
+    resubmission: {
       color: C.red,
       bg: "rgba(246,70,93,0.06)",
       border: "rgba(246,70,93,0.2)",
@@ -241,10 +241,10 @@ function KYCBanner({ status, rejectionReason }) {
           <line x1="9" y1="9" x2="15" y2="15" />
         </svg>
       ),
-      title: "KYC Rejected — Action Required",
+      title: "KYC Resubmission Needed",
       message: rejectionReason
         ? `Reason: ${rejectionReason}`
-        : "Your submission was rejected. Please resubmit with correct documents.",
+        : "Your submission needs changes. Please resubmit with correct documents.",
       cta: "Resubmit →",
     },
   }[status];

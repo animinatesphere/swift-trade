@@ -571,14 +571,14 @@ export default function Settings() {
                       background:
                         kycData?.status === "verified"
                           ? "rgba(14,203,129,0.1)"
-                          : kycData?.status === "rejected"
+                          : kycData?.status === "resubmission"
                             ? "rgba(246,70,93,0.1)"
                             : kycData?.status === "submitted"
                               ? "rgba(59,130,246,0.1)"
                               : "rgba(245,166,35,0.1)",
                       border: `1px solid ${kycData?.status === "verified"
                           ? "rgba(14,203,129,0.2)"
-                          : kycData?.status === "rejected"
+                          : kycData?.status === "resubmission"
                             ? "rgba(246,70,93,0.2)"
                             : kycData?.status === "submitted"
                               ? "rgba(59,130,246,0.2)"
@@ -587,7 +587,7 @@ export default function Settings() {
                       color:
                         kycData?.status === "verified"
                           ? C.green
-                          : kycData?.status === "rejected"
+                          : kycData?.status === "resubmission"
                             ? C.red
                             : kycData?.status === "submitted"
                               ? C.blue
@@ -598,8 +598,8 @@ export default function Settings() {
                   >
                     {kycData?.status === "verified"
                       ? "✓ VERIFIED"
-                      : kycData?.status === "rejected"
-                        ? "✗ REJECTED"
+                      : kycData?.status === "resubmission"
+                        ? "✗ RESUBMISSION"
                         : kycData?.status === "submitted"
                           ? "⧗ PENDING"
                           : "UNVERIFIED"}
@@ -678,17 +678,17 @@ export default function Settings() {
               value={
                 kycData?.status === "verified"
                   ? "Verified"
-                  : kycData?.status === "rejected"
-                    ? "Rejected"
+                  : kycData?.status === "resubmission"
+                    ? "Resubmission Needed"
                     : kycData?.status === "submitted"
-                      ? "Pending Verification"
+                      ? "Pending Review"
                       : "Unverified"
               }
               tag={
                 kycData?.status === "verified"
                   ? { label: "VERIFIED", color: "green" }
-                  : kycData?.status === "rejected"
-                    ? { label: "REJECTED", color: "red" }
+                  : kycData?.status === "resubmission"
+                    ? { label: "RESUBMISSION", color: "red" }
                     : kycData?.status === "submitted"
                       ? { label: "PENDING", color: "blue" }
                       : { label: "UNVERIFIED", color: "amber" }

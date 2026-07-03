@@ -68,17 +68,17 @@ const CSS = `
   /* ── Mobile Responsiveness ── */
   @media (max-width: 768px) {
     .kyc-card { margin-left: -8px; margin-right: -8px; }
-    
+
     /* Adjust padding for mobile */
     body { padding: 0; }
-    
+
     /* Better touch targets for mobile */
     .doc-btn { padding: 14px 10px; min-height: 48px; display: flex; justify-content: center; align-items: center; }
     .submit-btn { min-height: 48px; padding: 14px !important; font-size: 15px; }
-    
+
     /* Better spacing on mobile */
     .drop-zone { padding: 20px 16px !important; min-height: 140px; }
-    
+
     /* Responsive grid for document types */
     .doc-type-grid { grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)) !important; gap: 12px !important; }
   }
@@ -86,24 +86,24 @@ const CSS = `
   @media (max-width: 480px) {
     /* Extra small screens */
     .kyc-card { max-width: 100% !important; margin: 0 !important; }
-    
+
     /* Larger text for readability */
     .kyc-input { font-size: 16px; padding: 14px 12px !important; }
     .submit-btn { font-size: 14px; padding: 12px !important; }
-    
+
     /* Stack layout vertically */
     .doc-btn { padding: 12px 8px; font-size: 10px; }
-    
+
     /* Better touch spacing */
     .drop-zone { padding: 16px 12px !important; min-height: 130px; }
-    
+
     /* Responsive SVG sizes */
     svg { max-width: 100%; height: auto; }
-    
+
     /* Text sizes */
     h1 { font-size: 24px !important; }
     h2 { font-size: 20px !important; }
-    
+
     /* Better info boxes on mobile */
     .info-box { padding: 12px 10px !important; gap: 8px !important; margin-bottom: 12px !important; }
   }
@@ -123,28 +123,24 @@ const STATUS_CONFIG = {
     bg: "rgba(85,85,85,0.1)",
     border: "rgba(85,85,85,0.25)",
     label: "Unverified",
-    icon: null,
   },
   submitted: {
     color: C.amber,
     bg: "rgba(245,166,35,0.08)",
     border: "rgba(245,166,35,0.25)",
-    label: "Under Review",
-    icon: null,
+    label: "Pending Review",
   },
-  rejected: {
+  resubmission: {
     color: C.red,
     bg: "rgba(246,70,93,0.08)",
     border: "rgba(246,70,93,0.25)",
-    label: "Rejected",
-    icon: null,
+    label: "Resubmission Needed",
   },
   verified: {
     color: C.green,
     bg: "rgba(14,203,129,0.08)",
     border: "rgba(14,203,129,0.25)",
     label: "Verified",
-    icon: null,
   },
 };
 
@@ -169,28 +165,6 @@ const DOC_TYPES = [
     ),
   },
   {
-    value: "bvn",
-    label: "BVN",
-    desc: "Bank Verification No.",
-    icon: (
-      <svg
-        width={18}
-        height={18}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={1.8}
-        strokeLinecap="round"
-      >
-        <rect x="3" y="4" width="18" height="16" rx="2" />
-        <circle cx="8" cy="10" r="2" />
-        <line x1="13" y1="9" x2="18" y2="9" />
-        <line x1="13" y1="12" x2="18" y2="12" />
-        <line x1="5" y1="16" x2="19" y2="16" />
-      </svg>
-    ),
-  },
-  {
     value: "drivers_license",
     label: "Driver's License",
     desc: "Valid driver's license",
@@ -208,6 +182,49 @@ const DOC_TYPES = [
         <circle cx="9" cy="12" r="2" />
         <line x1="13" y1="10" x2="18" y2="10" />
         <line x1="13" y1="14" x2="16" y2="14" />
+      </svg>
+    ),
+  },
+  {
+    value: "voters_card",
+    label: "Voter's Card",
+    desc: "INEC voter's card",
+    icon: (
+      <svg
+        width={18}
+        height={18}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+      >
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <circle cx="9" cy="9" r="2.2" />
+        <line x1="13.5" y1="8" x2="18" y2="8" />
+        <line x1="13.5" y1="10.5" x2="18" y2="10.5" />
+        <line x1="5" y1="15" x2="19" y2="15" />
+        <line x1="5" y1="18" x2="14" y2="18" />
+      </svg>
+    ),
+  },
+  {
+    value: "international_passport",
+    label: "Passport",
+    desc: "International passport",
+    icon: (
+      <svg
+        width={18}
+        height={18}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <ellipse cx="12" cy="12" rx="4.5" ry="10" />
+        <line x1="2" y1="12" x2="22" y2="12" />
       </svg>
     ),
   },
@@ -330,8 +347,8 @@ function PendingClock() {
   );
 }
 
-// ── Rejected icon ──────────────────────────────────────────
-function RejectedIcon() {
+// ── Resubmission icon ──────────────────────────────────────
+function ResubmissionIcon() {
   return (
     <div
       style={{
@@ -478,56 +495,116 @@ function DropZone({
   );
 }
 
-// ── Step 1: ID verification form ───────────────────────────
-function IdVerificationForm({ defaultDocType, onVerified }) {
+// ── Upload a single file to Cloudinary, reporting progress ──
+function uploadToCloudinary(file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(e.loaded / e.total);
+    };
+    xhr.onload = () => {
+      try {
+        const res = JSON.parse(xhr.responseText);
+        if (res.secure_url) resolve(res.secure_url);
+        else reject(new Error("Failed to get secure URL from Cloudinary."));
+      } catch {
+        reject(new Error("Failed to parse Cloudinary response."));
+      }
+    };
+    xhr.onerror = () => reject(new Error("Upload to Cloudinary failed."));
+    xhr.send(formData);
+  });
+}
+
+// ── KYC submission form ─────────────────────────────────────
+function KYCSubmitForm({ defaultDocType, defaultDocNumber, onSubmitted }) {
   const [docType, setDocType] = useState(defaultDocType || "nin");
-  const [docNumber, setDocNumber] = useState("");
+  const [docNumber, setDocNumber] = useState(defaultDocNumber || "");
   const [dob, setDob] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [docFile, setDocFile] = useState(null);
+  const [selfieFile, setSelfieFile] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploading, setUploading] = useState(false);
+
+  const docLabel =
+    docType === "nin"
+      ? "NIN"
+      : docType === "drivers_license"
+        ? "LICENSE NUMBER"
+        : docType === "voters_card"
+          ? "VOTER'S CARD NUMBER"
+          : "PASSPORT NUMBER";
 
   const handleSubmit = async () => {
     setError("");
     const trimmedNum = docNumber.trim();
-    if (docType === "nin" || docType === "bvn") {
+    if (docType === "nin") {
       if (trimmedNum.length !== 11 || !/^\d+$/.test(trimmedNum)) {
-        return setError(`Please enter a valid 11-digit ${docType.toUpperCase()}.`);
+        return setError("Please enter a valid 11-digit NIN.");
       }
     } else if (!trimmedNum || trimmedNum.length < 5) {
-      return setError("Please enter a valid ID number (at least 5 characters).");
+      return setError("Please enter a valid document number (at least 5 characters).");
     }
-    if (docType === "drivers_license") {
-      if (!dob) return setError("Please enter your date of birth.");
-      if (!firstName.trim() || !lastName.trim())
-        return setError("Please enter your first and last name.");
-    }
+    if (!docFile) return setError("Please upload a photo of your document.");
+    if (!selfieFile) return setError("Please take or upload a selfie.");
+
+    const docValidation = validateImageFile(docFile);
+    if (!docValidation.valid) return setError(docValidation.error);
+    const selfieValidation = validateImageFile(selfieFile);
+    if (!selfieValidation.valid) return setError(selfieValidation.error);
 
     setLoading(true);
+    setUploading(true);
+    setUploadProgress(2);
+
     try {
+      // Compress both images client-side
+      const [compressedDoc, compressedSelfie] = await Promise.all([
+        compressImageForKYC(docFile),
+        compressImageForKYC(selfieFile),
+      ]);
+      setUploadProgress(15);
+
+      // Upload sequentially so progress is easy to reason about
+      const documentUrl = await uploadToCloudinary(compressedDoc, (pct) =>
+        setUploadProgress(15 + pct * 40),
+      );
+      setUploadProgress(55);
+
+      const selfieUrl = await uploadToCloudinary(compressedSelfie, (pct) =>
+        setUploadProgress(55 + pct * 35),
+      );
+      setUploadProgress(90);
+      setUploading(false);
+
       const payload = {
         document_type: docType,
-        document_number: docNumber.trim(),
+        document_number: trimmedNum,
+        document_url: documentUrl,
+        selfie_url: selfieUrl,
       };
-      if (docType === "drivers_license") {
-        payload.date_of_birth = dob;
-        payload.first_name = firstName.trim();
-        payload.last_name = lastName.trim();
-      }
-      const { data } = await api.post("/kyc/verify-id", payload);
-      onVerified({
-        docType,
-        docNumber: docNumber.trim(),
-        verifiedName: data.verified_name,
-      });
-    } catch (submitErr) {
+      if (dob) payload.date_of_birth = dob;
+
+      const { data } = await api.post("/kyc/submit", payload);
+      setUploadProgress(100);
+      onSubmitted(data);
+    } catch (err) {
       const msg =
-        submitErr.response?.data?.detail ||
-        submitErr.response?.data?.message ||
-        "ID verification failed. Please check your details and try again.";
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        err.message ||
+        "Submission failed. Please try again.";
       setError(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
+      setUploading(false);
       setLoading(false);
     }
   };
@@ -607,7 +684,7 @@ function IdVerificationForm({ defaultDocType, onVerified }) {
             marginBottom: 8,
           }}
         >
-          {docType === "bvn" ? "BVN" : docType === "nin" ? "NIN" : "LICENSE NUMBER"}
+          {docLabel}
         </label>
         <input
           className="kyc-input"
@@ -617,11 +694,7 @@ function IdVerificationForm({ defaultDocType, onVerified }) {
             setError("");
           }}
           placeholder={
-            docType === "nin"
-              ? "e.g. 12345678901"
-              : docType === "bvn"
-                ? "e.g. 22345678901"
-                : "e.g. ABC123456"
+            docType === "nin" ? "e.g. 12345678901" : "e.g. ABC123456"
           }
           style={{
             width: "100%",
@@ -636,110 +709,118 @@ function IdVerificationForm({ defaultDocType, onVerified }) {
         />
       </div>
 
-      {/* Driver's license extra fields */}
-      {docType === "drivers_license" && (
-        <div style={{ marginBottom: 16, animation: "fadeIn 0.2s ease" }}>
+      {/* Date of birth (optional) */}
+      <div style={{ marginBottom: 20 }}>
+        <label
+          style={{
+            display: "block",
+            fontSize: 10,
+            color: C.muted,
+            letterSpacing: 2,
+            marginBottom: 8,
+          }}
+        >
+          DATE OF BIRTH (OPTIONAL)
+        </label>
+        <input
+          className="kyc-input"
+          type="date"
+          value={dob}
+          onChange={(e) => setDob(e.target.value)}
+          style={{
+            width: "100%",
+            background: "#0a0a0a",
+            border: `1px solid ${C.border2}`,
+            borderRadius: 10,
+            padding: "12px 14px",
+            color: C.text,
+            fontSize: 14,
+            fontFamily: "'DM Mono',monospace",
+          }}
+        />
+      </div>
+
+      {/* Document photo upload */}
+      <div style={{ marginBottom: 20 }}>
+        <label
+          style={{
+            display: "block",
+            fontSize: 10,
+            color: C.muted,
+            letterSpacing: 2,
+            marginBottom: 8,
+          }}
+        >
+          FRONT OF DOCUMENT
+        </label>
+        <DropZone
+          file={docFile}
+          onChange={(f) => {
+            setDocFile(f);
+            setError("");
+          }}
+          capture="environment"
+          primaryText="Tap to upload a clear photo of your document"
+        />
+      </div>
+
+      {/* Selfie upload */}
+      <div style={{ marginBottom: 20 }}>
+        <label
+          style={{
+            display: "block",
+            fontSize: 10,
+            color: C.muted,
+            letterSpacing: 2,
+            marginBottom: 8,
+          }}
+        >
+          SELFIE
+        </label>
+        <DropZone
+          file={selfieFile}
+          onChange={(f) => {
+            setSelfieFile(f);
+            setError("");
+          }}
+          capture="user"
+          primaryText="Tap to take a selfie or upload a photo"
+        />
+      </div>
+
+      {uploading && (
+        <div style={{ marginBottom: 18 }}>
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 10,
-              marginBottom: 10,
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: 4,
             }}
           >
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: 10,
-                  color: C.muted,
-                  letterSpacing: 2,
-                  marginBottom: 8,
-                }}
-              >
-                FIRST NAME
-              </label>
-              <input
-                className="kyc-input"
-                value={firstName}
-                onChange={(e) => {
-                  setFirstName(e.target.value);
-                  setError("");
-                }}
-                placeholder="John"
-                style={{
-                  width: "100%",
-                  background: "#0a0a0a",
-                  border: `1px solid ${C.border2}`,
-                  borderRadius: 10,
-                  padding: "12px 14px",
-                  color: C.text,
-                  fontSize: 14,
-                }}
-              />
-            </div>
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: 10,
-                  color: C.muted,
-                  letterSpacing: 2,
-                  marginBottom: 8,
-                }}
-              >
-                LAST NAME
-              </label>
-              <input
-                className="kyc-input"
-                value={lastName}
-                onChange={(e) => {
-                  setLastName(e.target.value);
-                  setError("");
-                }}
-                placeholder="Doe"
-                style={{
-                  width: "100%",
-                  background: "#0a0a0a",
-                  border: `1px solid ${C.border2}`,
-                  borderRadius: 10,
-                  padding: "12px 14px",
-                  color: C.text,
-                  fontSize: 14,
-                }}
-              />
-            </div>
+            <span style={{ fontSize: 11, color: C.amber }}>
+              Uploading documents...
+            </span>
+            <span
+              style={{
+                fontSize: 11,
+                color: C.amber,
+                fontFamily: "'DM Mono',monospace",
+              }}
+            >
+              {Math.round(uploadProgress)}%
+            </span>
           </div>
-          <label
-            style={{
-              display: "block",
-              fontSize: 10,
-              color: C.muted,
-              letterSpacing: 2,
-              marginBottom: 8,
-            }}
-          >
-            DATE OF BIRTH
-          </label>
-          <input
-            className="kyc-input"
-            type="date"
-            value={dob}
-            onChange={(e) => {
-              setDob(e.target.value);
-              setError("");
-            }}
-            style={{
-              width: "100%",
-              background: "#0a0a0a",
-              border: `1px solid ${C.border2}`,
-              borderRadius: 10,
-              padding: "12px 14px",
-              color: C.text,
-              fontSize: 14,
-              fontFamily: "'DM Mono',monospace",
-            }}
-          />
+          <div style={{ height: 3, background: C.border, borderRadius: 2 }}>
+            <div
+              style={{
+                height: "100%",
+                width: `${uploadProgress}%`,
+                borderRadius: 2,
+                background: `linear-gradient(90deg,${C.amber},${C.green})`,
+                transition: "width 0.3s ease",
+              }}
+            />
+          </div>
         </div>
       )}
 
@@ -771,8 +852,8 @@ function IdVerificationForm({ defaultDocType, onVerified }) {
           <line x1="12" y1="16" x2="12.01" y2="16" />
         </svg>
         <span style={{ fontSize: 11, color: "#666", lineHeight: 1.6 }}>
-          We'll verify your ID number instantly. No document photos required —
-          just a selfie in the next step.
+          Your documents are reviewed manually by our compliance team. This
+          typically takes 1–3 business days.
         </span>
       </div>
 
@@ -836,438 +917,13 @@ function IdVerificationForm({ defaultDocType, onVerified }) {
       >
         {loading ? (
           <>
-            <Spinner size={15} /> Verifying ID...
+            <Spinner size={15} /> Submitting...
           </>
         ) : (
-          "Verify ID →"
+          "Submit for Review →"
         )}
       </button>
     </div>
-  );
-}
-
-// ── Intermediary: confirm verified name ────────────────────
-function ConfirmNameStep({ verifiedName, onConfirm, onReject }) {
-  return (
-    <div
-      style={{
-        textAlign: "center",
-        padding: "12px 0",
-        animation: "fadeUp 0.4s ease",
-      }}
-    >
-      <div
-        style={{
-          width: 72,
-          height: 72,
-          margin: "0 auto 20px",
-          background:
-            "linear-gradient(135deg,rgba(14,203,129,0.12),rgba(14,203,129,0.04))",
-          border: "1px solid rgba(14,203,129,0.3)",
-          borderRadius: 18,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <svg
-          width={32}
-          height={32}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke={C.green}
-          strokeWidth={1.6}
-          strokeLinecap="round"
-        >
-          <circle cx="12" cy="8" r="4" />
-          <path d="M4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1" />
-        </svg>
-      </div>
-      <div
-        style={{
-          fontSize: 11,
-          color: C.muted,
-          letterSpacing: 2,
-          marginBottom: 8,
-        }}
-      >
-        ID VERIFIED — IS THIS YOU?
-      </div>
-      <h2
-        style={{
-          fontFamily: "'Bebas Neue',sans-serif",
-          fontSize: "clamp(24px, 6vw, 30px)",
-          letterSpacing: 1,
-          color: C.text,
-          marginBottom: 24,
-          wordBreak: "break-word",
-        }}
-      >
-        {verifiedName || "Unknown"}
-      </h2>
-      <div style={{ display: "flex", gap: 10 }}>
-        <button
-          onClick={onReject}
-          style={{
-            flex: 1,
-            background: "transparent",
-            border: `1px solid ${C.border2}`,
-            color: C.muted,
-            fontWeight: 600,
-            fontSize: 13,
-            padding: "13px",
-            borderRadius: 10,
-            cursor: "pointer",
-            fontFamily: "'Outfit',sans-serif",
-          }}
-        >
-          No, edit details
-        </button>
-        <button
-          className="submit-btn"
-          onClick={onConfirm}
-          style={{
-            flex: 1,
-            background: C.green,
-            color: "#000",
-            fontWeight: 700,
-            fontSize: 13,
-            padding: "13px",
-            borderRadius: 10,
-            border: "none",
-            cursor: "pointer",
-            fontFamily: "'Outfit',sans-serif",
-          }}
-        >
-          Yes, continue →
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ── Step 2: Selfie & liveness check ────────────────────────
-function SelfieStep({ onApproved, onPendingReview }) {
-  const [file, setFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [error, setError] = useState("");
-  const [remainingAttempts, setRemainingAttempts] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async () => {
-    setError("");
-    if (!file) return setError("Please take or upload a selfie.");
-
-    const validation = validateImageFile(file);
-    if (!validation.valid) return setError(validation.error);
-
-    setLoading(true);
-
-    // Step 0: Compress image (client-side)
-    let compressedFile = file;
-    try {
-      setUploading(true);
-      setUploadProgress(5);
-      compressedFile = await compressImageForKYC(file);
-      setUploadProgress(15);
-    } catch (_err) {
-      setUploading(false);
-      setLoading(false);
-      return setError(
-        "Image compression failed. Please try a different image.",
-      );
-    }
-
-    // Step 1: Upload compressed selfie to Cloudinary
-    let selfieUrl = "";
-    try {
-      const formData = new FormData();
-      formData.append("file", compressedFile);
-      formData.append("upload_preset", UPLOAD_PRESET);
-
-      const xhr = new XMLHttpRequest();
-      xhr.open(
-        "POST",
-        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-      );
-
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          const uploadPercent = Math.round((e.loaded / e.total) * 75);
-          setUploadProgress(15 + uploadPercent);
-        }
-      };
-
-      const cloudRes = await new Promise((resolve, reject) => {
-        xhr.onload = () => resolve(JSON.parse(xhr.responseText));
-        xhr.onerror = () => reject(new Error("Upload to Cloudinary failed"));
-        xhr.send(formData);
-      });
-
-      if (!cloudRes.secure_url)
-        throw new Error("Failed to get secure URL from Cloudinary.");
-      selfieUrl = cloudRes.secure_url;
-      setUploadProgress(95);
-    } catch (err) {
-      setUploading(false);
-      setLoading(false);
-      return setError(
-        `Selfie upload failed: ${err.message}. Please try again.`,
-      );
-    }
-
-    // Step 2: Submit selfie to backend for liveness + face match
-    try {
-      setUploadProgress(98);
-      const { data } = await api.post("/kyc/verify-selfie", {
-        selfie_url: selfieUrl,
-      });
-      setUploadProgress(100);
-
-      if (data.status === "verified") {
-        onApproved();
-        return;
-      }
-
-      // Face match / liveness failed
-      const attemptsLeft = data.remaining_attempts ?? 0;
-      setRemainingAttempts(attemptsLeft);
-      if (attemptsLeft <= 0) {
-        onPendingReview();
-        return;
-      }
-      setFile(null);
-      setError(
-        data.message ||
-          "Face match failed. Please take a clearer selfie in good lighting.",
-      );
-    } catch (submitErr) {
-      const respData = submitErr.response?.data;
-      if (respData?.remaining_attempts !== undefined) {
-        const attemptsLeft = respData.remaining_attempts;
-        setRemainingAttempts(attemptsLeft);
-        if (attemptsLeft <= 0) {
-          onPendingReview();
-          return;
-        }
-        setFile(null);
-      }
-      const msg =
-        respData?.message ||
-        respData?.detail ||
-        "Face match failed. Please take a clearer selfie in good lighting.";
-      setError(typeof msg === "string" ? msg : JSON.stringify(msg));
-    } finally {
-      setUploading(false);
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div style={{ animation: "fadeUp 0.4s ease" }}>
-      <div style={{ marginBottom: 20 }}>
-        <label
-          style={{
-            display: "block",
-            fontSize: 10,
-            color: C.muted,
-            letterSpacing: 2,
-            marginBottom: 8,
-          }}
-        >
-          TAKE A SELFIE
-        </label>
-        <DropZone
-          file={file}
-          onChange={(f) => {
-            setFile(f);
-            setError("");
-          }}
-          capture="user"
-          primaryText="Tap to take a selfie or upload a photo"
-        />
-
-        {uploading && (
-          <div style={{ marginTop: 10 }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginBottom: 4,
-              }}
-            >
-              <span style={{ fontSize: 11, color: C.amber }}>
-                Verifying selfie...
-              </span>
-              <span
-                style={{
-                  fontSize: 11,
-                  color: C.amber,
-                  fontFamily: "'DM Mono',monospace",
-                }}
-              >
-                {uploadProgress}%
-              </span>
-            </div>
-            <div style={{ height: 3, background: C.border, borderRadius: 2 }}>
-              <div
-                style={{
-                  height: "100%",
-                  width: `${uploadProgress}%`,
-                  borderRadius: 2,
-                  background: `linear-gradient(90deg,${C.amber},${C.green})`,
-                  transition: "width 0.3s ease",
-                }}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Info note */}
-      <div
-        style={{
-          display: "flex",
-          gap: 10,
-          alignItems: "flex-start",
-          background: "rgba(59,130,246,0.04)",
-          border: "1px solid rgba(59,130,246,0.12)",
-          borderRadius: 10,
-          padding: "11px 13px",
-          marginBottom: 18,
-        }}
-      >
-        <svg
-          width={14}
-          height={14}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke={C.blue}
-          strokeWidth={2}
-          strokeLinecap="round"
-          style={{ flexShrink: 0, marginTop: 1 }}
-        >
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="8" x2="12" y2="12" />
-          <line x1="12" y1="16" x2="12.01" y2="16" />
-        </svg>
-        <span style={{ fontSize: 11, color: "#666", lineHeight: 1.6 }}>
-          Face the camera directly in good lighting, with no glasses or mask.
-          We'll match this against your ID instantly.
-        </span>
-      </div>
-
-      {/* Error */}
-      {error && (
-        <div
-          style={{
-            display: "flex",
-            gap: 8,
-            alignItems: "flex-start",
-            background: "rgba(246,70,93,0.06)",
-            border: "1px solid rgba(246,70,93,0.2)",
-            borderRadius: 10,
-            padding: "10px 13px",
-            marginBottom: 16,
-            animation: "fadeIn 0.2s ease",
-          }}
-        >
-          <svg
-            width={14}
-            height={14}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke={C.red}
-            strokeWidth={2}
-            strokeLinecap="round"
-            style={{ flexShrink: 0, marginTop: 1 }}
-          >
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          <div>
-            <div style={{ fontSize: 12, color: C.red, lineHeight: 1.5 }}>
-              {error}
-            </div>
-            {remainingAttempts !== null && remainingAttempts > 0 && (
-              <div style={{ fontSize: 11, color: C.amber, marginTop: 4 }}>
-                {remainingAttempts} attempt
-                {remainingAttempts === 1 ? "" : "s"} remaining
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Submit */}
-      <button
-        className="submit-btn"
-        disabled={loading}
-        onClick={handleSubmit}
-        style={{
-          width: "100%",
-          background: C.green,
-          color: "#000",
-          fontWeight: 700,
-          fontSize: "clamp(14px, 3vw, 14px)",
-          padding: "clamp(12px, 3vw, 14px)",
-          borderRadius: 10,
-          border: "none",
-          fontFamily: "'Outfit',sans-serif",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 8,
-          minHeight: 48,
-        }}
-      >
-        {loading ? (
-          <>
-            <Spinner size={15} />{" "}
-            {uploading ? "Verifying..." : "Submitting..."}
-          </>
-        ) : (
-          "Verify Selfie →"
-        )}
-      </button>
-    </div>
-  );
-}
-
-// ── KYC Form: orchestrates ID verification → selfie ────────
-function KYCForm({ defaultDocType, onSuccess, onPendingReview, onPhaseChange }) {
-  const [phase, setPhase] = useState("id"); // 'id' | 'confirm' | 'selfie'
-  const [idResult, setIdResult] = useState(null);
-
-  useEffect(() => {
-    onPhaseChange?.(phase);
-  }, [phase, onPhaseChange]);
-
-  return (
-    <>
-      {phase === "id" && (
-        <IdVerificationForm
-          defaultDocType={defaultDocType}
-          onVerified={(result) => {
-            setIdResult(result);
-            setPhase("confirm");
-          }}
-        />
-      )}
-      {phase === "confirm" && idResult && (
-        <ConfirmNameStep
-          verifiedName={idResult.verifiedName}
-          onConfirm={() => setPhase("selfie")}
-          onReject={() => setPhase("id")}
-        />
-      )}
-      {phase === "selfie" && (
-        <SelfieStep onApproved={onSuccess} onPendingReview={onPendingReview} />
-      )}
-    </>
   );
 }
 
@@ -1366,7 +1022,7 @@ function VerifiedState({ kyc }) {
   );
 }
 
-// ── Submitted / pending state ──────────────────────────────
+// ── Submitted / pending review state ───────────────────────
 function SubmittedState({ kyc }) {
   return (
     <div
@@ -1386,7 +1042,7 @@ function SubmittedState({ kyc }) {
           marginBottom: 8,
         }}
       >
-        UNDER REVIEW
+        PENDING REVIEW
       </h2>
       <p
         style={{
@@ -1485,12 +1141,12 @@ function SubmittedState({ kyc }) {
   );
 }
 
-// ── Rejected state ─────────────────────────────────────────
-function RejectedState({ kyc, onResubmit }) {
+// ── Resubmission state ──────────────────────────────────────
+function ResubmissionState({ kyc, onResubmit }) {
   return (
     <div style={{ animation: "fadeUp 0.4s ease" }}>
       <div style={{ textAlign: "center", marginBottom: 28 }}>
-        <RejectedIcon />
+        <ResubmissionIcon />
         <h2
           style={{
             fontFamily: "'Bebas Neue',sans-serif",
@@ -1500,7 +1156,7 @@ function RejectedState({ kyc, onResubmit }) {
             marginBottom: 8,
           }}
         >
-          VERIFICATION REJECTED
+          RESUBMISSION NEEDED
         </h2>
         <p
           style={{
@@ -1621,8 +1277,9 @@ function UnverifiedPrompt({ onBegin }) {
           margin: "0 auto 28px",
         }}
       >
-        Complete KYC to unlock withdrawals and access all platform features. The
-        process takes less than 2 minutes.
+        Complete KYC to unlock withdrawals and access all platform features.
+        Upload your ID and a selfie — our team reviews submissions within 1–3
+        business days.
       </p>
 
       <div
@@ -1666,8 +1323,8 @@ function UnverifiedPrompt({ onBegin }) {
                 <polyline points="12 6 12 12 16 14" />
               </svg>
             ),
-            label: "Instant",
-            sub: "Approved in seconds",
+            label: "Manual Review",
+            sub: "1–3 business days",
           },
           {
             icon: (
@@ -1738,76 +1395,12 @@ function UnverifiedPrompt({ onBegin }) {
   );
 }
 
-// ── Progress steps bar ─────────────────────────────────────
-function StepsBar({ step }) {
-  const steps = ["ID Number", "Selfie", "Review"];
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 0,
-        marginBottom: 28,
-      }}
-    >
-      {steps.map((s, i) => (
-        <div key={s} style={{ display: "flex", alignItems: "center", flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <div
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: "50%",
-                flexShrink: 0,
-                background: i <= step ? C.green : C.border2,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 10,
-                fontWeight: 700,
-                color: i <= step ? "#000" : C.muted,
-                transition: "all 0.3s",
-              }}
-            >
-              {i < step ? "✓" : i + 1}
-            </div>
-            <span
-              style={{
-                fontSize: 10,
-                color: i <= step ? C.green : C.muted,
-                letterSpacing: 0.5,
-                whiteSpace: "nowrap",
-                transition: "color 0.3s",
-              }}
-            >
-              {s}
-            </span>
-          </div>
-          {i < steps.length - 1 && (
-            <div
-              style={{
-                flex: 1,
-                height: 1,
-                background: i < step ? C.green : C.border,
-                margin: "0 8px",
-                transition: "background 0.3s",
-              }}
-            />
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
 // ── Main KYC Page ──────────────────────────────────────────
 export default function KYC() {
   const [kycStatus, setKycStatus] = useState(null); // null = loading
   const [kyc, setKyc] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
-  const [formPhase, setFormPhase] = useState("id");
 
   useEffect(() => {
     const s = document.createElement("style");
@@ -1831,16 +1424,10 @@ export default function KYC() {
     fetchStatus();
   }, []);
 
-  const handleSuccess = () => {
-    setSubmitted(true);
+  const handleSubmitted = (data) => {
+    setKyc(data);
+    setKycStatus(data.status);
     setShowForm(false);
-    fetchStatus();
-  };
-
-  const handlePendingReview = () => {
-    setSubmitted(true);
-    setShowForm(false);
-    fetchStatus();
   };
 
   return (
@@ -1925,7 +1512,7 @@ export default function KYC() {
                   }}
                 />
               )}
-              {kycStatus === "rejected" && (
+              {kycStatus === "resubmission" && (
                 <span
                   style={{
                     width: 6,
@@ -2014,36 +1601,23 @@ export default function KYC() {
 
           {kycStatus === "verified" && <VerifiedState kyc={kyc} />}
 
-          {kycStatus === "submitted" && !submitted && (
-            <SubmittedState kyc={kyc} />
-          )}
-          {kycStatus === "submitted" && submitted && (
-            <SubmittedState kyc={kyc} />
-          )}
+          {kycStatus === "submitted" && <SubmittedState kyc={kyc} />}
 
-          {kycStatus === "rejected" && !showForm && (
-            <RejectedState kyc={kyc} onResubmit={() => setShowForm(true)} />
+          {kycStatus === "resubmission" && !showForm && (
+            <ResubmissionState kyc={kyc} onResubmit={() => setShowForm(true)} />
           )}
 
           {kycStatus === "unverified" && !showForm && (
             <UnverifiedPrompt onBegin={() => setShowForm(true)} />
           )}
 
-          {(kycStatus === "unverified" || kycStatus === "rejected") &&
+          {(kycStatus === "unverified" || kycStatus === "resubmission") &&
             showForm && (
-              <div>
-                <StepsBar
-                  step={
-                    { id: 0, confirm: 0, selfie: 1 }[formPhase] ?? 0
-                  }
-                />
-                <KYCForm
-                  defaultDocType={kyc?.document_type || "nin"}
-                  onSuccess={handleSuccess}
-                  onPendingReview={handlePendingReview}
-                  onPhaseChange={setFormPhase}
-                />
-              </div>
+              <KYCSubmitForm
+                defaultDocType={kyc?.document_type || "nin"}
+                defaultDocNumber={kyc?.document_number || ""}
+                onSubmitted={handleSubmitted}
+              />
             )}
         </div>
       </div>

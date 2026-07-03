@@ -338,7 +338,7 @@ export default function DashboardLayout() {
       ? C.green
       : kycStatus === "submitted"
         ? C.amber
-        : kycStatus === "rejected"
+        : kycStatus === "resubmission"
           ? C.red
           : C.muted;
   const showKycBadge = kycStatus && kycStatus !== "verified";
@@ -593,7 +593,7 @@ export default function DashboardLayout() {
                       ? C.green
                       : kycStatus === "submitted"
                         ? C.amber
-                        : kycStatus === "rejected"
+                        : kycStatus === "resubmission"
                           ? C.red
                           : kycStatus === "unverified"
                             ? C.red
@@ -603,9 +603,9 @@ export default function DashboardLayout() {
                 {kycStatus === "verified"
                   ? "✓ VERIFIED"
                   : kycStatus === "submitted"
-                    ? "⏳ UNDER REVIEW"
-                    : kycStatus === "rejected"
-                      ? "✕ KYC REJECTED"
+                    ? "⏳ PENDING REVIEW"
+                    : kycStatus === "resubmission"
+                      ? "✕ RESUBMISSION NEEDED"
                       : kycStatus === "unverified"
                         ? "⚠ UNVERIFIED"
                         : "· · ·"}
