@@ -53,17 +53,14 @@ const CSS = `
 
   @media (max-width:1024px) {
     .bank-page { flex-direction:column; }
-    .bank-left { width:100%; border-right:none; border-bottom:1px solid #1a1a1a; padding:20px; }
-    .bank-left-hero, .bank-left-default { display:none !important; }
+    .bank-left { display:none !important; }
     .bank-scroll { padding:20px 16px 32px; }
-    .bank-topbar { padding:0 16px !important; }
+    .bank-topbar { display:none !important; }
     .stats-row { grid-template-columns:1fr 1fr !important; }
     .acct-actions .act-label { display:none !important; }
   }
   @media (max-width:640px) {
     .stats-row { grid-template-columns:1fr !important; }
-    .bank-topbar-btn-text { display:none !important; }
-    .bank-topbar-btn { padding:8px !important; border-radius:50% !important; width:34px; height:34px; justify-content:center !important; }
   }
 `;
 
