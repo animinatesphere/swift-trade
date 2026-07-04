@@ -412,28 +412,6 @@ function Stats({ balance, stats, loading }) {
       highlight: true,
     },
     {
-      label: "Total Withdrawn",
-      val: `₦${Number(stats?.totalWithdrawn || 0).toLocaleString("en-NG", { maximumFractionDigits: 2 })}`,
-      sub: "All time",
-      col: "#aaa",
-      icon: (
-        <svg
-          width={16}
-          height={16}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#aaa"
-          strokeWidth={1.8}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-          <polyline points="7 10 12 15 17 10" />
-          <line x1="12" y1="15" x2="12" y2="3" />
-        </svg>
-      ),
-    },
-    {
       label: "Trades Completed",
       val: String(stats?.completedTrades || 0),
       sub: "Successfully",
@@ -1193,7 +1171,7 @@ export default function DashboardOverview() {
 
   return (
     <div
-      style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}
+      style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, minHeight: 0 }}
     >
       <Topbar user={user} onNewTrade={() => goToTrade()} />
       <Ticker />
