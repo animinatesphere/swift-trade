@@ -252,7 +252,7 @@ function KYCBanner({ status, rejectionReason }) {
   if (!cfg) return null;
 
   return (
-    <Link to="/dashboard/kyc" style={{ textDecoration: "none", display: "block", marginBottom: 4 }}>
+    <Link to="/dashboard/kyc" style={{ textDecoration: "none", display: "block", marginBottom: 16 }}>
       <div
         className={`card-in padded-card kyc-banner ${cfg.cls}`}
         style={{
