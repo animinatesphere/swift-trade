@@ -129,13 +129,6 @@ const CSS = `
       flex-direction: column !important;
     }
     .left-panel {
-      width: 100% !important;
-      height: auto !important;
-      border-right: none !important;
-      border-bottom: 1px solid #1a1a1a !important;
-      padding: 20px !important;
-    }
-    .left-panel-ambient, .left-panel-logo, .left-panel-title {
       display: none !important;
     }
     .form-area {
