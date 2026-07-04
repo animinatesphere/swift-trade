@@ -587,6 +587,17 @@ function Stats({ balance, stats, loading }) {
   );
 }
 
+// ─── STATUS META ──────────────────────────────────────────
+function statusMeta(status) {
+  if (status === "completed" || status === "success" || status === "converted") {
+    return { label: "Completed", color: C.green, bg: "rgba(14,203,129,0.08)" };
+  }
+  if (status === "failed" || status === "reversed") {
+    return { label: "Failed", color: C.red, bg: "rgba(246,70,93,0.08)" };
+  }
+  return { label: "Pending", color: C.amber, bg: "rgba(245,166,35,0.08)" };
+}
+
 // ─── HISTORY TABLE ────────────────────────────────────────
 function History({ transactions, loading }) {
   const navigate = useNavigate();
@@ -629,34 +640,39 @@ function History({ transactions, loading }) {
         <div style={{ minWidth: 500 }}>
           {/* header row */}
           <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1.2fr", padding: "8px 18px", borderBottom: `1px solid ${C.border}` }}>
-            {["Trade", "You Sent", "You Received", "Date"].map((h) => (
+            {["Transaction", "You Sent", "You Received", "Date"].map((h) => (
               <span key={h} style={{ fontSize: 9, color: C.muted, letterSpacing: 2, textTransform: "uppercase" }}>{h}</span>
             ))}
           </div>
           {isEmpty && <EmptyState />}
           {(transactions || []).slice(0, 5).map((t, i) => {
-            const cDef = COINS.find((c) => c.id.toLowerCase() === t.asset?.toLowerCase()) || COINS[0];
-            const statusConverted = t.status === "converted";
+            const isWD = t.type === "withdrawal";
+            const cDef = COINS.find((c) => c.id.toLowerCase() === t.coin?.toLowerCase()) || COINS[0];
+            const st = statusMeta(t.status);
             return (
               <div key={t.id} className="txn-row"
                 style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1.2fr", padding: "12px 18px", borderBottom: `1px solid ${C.border}`, alignItems: "center", cursor: "pointer", animationDelay: `${i * 0.04}s` }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: cDef.bg, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: cDef.color }}>{cDef.icon}</div>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: isWD ? "rgba(246,70,93,0.1)" : cDef.bg, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: isWD ? C.red : cDef.color }}>{isWD ? "↑" : cDef.icon}</div>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 500 }}>{cDef.id}/NGN</div>
-                    <div style={{ fontSize: 10, color: C.muted }}>{t.reference || `TRD-${t.id}`}</div>
+                    <div style={{ fontSize: 13, fontWeight: 500 }}>{isWD ? "Bank Withdrawal" : `${cDef.id}/NGN`}</div>
+                    <div style={{ fontSize: 10, color: C.muted }}>{t.ref}</div>
                   </div>
                 </div>
                 <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "#bbb" }}>
-                  {Number(t.crypto_amount).toLocaleString(undefined, { maximumFractionDigits: 6 })} {cDef.id}
+                  {isWD ? "—" : `${Number(t.cryptoAmt).toLocaleString(undefined, { maximumFractionDigits: 6 })} ${cDef.id}`}
                 </div>
                 <div>
-                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 13, color: C.green }}>₦{Number(t.ngn_amount).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
-                  <div style={{ fontSize: 10, color: C.muted }}>Rate: ₦{Number(t.rate_applied).toLocaleString()} / $</div>
+                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 13, color: isWD ? C.red : C.green }}>
+                    {isWD ? "-" : ""}₦{Number(t.ngnAmt).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                  </div>
+                  {!isWD && t.rate && (
+                    <div style={{ fontSize: 10, color: C.muted }}>Rate: ₦{Number(t.rate).toLocaleString()} / $</div>
+                  )}
                 </div>
                 <div>
-                  <div style={{ fontSize: 11, color: C.muted }}>{new Date(t.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}</div>
-                  <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 100, background: statusConverted ? "rgba(14,203,129,0.08)" : "rgba(245,166,35,0.08)", color: statusConverted ? C.green : C.amber, letterSpacing: 1, textTransform: "uppercase" }}>{t.status}</span>
+                  <div style={{ fontSize: 11, color: C.muted }}>{new Date(t.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}</div>
+                  <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 100, background: st.bg, color: st.color, letterSpacing: 1, textTransform: "uppercase" }}>{st.label}</span>
                 </div>
               </div>
             );
@@ -668,39 +684,51 @@ function History({ transactions, loading }) {
       <div className="txn-mobile">
         {isEmpty && <EmptyState />}
         {(transactions || []).slice(0, 5).map((t, i) => {
-          const cDef = COINS.find((c) => c.id.toLowerCase() === t.asset?.toLowerCase()) || COINS[0];
-          const statusConverted = t.status === "converted";
+          const isWD = t.type === "withdrawal";
+          const cDef = COINS.find((c) => c.id.toLowerCase() === t.coin?.toLowerCase()) || COINS[0];
+          const st = statusMeta(t.status);
           return (
             <div key={t.id} className="txn-row"
               style={{ padding: "14px 16px", borderBottom: `1px solid ${C.border}`, cursor: "pointer" }}>
               {/* Row 1: coin info + status badge */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: cDef.bg, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: cDef.color }}>{cDef.icon}</div>
+                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: isWD ? "rgba(246,70,93,0.1)" : cDef.bg, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: isWD ? C.red : cDef.color }}>{isWD ? "↑" : cDef.icon}</div>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>{cDef.id}/NGN</div>
-                    <div style={{ fontSize: 10, color: C.muted, fontFamily: "'DM Mono',monospace" }}>{t.reference || `TRD-${t.id}`}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>{isWD ? "Bank Withdrawal" : `${cDef.id}/NGN`}</div>
+                    <div style={{ fontSize: 10, color: C.muted, fontFamily: "'DM Mono',monospace" }}>{t.ref}</div>
                   </div>
                 </div>
-                <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 100, background: statusConverted ? "rgba(14,203,129,0.1)" : "rgba(245,166,35,0.1)", color: statusConverted ? C.green : C.amber, letterSpacing: 1, textTransform: "uppercase", fontWeight: 600 }}>{t.status}</span>
+                <span style={{ fontSize: 9, padding: "3px 8px", borderRadius: 100, background: st.bg, color: st.color, letterSpacing: 1, textTransform: "uppercase", fontWeight: 600 }}>{st.label}</span>
               </div>
-              {/* Row 2: amounts left/right + date */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+              {/* Row 2: amounts */}
+              {isWD ? (
                 <div>
-                  <div style={{ fontSize: 9, color: C.muted, letterSpacing: 1, marginBottom: 2 }}>YOU SENT</div>
-                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "#bbb" }}>
-                    {Number(t.crypto_amount).toLocaleString(undefined, { maximumFractionDigits: 6 })} {cDef.id}
+                  <div style={{ fontSize: 9, color: C.muted, letterSpacing: 1, marginBottom: 2 }}>AMOUNT WITHDRAWN</div>
+                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 13, color: C.red, fontWeight: 600 }}>
+                    -₦{Number(t.ngnAmt).toLocaleString(undefined, { maximumFractionDigits: 2 })}
                   </div>
                 </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 9, color: C.muted, letterSpacing: 1, marginBottom: 2 }}>YOU RECEIVED</div>
-                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 13, color: C.green, fontWeight: 600 }}>₦{Number(t.ngn_amount).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+              ) : (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                  <div>
+                    <div style={{ fontSize: 9, color: C.muted, letterSpacing: 1, marginBottom: 2 }}>YOU SENT</div>
+                    <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "#bbb" }}>
+                      {Number(t.cryptoAmt).toLocaleString(undefined, { maximumFractionDigits: 6 })} {cDef.id}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 9, color: C.muted, letterSpacing: 1, marginBottom: 2 }}>YOU RECEIVED</div>
+                    <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 13, color: C.green, fontWeight: 600 }}>₦{Number(t.ngnAmt).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+                  </div>
                 </div>
-              </div>
+              )}
               {/* Row 3: date + rate */}
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
-                <div style={{ fontSize: 10, color: C.muted }}>{new Date(t.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</div>
-                <div style={{ fontSize: 10, color: C.muted }}>Rate: ₦{Number(t.rate_applied).toLocaleString()} / $</div>
+                <div style={{ fontSize: 10, color: C.muted }}>{new Date(t.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</div>
+                {!isWD && t.rate && (
+                  <div style={{ fontSize: 10, color: C.muted }}>Rate: ₦{Number(t.rate).toLocaleString()} / $</div>
+                )}
               </div>
             </div>
           );
@@ -1100,7 +1128,7 @@ export default function DashboardOverview() {
 
       const [balRes, txRes, ratesRes, statsRes] = await Promise.all([
         api.get("/wallets/balance").catch(() => ({ data: { balance: 0 } })),
-        api.get("/transactions/deposits").catch(() => ({ data: [] })),
+        api.get("/transactions/").catch(() => ({ data: [] })),
         api.get("/rates/").catch(() => ({ data: [] })),
         api.get("/dashboard/stats").catch(() => ({
           data: { totalWithdrawn: 0, completedTrades: 0, volumeThisMonth: 0 },
@@ -1115,8 +1143,22 @@ export default function DashboardOverview() {
           volumeThisMonth: 0,
         },
       );
+      // Unified transaction feed (trades + withdrawals), same shape as the full history page
       const rawTx = txRes.data?.items || txRes.data || [];
-      setTransactions(Array.isArray(rawTx) ? rawTx : []);
+      const mappedTx = (Array.isArray(rawTx) ? rawTx : [])
+        .map((t) => ({
+          id: t.id,
+          type: t.type,
+          date: t.created_at,
+          ref: t.ref || t.reference || String(t.id),
+          ngnAmt: Number(t.amount ?? t.ngn_amount) || 0,
+          status: (t.status || "pending").toLowerCase(),
+          coin: t.coin || t.asset || null,
+          cryptoAmt: t.crypto_amount ? Number(t.crypto_amount) : null,
+          rate: t.rate ?? t.rate_applied ? Number(t.rate ?? t.rate_applied) : null,
+        }))
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+      setTransactions(mappedTx);
 
       const ratesData = Array.isArray(ratesRes.data) ? ratesRes.data : [];
       setLiveCoins(
