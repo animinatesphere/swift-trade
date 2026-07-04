@@ -75,32 +75,23 @@ const CSS = `
       flex-direction: column !important;
     }
     .left-panel {
-      width: 100% !important;
-      height: auto !important;
-      border-right: none !important;
-      border-bottom: 1px solid #1a1a1a !important;
-      padding: clamp(16px, 3vw, 20px) !important;
-    }
-    .left-panel-ambient, .left-panel-logo, .left-panel-title {
       display: none !important;
     }
     .form-area {
       padding: clamp(20px, 3vw, 24px) clamp(16px, 3vw, 20px) clamp(30px, 4vw, 40px) !important;
     }
+    .withdraw-topbar {
+      display: none !important;
+    }
   }
 
   @media (max-width: 768px) {
     .form-area { padding: clamp(16px, 2vw, 20px) clamp(14px, 2vw, 18px) !important; }
-    .left-panel { padding: clamp(12px, 2vw, 16px) !important; }
   }
 
   @media (max-width: 480px) {
     .form-area { padding: clamp(14px, 2vw, 16px) !important; }
     .pri-btn { min-height: 48px; padding: clamp(12px, 2vw, 14px) !important; }
-  }
-    .withdraw-topbar {
-      display: none !important;
-    }
   }
 
   @media (max-width: 640px) {
