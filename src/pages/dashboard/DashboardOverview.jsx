@@ -182,8 +182,8 @@ function KYCBanner({ status, rejectionReason }) {
       cls: "kyc-banner-unverified",
       icon: (
         <svg
-          width={15}
-          height={15}
+          width={19}
+          height={19}
           viewBox="0 0 24 24"
           fill="none"
           stroke="#F5A623"
@@ -204,8 +204,8 @@ function KYCBanner({ status, rejectionReason }) {
       cls: "kyc-banner-submitted",
       icon: (
         <svg
-          width={15}
-          height={15}
+          width={19}
+          height={19}
           viewBox="0 0 24 24"
           fill="none"
           stroke="#F5A623"
@@ -228,8 +228,8 @@ function KYCBanner({ status, rejectionReason }) {
       cls: "kyc-banner-rejected",
       icon: (
         <svg
-          width={15}
-          height={15}
+          width={19}
+          height={19}
           viewBox="0 0 24 24"
           fill="none"
           stroke="#F6465D"
@@ -252,25 +252,25 @@ function KYCBanner({ status, rejectionReason }) {
   if (!cfg) return null;
 
   return (
-    <Link to="/dashboard/kyc" style={{ textDecoration: "none" }}>
+    <Link to="/dashboard/kyc" style={{ textDecoration: "none", display: "block", marginBottom: 4 }}>
       <div
         className={`card-in padded-card kyc-banner ${cfg.cls}`}
         style={{
           background: cfg.bg,
           border: `1px solid ${cfg.border}`,
-          borderRadius: 12,
-          padding: "12px 16px",
+          borderRadius: 14,
+          padding: "18px 20px",
           display: "flex",
           alignItems: "center",
-          gap: 12,
+          gap: 16,
           animationDelay: "0s",
         }}
       >
         <div
           style={{
-            width: 32,
-            height: 32,
-            borderRadius: 8,
+            width: 44,
+            height: 44,
+            borderRadius: 10,
             flexShrink: 0,
             background: `${cfg.color}18`,
             border: `1px solid ${cfg.color}33`,
@@ -284,21 +284,19 @@ function KYCBanner({ status, rejectionReason }) {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div
             style={{
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: 600,
               color: cfg.color,
-              marginBottom: 2,
+              marginBottom: 3,
             }}
           >
             {cfg.title}
           </div>
           <div
             style={{
-              fontSize: 11,
+              fontSize: 12,
               color: C.muted,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+              lineHeight: 1.5,
             }}
           >
             {cfg.message}
@@ -306,7 +304,7 @@ function KYCBanner({ status, rejectionReason }) {
         </div>
         <div
           style={{
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 600,
             color: cfg.color,
             whiteSpace: "nowrap",
