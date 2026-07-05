@@ -317,7 +317,16 @@ const BRANDS = [
 
 function Mark({ size = 32 }) {
   return (
-    <img src={logoImg} alt="Swift Trade Logo" style={{ width: size, height: size, display: "block", objectFit: "contain" }} />
+    <img
+      src={logoImg}
+      alt="Swift Trade Logo"
+      style={{
+        width: size,
+        height: size,
+        display: "block",
+        objectFit: "contain",
+      }}
+    />
   );
 }
 
@@ -1082,7 +1091,7 @@ function StepUpload({ image, setImage, cardCode, setCardCode }) {
     setDrag(false);
     handleFile(e.dataTransfer.files[0]);
   };
-
+  // me sjjsj
   return (
     <div className="step-form">
       <div

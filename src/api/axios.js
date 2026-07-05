@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://swift-jet-iota.vercel.app/api",
+  baseURL: "https://api.swiftradeapp.com/api",
   headers: {
     "Content-Type": "application/json",
   },
@@ -116,7 +116,7 @@ api.interceptors.response.use(
     // If error is 401 Unauthorized
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       // The backend does not implement a refresh token endpoint.
       // Clear stale credentials and force logout.
       localStorage.removeItem("access_token");
