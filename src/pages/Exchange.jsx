@@ -100,7 +100,7 @@ const ASSETS = [
     bg: "rgba(247,147,26,0.15)",
     rateNGN: 98240000,
     change: +2.4,
-    networks: ["BTC"],
+    networks: ["Bitcoin"],
   },
   {
     id: "ETH",
@@ -170,7 +170,6 @@ const ASSETS = [
   },
 ];
 
-const SPREAD = 0.04;
 const QUOTE_DURATION = 60;
 
 const RECENT_TRADES = [
@@ -428,10 +427,7 @@ function ExchangeWidget() {
     setNetwork(asset.networks[0]);
   }, [asset]);
 
-  const effectiveRate =
-    side === "sell"
-      ? asset.rateNGN * (1 - SPREAD)
-      : asset.rateNGN * (1 + SPREAD);
+  const effectiveRate = asset.rateNGN;
 
   const handleCryptoChange = (val) => {
     setCryptoAmount(val);

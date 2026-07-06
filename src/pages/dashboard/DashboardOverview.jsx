@@ -112,7 +112,7 @@ const COINS = [
     color: "#26A17B",
     bg: "rgba(38,161,123,0.15)",
     rate: 1592,
-    network: "TRC20",
+    network: "ERC20",
   },
   {
     id: "BTC",
@@ -121,7 +121,7 @@ const COINS = [
     color: "#F7931A",
     bg: "rgba(247,147,26,0.15)",
     rate: 98240000,
-    network: "BTC",
+    network: "Bitcoin",
   },
   {
     id: "ETH",
