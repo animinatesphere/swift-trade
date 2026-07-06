@@ -289,7 +289,7 @@ function AssetDropdown({ assets, selected, onSelect, onClose }) {
                   color: "#ccc",
                 }}
               >
-                ₦{a.rateNGN.toLocaleString()}
+                ₦{a.rateNGN.toLocaleString()}/$
               </div>
             </div>
           </div>
@@ -378,6 +378,10 @@ function ExchangeWidget() {
             return {
               ...a,
               rateNGN:
+                rateInfo.user_ngn_usd_rate ||
+                rateInfo.market_ngn_usd_rate ||
+                a.rateNGN,
+              calcRate:
                 rateInfo.user_rate ||
                 rateInfo.market_rate ||
                 a.rateNGN,
@@ -405,7 +409,7 @@ function ExchangeWidget() {
     setNetwork(asset.networks[0]);
   }, [asset]);
 
-  const effectiveRate = asset.rateNGN;
+  const effectiveRate = asset.calcRate || asset.rateNGN;
 
   const handleCryptoChange = (val) => {
     setCryptoAmount(val);

@@ -244,7 +244,8 @@ function findDepositEntry(coinId, network, depositAddresses) {
 function buildLiveCoins(liveRates) {
   return COINS.map((c) => ({
     ...c,
-    rate: liveRates[c.id] || 0,
+    rate: liveRates[c.id]?.rate || 0,
+    displayRate: liveRates[c.id]?.displayRate || 0,
   }));
 }
 
@@ -449,8 +450,8 @@ function LeftPanel({ trade }) {
     },
     {
       label: "Rate",
-      val: trade.liveRate
-        ? `₦${trade.liveRate.toLocaleString("en-NG", { maximumFractionDigits: 0 })} / ${trade.coin?.id}`
+      val: trade.coin && trade.coin.displayRate
+        ? `₦${trade.coin.displayRate.toLocaleString("en-NG", { maximumFractionDigits: 0 })} / $`
         : null,
     },
     {
@@ -764,7 +765,7 @@ function StepCoin({ selected, coins, onSelect, ratesLoading }) {
                   color: C.green,
                 }}
               >
-                ₦{c.rate.toLocaleString("en-NG", { maximumFractionDigits: 0 })}
+                ₦{(c.displayRate || 0).toLocaleString("en-NG", { maximumFractionDigits: 0 })}/$
               </div>
             )}
           </button>
@@ -1284,7 +1285,7 @@ function StepAmount({
           [
             "Rate",
             liveRate > 0
-              ? `₦${liveRate.toLocaleString("en-NG", { maximumFractionDigits: 0 })} / ${coin.id}`
+              ? `₦${(coin.displayRate || 0).toLocaleString("en-NG", { maximumFractionDigits: 0 })} / $`
               : "Loading...",
           ],
           ["Payout", "To your NGN wallet"],
@@ -1322,7 +1323,7 @@ function StepReview({ trade }) {
     ["You Send", `${trade.amount} ${trade.coin.id}`],
     [
       "Exchange Rate",
-      `₦${(trade.liveRate || trade.coin.rate || 0).toLocaleString("en-NG", { maximumFractionDigits: 0 })} / ${trade.coin.id}`,
+      `₦${(trade.coin?.displayRate || 0).toLocaleString("en-NG", { maximumFractionDigits: 0 })} / $`,
     ],
     [
       "You Receive",
@@ -2125,7 +2126,12 @@ export default function SellCrypto() {
       const map = {};
       (Array.isArray(ratesRes.data) ? ratesRes.data : [ratesRes.data]).forEach(
         (r) => {
-          if (r?.asset) map[r.asset.toUpperCase()] = parseRate(r);
+          if (r?.asset) {
+            map[r.asset.toUpperCase()] = {
+              rate: parseRate(r),
+              displayRate: parseFloat(r.user_ngn_usd_rate || r.market_ngn_usd_rate || 0),
+            };
+          }
         },
       );
       setLiveRates(map);

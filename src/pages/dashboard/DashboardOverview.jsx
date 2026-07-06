@@ -840,7 +840,7 @@ function RatesPanel({ onTrade, liveCoins, loading }) {
                   color: "#ccc",
                 }}
               >
-                ₦{c.rate.toLocaleString("en-NG", { maximumFractionDigits: 0 })}
+                ₦{(c.displayRate || c.rate).toLocaleString("en-NG", { maximumFractionDigits: 0 })}/$
               </div>
               <div style={{ fontSize: 10, color: C.green }}>Trade →</div>
             </div>
@@ -1138,6 +1138,9 @@ export default function DashboardOverview() {
             ...c,
             rate: r
               ? parseFloat(r.user_rate || r.market_rate || 0)
+              : c.rate,
+            displayRate: r
+              ? parseFloat(r.user_ngn_usd_rate || r.market_ngn_usd_rate || 0)
               : c.rate,
           };
         }),
