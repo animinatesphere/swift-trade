@@ -164,7 +164,7 @@ const COINS = [
 ];
 
 function parseRate(r) {
-  return parseFloat(r.user_ngn_usd_rate || r.user_rate || 0);
+  return parseFloat(r.user_rate || r.market_rate || 0);
 }
 
 function normNet(s) {

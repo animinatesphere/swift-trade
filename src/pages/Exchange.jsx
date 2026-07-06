@@ -146,28 +146,6 @@ const ASSETS = [
     change: +3.1,
     networks: ["BEP20"],
   },
-  {
-    id: "XRP",
-    name: "XRP",
-    symbol: "XRP",
-    icon: "✕",
-    color: "#00AAE4",
-    bg: "rgba(0,170,228,0.15)",
-    rateNGN: 860,
-    change: +0.8,
-    networks: ["XRP"],
-  },
-  {
-    id: "DOGE",
-    name: "Dogecoin",
-    symbol: "DOGE",
-    icon: "Ð",
-    color: "#C2A633",
-    bg: "rgba(194,166,51,0.15)",
-    rateNGN: 262,
-    change: +5.2,
-    networks: ["DOGE"],
-  },
 ];
 
 const QUOTE_DURATION = 60;
@@ -400,8 +378,8 @@ function ExchangeWidget() {
             return {
               ...a,
               rateNGN:
-                rateInfo.user_ngn_usd_rate ||
-                rateInfo.market_ngn_usd_rate ||
+                rateInfo.user_rate ||
+                rateInfo.market_rate ||
                 a.rateNGN,
             };
           }
@@ -1264,13 +1242,13 @@ function MarketSidebar() {
               return {
                 ...a,
                 rateNGN:
-                  rateInfo.user_ngn_usd_rate ||
-                  rateInfo.market_ngn_usd_rate ||
+                  rateInfo.user_rate ||
+                  rateInfo.market_rate ||
                   a.rateNGN,
                 spark: [
                   ...a.spark.slice(1),
-                  rateInfo.user_ngn_usd_rate ||
-                    rateInfo.market_ngn_usd_rate ||
+                  rateInfo.user_rate ||
+                    rateInfo.market_rate ||
                     a.rateNGN,
                 ],
               };

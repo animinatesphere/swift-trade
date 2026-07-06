@@ -150,15 +150,6 @@ const COINS = [
     rate: 920000,
     network: "BEP20",
   },
-  {
-    id: "SOL",
-    name: "Solana",
-    icon: "◎",
-    color: "#9945FF",
-    bg: "rgba(153,69,255,0.15)",
-    rate: 218400,
-    network: "SOL",
-  },
 ];
 
 const TICKERS = [
@@ -167,7 +158,6 @@ const TICKERS = [
   { s: "ETH/NGN", p: "₦3,420,000", c: "+1.8%", up: true },
   { s: "USDC/NGN", p: "₦1,590", c: "+0.1%", up: true },
   { s: "BNB/NGN", p: "₦920,000", c: "+3.1%", up: true },
-  { s: "SOL/NGN", p: "₦218,400", c: "-1.2%", up: false },
 ];
 
 // ─── KYC BANNER ───────────────────────────────────────────
@@ -1147,7 +1137,7 @@ export default function DashboardOverview() {
           return {
             ...c,
             rate: r
-              ? parseFloat(r.user_ngn_usd_rate || r.user_rate || 0)
+              ? parseFloat(r.user_rate || r.market_rate || 0)
               : c.rate,
           };
         }),
