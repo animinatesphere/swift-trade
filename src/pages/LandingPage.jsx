@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../hooks/useTheme";
 import { colors, fonts } from "../theme/tokens";
-import Navbar, { Logo } from "../components/Navbar";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 // ─── DATA ──────────────────────────────────────────────────
 const TICKER_ITEMS = [
@@ -15,8 +16,7 @@ const TICKER_ITEMS = [
 ];
 
 const STATS = [
-  { num: "₦12B+", label: "Total volume traded" },
-  { num: "50K+", label: "Active users" },
+  { num: "5,000+", label: "Active users" },
   { num: "99.9%", label: "Uptime guaranteed" },
   { num: "2min", label: "Avg. withdrawal time" },
 ];
@@ -95,7 +95,7 @@ const RATES = [
     bg: "rgba(38,161,123,0.15)",
     name: "Tether",
     ticker: "USDT/NGN",
-    price: "₦1,592",
+    price: "₦1,370",
     change: "-0.3%",
     up: false,
   },
@@ -105,7 +105,7 @@ const RATES = [
     bg: "rgba(0,114,255,0.15)",
     name: "USD Coin",
     ticker: "USDC/NGN",
-    price: "₦1,590",
+    price: "₦1,370",
     change: "+0.1%",
     up: true,
   },
@@ -117,28 +117,24 @@ const GC_CARDS = [
     color: "#FF9900",
     bg: "linear-gradient(135deg,#1a0a00,#2d1500)",
     amount: "$100",
-    rate: "₦140,000",
   },
   {
     label: "Steam",
     color: "#66C0F4",
     bg: "linear-gradient(135deg,#001a2d,#00264d)",
     amount: "$50",
-    rate: "₦66,500",
   },
   {
     label: "iTunes",
     color: "#FC3C44",
     bg: "linear-gradient(135deg,#1a001a,#2d002d)",
     amount: "$25",
-    rate: "₦33,750",
   },
   {
     label: "Google Play",
     color: "#0ECB81",
     bg: "linear-gradient(135deg,#001a00,#002d00)",
     amount: "$50",
-    rate: "₦68,500",
   },
 ];
 
@@ -165,17 +161,6 @@ const TESTIMONIALS = [
     stars: 5,
   },
 ];
-
-const FOOTER_LINKS = {
-  Products: [
-    "Crypto Exchange",
-    "Crypto Conversion",
-    "Gift Cards",
-    "Live Rates",
-  ],
-  Company: ["About Us", "Careers", "Blog", "Contact"],
-  Legal: ["Privacy Policy", "Terms of Service", "AML Policy", "Cookie Policy"],
-};
 
 // ─── STYLES ────────────────────────────────────────────────
 const GLOBAL_CSS = `
@@ -359,7 +344,7 @@ export default function LandingPage() {
                 letterSpacing: 0.5,
               }}
             >
-              Trusted by 50,000+ Nigerians
+              Trusted by 5,000+ Nigerians
             </span>
           </div>
 
@@ -421,22 +406,6 @@ export default function LandingPage() {
             >
               Start Trading →
             </Link>
-            <button
-              className="btn"
-              style={{
-                background: "transparent",
-                color: "#fff",
-                border: `1px solid ${colors.border2}`,
-                padding: "clamp(12px, 2vw, 16px) clamp(20px, 4vw, 32px)",
-                borderRadius: radius.lg,
-                fontWeight: 600,
-                fontSize: "clamp(13px, 2vw, 16px)",
-                width: "100%",
-                minHeight: 44,
-              }}
-            >
-              View Live Rates
-            </button>
           </div>
         </FadeIn>
 
@@ -1088,23 +1057,6 @@ export default function LandingPage() {
               Got unused cards from Amazon, Steam, or iTunes? Convert them to
               cash instantly at the highest rates in Nigeria.
             </p>
-            <Link
-              to="/gift-cards"
-              className="btn"
-              style={{
-                background: colors.green,
-                color: "#000",
-                border: "none",
-                padding: "16px 32px",
-                borderRadius: radius.lg,
-                fontWeight: 600,
-                width: isMobile ? "100%" : "auto",
-                display: "inline-block",
-                textDecoration: "none",
-              }}
-            >
-              Check Gift Card Rates →
-            </Link>
           </div>
           <div
             style={{
@@ -1138,15 +1090,6 @@ export default function LandingPage() {
                   </div>
                   <div style={{ fontFamily: fonts.display, fontSize: 28 }}>
                     {card.amount}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: "rgba(255,255,255,0.6)",
-                      marginTop: 4,
-                    }}
-                  >
-                    ≈ {card.rate}
                   </div>
                 </div>
               </FadeIn>
@@ -1290,7 +1233,7 @@ export default function LandingPage() {
               lineHeight: 1.6,
             }}
           >
-            Join 50,000+ Nigerians already using Swift Trade for crypto exchange
+            Join 5,000+ Nigerians already using Swift Trade for crypto exchange
             and gift cards.
           </p>
           <div
@@ -1334,114 +1277,7 @@ export default function LandingPage() {
         </FadeIn>
       </section>
 
-      {/* 10. Footer */}
-      <footer
-        style={{
-          padding: isMobile ? "60px 20px 40px" : "80px 64px 40px",
-          background: colors.surface,
-          borderTop: `1px solid ${colors.border}`,
-        }}
-      >
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile
-              ? "1fr"
-              : isTablet
-                ? "1fr 1fr"
-                : "2fr 1fr 1fr 1fr",
-            gap: 48,
-            marginBottom: isMobile ? 48 : 80,
-          }}
-        >
-          <div>
-            <Logo />
-            <p
-              style={{
-                color: colors.muted,
-                marginTop: 20,
-                maxWidth: 280,
-                fontSize: 13,
-                lineHeight: 1.6,
-              }}
-            >
-              Nigeria's fastest crypto exchange and gift card platform. Convert
-              digital assets to naira instantly.
-            </p>
-          </div>
-          {Object.entries(FOOTER_LINKS).map(([title, links]) => (
-            <div key={title}>
-              <h5
-                style={{
-                  color: colors.text,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  marginBottom: 20,
-                }}
-              >
-                {title}
-              </h5>
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: 10 }}
-              >
-                {links.map((link) => (
-                  <Link
-                    key={link}
-                    to={
-                      link === "About Us"
-                        ? "/about"
-                        : link === "Gift Cards"
-                          ? "/gift-cards"
-                          : link === "Crypto Exchange"
-                            ? "/exchange"
-                            : link === "Live Rates"
-                              ? "/rates"
-                              : "#"
-                    }
-                    style={{
-                      color: colors.muted,
-                      fontSize: 13,
-                      textDecoration: "none",
-                    }}
-                  >
-                    {link}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-        <div
-          style={{
-            paddingTop: 32,
-            borderTop: `1px solid ${colors.border}`,
-            display: "flex",
-            flexDirection: isMobile ? "column" : "row",
-            justifyContent: "space-between",
-            alignItems: isMobile ? "flex-start" : "center",
-            gap: 20,
-          }}
-        >
-          <div style={{ color: colors.muted2, fontSize: 11 }}>
-            © 2025 Swift Trade. All rights reserved.
-          </div>
-          <div style={{ display: "flex", gap: 24 }}>
-            {["Twitter", "Instagram", "WhatsApp"].map((social) => (
-              <a
-                key={social}
-                href="#"
-                style={{
-                  color: colors.muted2,
-                  fontSize: 11,
-                  textDecoration: "none",
-                }}
-              >
-                {social}
-              </a>
-            ))}
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

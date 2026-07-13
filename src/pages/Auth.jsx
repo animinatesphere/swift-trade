@@ -108,30 +108,34 @@ const TICKERS = [
   { sym: "SOL/NGN", price: "₦218,400", change: "-1.2%", up: false },
 ];
 
-const MINI_RATES = [
+const TRUST_POINTS = [
   {
-    sym: "BTC",
-    icon: "₿",
-    color: "#F7931A",
-    bg: "rgba(247,147,26,0.12)",
-    rate: "₦98.2M",
-    ch: "+2.4%",
+    title: "Manual KYC & AML verification",
+    desc: "Every account is reviewed by a real compliance team.",
+    icon: (
+      <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>
+    ),
   },
   {
-    sym: "USDT",
-    icon: "₮",
-    color: "#26A17B",
-    bg: "rgba(38,161,123,0.12)",
-    rate: "₦1,592",
-    ch: "-0.3%",
+    title: "Bank-grade encryption",
+    desc: "Your data and funds are protected end-to-end.",
+    icon: (
+      <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" />
+        <path d="M7 11V7a5 5 0 0110 0v4" />
+      </svg>
+    ),
   },
   {
-    sym: "ETH",
-    icon: "Ξ",
-    color: "#627EEA",
-    bg: "rgba(98,126,234,0.12)",
-    rate: "₦3.42M",
-    ch: "+1.8%",
+    title: "Real human support",
+    desc: "Talk to a person on our team, not a bot.",
+    icon: (
+      <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .92h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.59a16 16 0 006.5 6.5l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
+      </svg>
+    ),
   },
 ];
 
@@ -443,7 +447,7 @@ function LeftPanel({ page }) {
                 display: "inline-block",
               }}
             />
-            {page === "register" ? "JOIN 50,000+ TRADERS" : "WELCOME BACK"}
+            {page === "register" ? "JOIN 5,000+ TRADERS" : "WELCOME BACK"}
           </div>
 
           <h2
@@ -493,9 +497,9 @@ function LeftPanel({ page }) {
               marginBottom: 40,
             }}
           >
-            {MINI_RATES.map((r) => (
+            {TRUST_POINTS.map((t) => (
               <div
-                key={r.sym}
+                key={t.title}
                 className="rate-pill"
                 style={{
                   display: "flex",
@@ -513,77 +517,23 @@ function LeftPanel({ page }) {
                     width: 34,
                     height: 34,
                     borderRadius: "50%",
-                    background: r.bg,
+                    background: "rgba(14,203,129,0.1)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: r.color,
+                    color: C.green,
                     flexShrink: 0,
                   }}
                 >
-                  {r.icon}
+                  {t.icon}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12, fontWeight: 500 }}>
-                    {r.sym}/NGN
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>
+                    {t.title}
                   </div>
-                </div>
-                <div
-                  style={{
-                    fontFamily: "'DM Mono',monospace",
-                    fontSize: 13,
-                    color: "#ccc",
-                  }}
-                >
-                  {r.rate}
-                </div>
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 600,
-                    padding: "2px 8px",
-                    borderRadius: 100,
-                    color: r.ch.startsWith("+") ? C.green : C.red,
-                    background: r.ch.startsWith("+")
-                      ? "rgba(14,203,129,0.08)"
-                      : "rgba(246,70,93,0.08)",
-                  }}
-                >
-                  {r.ch}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ display: "flex", gap: 28 }}>
-            {[
-              { val: "50K+", label: "Active users" },
-              { val: "₦12B+", label: "Total traded" },
-              { val: "5min", label: "Avg. payout" },
-            ].map((s) => (
-              <div key={s.label}>
-                <div
-                  style={{
-                    fontFamily: "'Bebas Neue',sans-serif",
-                    fontSize: 24,
-                    color: C.green,
-                    letterSpacing: 1,
-                    lineHeight: 1,
-                  }}
-                >
-                  {s.val}
-                </div>
-                <div
-                  style={{
-                    fontSize: 10,
-                    color: C.muted,
-                    letterSpacing: 1,
-                    marginTop: 3,
-                  }}
-                >
-                  {s.label}
+                  <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+                    {t.desc}
+                  </div>
                 </div>
               </div>
             ))}
@@ -1889,7 +1839,25 @@ function RegisterForm({ onSwitch }) {
 
       <div style={{ marginBottom: 22 }}>
         <Checkbox checked={agreed} onChange={setAgreed}>
-          I agree to Swift Trade's Terms and Privacy Policy.
+          I agree to Swift Trade's{" "}
+          <Link
+            to="/terms-of-service"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: C.green, fontWeight: 600, textDecoration: "underline" }}
+          >
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link
+            to="/privacy-policy"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: C.green, fontWeight: 600, textDecoration: "underline" }}
+          >
+            Privacy Policy
+          </Link>
+          .
         </Checkbox>
       </div>
       <button

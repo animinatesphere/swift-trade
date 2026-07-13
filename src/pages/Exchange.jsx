@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 import api from "../api/axios";
 import {
   ArrowLeft,
@@ -1730,6 +1731,7 @@ export default function ExchangePage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

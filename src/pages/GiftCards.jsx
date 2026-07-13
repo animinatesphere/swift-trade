@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import Navbar, { Logo } from "../components/Navbar";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 import heroTrader from "../assets/hero_trader.png";
 import lifestyleGiftcard from "../assets/lifestyle_giftcard.png";
 
@@ -106,17 +107,6 @@ const GLOBAL_CSS = `
 `;
 
 // ─── GIFT CARD DATA ───────────────────────────────────────
-const CATEGORIES = [
-  "All",
-  "Amazon",
-  "Steam",
-  "iTunes",
-  "Google Play",
-  "Netflix",
-  "Visa",
-  "Xbox",
-];
-
 const GIFT_CARDS = [
   {
     id: 1,
@@ -1051,11 +1041,11 @@ function GiftCardItem({ card, onSell, delay = 0 }) {
                 style={{
                   fontFamily: "'DM Mono',monospace",
                   fontSize: 18,
-                  color: C.green,
+                  color: C.amber,
                   fontWeight: 500,
                 }}
               >
-                ₦{card.ratePerDollar.toLocaleString()}
+                Coming soon
               </div>
             </div>
             <div style={{ textAlign: "right" }}>
@@ -1101,9 +1091,7 @@ function GiftCardItem({ card, onSell, delay = 0 }) {
 
 // ─── MAIN PAGE ────────────────────────────────────────────
 export default function GiftCardsPage() {
-  const [activeCategory, setActiveCategory] = useState("All");
   const [sellingCard, setSellingCard] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const style = document.createElement("style");
@@ -1111,14 +1099,6 @@ export default function GiftCardsPage() {
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
   }, []);
-
-  const filtered = GIFT_CARDS.filter((c) => {
-    const matchCat = activeCategory === "All" || c.category === activeCategory;
-    const matchSearch = c.brand
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    return matchCat && matchSearch;
-  });
 
   return (
     <div
@@ -1344,102 +1324,9 @@ export default function GiftCardsPage() {
         </span>
       </div>
 
-      {/* Filters + search */}
-      <div
-        className="filters-bar"
-        style={{
-          padding: "28px 64px",
-          borderBottom: `1px solid ${C.border}`,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          position: "sticky",
-          top: 72,
-          zIndex: 50,
-          background: "rgba(8,8,8,0.95)",
-          backdropFilter: "blur(16px)",
-        }}
-      >
-        <div
-          className="filters-scroll"
-          style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
-        >
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              className="category-pill"
-              onClick={() => setActiveCategory(cat)}
-              style={{
-                background:
-                  activeCategory === cat
-                    ? "rgba(14,203,129,0.1)"
-                    : "transparent",
-                border:
-                  activeCategory === cat
-                    ? `1px solid ${C.green}`
-                    : `1px solid ${C.border2}`,
-                color: activeCategory === cat ? C.green : C.muted,
-                fontSize: 13,
-                padding: "7px 16px",
-                borderRadius: 100,
-                fontFamily: "'Outfit',sans-serif",
-                fontWeight: 500,
-                transition: "all 0.2s",
-              }}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ position: "relative" }}>
-          <span
-            style={{
-              position: "absolute",
-              left: 14,
-              top: "50%",
-              transform: "translateY(-50%)",
-              color: C.muted,
-              display: "flex",
-            }}
-          >
-            <svg
-              width={14}
-              height={14}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-          </span>
-          <input
-            className="search-input"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search cards..."
-            style={{
-              background: C.card,
-              border: `1px solid ${C.border2}`,
-              borderRadius: 10,
-              padding: "9px 16px 9px 38px",
-              color: "#fff",
-              fontSize: 14,
-              fontFamily: "'Outfit',sans-serif",
-              outline: "none",
-              width: 200,
-            }}
-          />
-        </div>
-      </div>
-
       {/* Cards grid */}
       <div className="section-padding" style={{ padding: "48px 64px" }}>
-        {filtered.length === 0 ? (
+        {GIFT_CARDS.length === 0 ? (
           <div
             style={{ textAlign: "center", padding: "80px 0", color: C.muted }}
           >
@@ -1477,7 +1364,7 @@ export default function GiftCardsPage() {
               gap: 20,
             }}
           >
-            {filtered.map((card, i) => (
+            {GIFT_CARDS.map((card, i) => (
               <GiftCardItem
                 key={card.id}
                 card={card}
@@ -1722,139 +1609,3 @@ export default function GiftCardsPage() {
   );
 }
 
-// ─── FOOTER ───────────────────────────────────────────────
-function Footer() {
-  const cols = {
-    Products: [
-      "Crypto Exchange",
-      "Crypto Conversion",
-      "Gift Cards",
-      "Live Rates",
-    ],
-    Company: ["About Us", "Our Story", "Careers", "Press"],
-    Legal: [
-      "Privacy Policy",
-      "Terms of Service",
-      "AML Policy",
-      "Cookie Policy",
-    ],
-  };
-  return (
-    <footer
-      className="section-padding"
-      style={{
-        padding: "100px 64px 40px",
-        background: C.surface,
-        borderTop: `1px solid ${C.border}`,
-      }}
-    >
-      <div
-        className="footer-grid"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "2fr 1fr 1fr 1fr",
-          gap: 48,
-          marginBottom: 80,
-        }}
-      >
-        <div>
-          <Logo />
-          <p
-            style={{
-              color: C.muted,
-              marginTop: 24,
-              maxWidth: 280,
-              fontSize: 14,
-              lineHeight: 1.6,
-            }}
-          >
-            Nigeria's fastest crypto exchange and gift card platform. Convert
-            digital assets to naira instantly.
-          </p>
-        </div>
-        {Object.entries(cols).map(([title, links]) => (
-          <div key={title}>
-            <h5
-              style={{
-                color: "#fff",
-                fontSize: 14,
-                fontWeight: 600,
-                marginBottom: 24,
-              }}
-            >
-              {title}
-            </h5>
-            <ul
-              style={{
-                listStyle: "none",
-                display: "flex",
-                flexDirection: "column",
-                gap: 12,
-              }}
-            >
-              {links.map((l) => (
-                <li key={l}>
-                  <Link
-                    key={l}
-                    to={
-                      l === "About Us"
-                        ? "/about"
-                        : l === "Gift Cards"
-                          ? "/gift-cards"
-                          : l === "Crypto Exchange"
-                            ? "/exchange"
-                            : l === "Live Rates"
-                              ? "/rates"
-                              : "#"
-                    }
-                    style={{
-                      color: "#444",
-                      fontSize: 14,
-                      transition: "color 0.2s",
-                    }}
-                    onMouseEnter={(e) => (e.target.style.color = "#fff")}
-                    onMouseLeave={(e) => (e.target.style.color = "#444")}
-                  >
-                    {l}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-      <div
-        className="footer-bottom"
-        style={{
-          paddingTop: 32,
-          borderTop: `1px solid ${C.border}`,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ color: C.muted2, fontSize: 12 }}>
-          © 2025 Swift Trade. All rights reserved.
-        </div>
-        <div style={{ display: "flex", gap: 24 }}>
-          {["Twitter", "Instagram", "LinkedIn"].map((s) => (
-            <a
-              key={s}
-              href="#"
-              style={{
-                color: C.muted2,
-                fontSize: 12,
-                textDecoration: "none",
-                transition: "color 0.2s",
-              }}
-              onMouseEnter={(e) => (e.target.style.color = "#fff")}
-              onMouseLeave={(e) => (e.target.style.color = C.muted2)}
-            >
-              {s}
-            </a>
-          ))}
-        </div>
-      </div>
-    </footer>
-  );
-}

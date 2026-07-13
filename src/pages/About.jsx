@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
-import Navbar, { Logo } from "../components/Navbar";
+import { useEffect, useRef } from "react";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 // ─── TOKENS ───────────────────────────────────────────────
 const C = {
@@ -220,7 +220,7 @@ function Hero() {
           <div className="hero-stats" style={{ display: "flex", gap: 32 }}>
             {[
               { val: "2023", label: "Founded" },
-              { val: "50K+", label: "Users" },
+              { val: "5K+", label: "Users" },
               { val: "Lagos", label: "HQ" },
             ].map((s) => (
               <div key={s.label}>
@@ -428,12 +428,14 @@ function Mission() {
                   color: "#000",
                 }}
               >
-                AO
+                OF
               </div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>Adewale Obi</div>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>
+                  Olalekan Samuel Famakinwa
+                </div>
                 <div style={{ fontSize: 12, color: C.muted }}>
-                  Co-founder & CEO
+                  CEO & Founder
                 </div>
               </div>
             </div>
@@ -444,10 +446,79 @@ function Mission() {
   );
 }
 
+function CEOFounder() {
+  return (
+    <section
+      className="section-padding"
+      style={{ padding: "0 64px 120px", background: C.bg }}
+    >
+      <FadeIn>
+        <div style={{ textAlign: "center", marginBottom: 48 }}>
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <Eyebrow>Leadership</Eyebrow>
+          </div>
+          <h2
+            style={{
+              fontFamily: "'Bebas Neue',sans-serif",
+              fontSize: "clamp(36px,5vw,60px)",
+              lineHeight: 1,
+            }}
+          >
+            OUR CEO <span style={{ color: C.green }}>&</span> FOUNDER
+          </h2>
+        </div>
+      </FadeIn>
+      <FadeIn delay={0.1}>
+        <div style={{ maxWidth: 420, margin: "0 auto", textAlign: "center" }}>
+          <div
+            style={{
+              width: 200,
+              height: 200,
+              borderRadius: "50%",
+              overflow: "hidden",
+              margin: "0 auto 28px",
+              border: `2px solid ${C.green}`,
+              boxShadow: "0 0 50px rgba(14,203,129,0.15)",
+            }}
+          >
+            <img
+              src="/ceo-photo.jpg"
+              alt="Olalekan Samuel Famakinwa, CEO & Founder of Swift Trade"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block",
+              }}
+            />
+          </div>
+          <p
+            style={{
+              fontFamily: "'Bebas Neue',sans-serif",
+              fontSize: "clamp(22px,3vw,28px)",
+              lineHeight: 1.2,
+              color: "#fff",
+              marginBottom: 16,
+            }}
+          >
+            "We built Swift Trade so every Nigerian can move between crypto
+            and naira without friction."
+          </p>
+          <div style={{ fontSize: 15, fontWeight: 600 }}>
+            Olalekan Samuel Famakinwa
+          </div>
+          <div style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>
+            CEO & Founder, Swift Trade
+          </div>
+        </div>
+      </FadeIn>
+    </section>
+  );
+}
+
 function Stats() {
   const stats = [
-    { val: "₦12B+", label: "Total traded", sub: "Across all assets" },
-    { val: "50K+", label: "Active users", sub: "And growing daily" },
+    { val: "5K+", label: "Active users", sub: "And growing daily" },
     { val: "99.9%", label: "Platform uptime", sub: "Since launch" },
     { val: "< 5min", label: "Avg. payout time", sub: "For NGN withdrawals" },
     { val: "20+", label: "Supported assets", sub: "Crypto & gift cards" },
@@ -536,9 +607,9 @@ function Timeline() {
       desc: "Rebuilt with automated NGN payouts and mobile app.",
     },
     {
-      year: "2025",
+      year: "2026",
       title: "Scale",
-      desc: "Serving 50k+ users with ₦12B+ processed volume.",
+      desc: "Growing steadily and reinvesting in reliability and support.",
     },
   ];
   return (
@@ -743,86 +814,6 @@ function Values() {
   );
 }
 
-function Footer() {
-  return (
-    <footer
-      className="section-padding"
-      style={{
-        background: C.bg,
-        borderTop: `1px solid ${C.border}`,
-        padding: "80px 64px 40px",
-      }}
-    >
-      <div
-        className="footer-grid grid-3"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "2fr 1fr 1fr",
-          gap: 64,
-          marginBottom: 64,
-        }}
-      >
-        <div>
-          <Logo />
-          <p
-            style={{
-              color: C.muted,
-              fontSize: 14,
-              marginTop: 20,
-              maxWidth: 280,
-            }}
-          >
-            Nigeria's fastest crypto exchange and gift card platform.
-          </p>
-        </div>
-        <div>
-          <h5
-            style={{
-              fontSize: 12,
-              letterSpacing: 2,
-              color: C.muted,
-              textTransform: "uppercase",
-              marginBottom: 20,
-            }}
-          >
-            Links
-          </h5>
-          <ul
-            style={{
-              listStyle: "none",
-              display: "flex",
-              flexDirection: "column",
-              gap: 12,
-            }}
-          >
-            {["Exchange", "Gift Cards", "Rates", "About"].map((l) => (
-              <li key={l}>
-                <Link
-                  to={l === "About" ? "/about" : "#"}
-                  style={{ color: C.muted2, fontSize: 14 }}
-                >
-                  {l}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-      <div
-        style={{
-          paddingTop: 32,
-          borderTop: `1px solid ${C.border}`,
-          textAlign: "center",
-          fontSize: 12,
-          color: C.muted2,
-        }}
-      >
-        © 2025 Swift Trade. All rights reserved.
-      </div>
-    </footer>
-  );
-}
-
 export default function AboutPage() {
   useEffect(() => {
     const style = document.createElement("style");
@@ -837,6 +828,7 @@ export default function AboutPage() {
       <Hero />
       <MarqueeBand />
       <Mission />
+      <CEOFounder />
       <Stats />
       <Timeline />
       <Values />

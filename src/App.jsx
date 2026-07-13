@@ -9,6 +9,11 @@ import About from './pages/About'
 import Exchange from './pages/Exchange'
 import Rates from './pages/Rates'
 import ForgotPassword from './pages/ForgotPassword'
+import Contact from './pages/Contact'
+import PrivacyPolicy from './pages/legal/PrivacyPolicy'
+import TermsOfService from './pages/legal/TermsOfService'
+import AMLPolicy from './pages/legal/AMLPolicy'
+import CookiePolicy from './pages/legal/CookiePolicy'
 
 // Dashboard
 import DashboardLayout from './pages/dashboard/DashboardLayout'
@@ -44,8 +49,13 @@ const App = () => {
     <Route path="/gift-cards" element={<GiftCards />} />
     <Route path="/about" element={<About />} />
     <Route path="/exchange" element={<Exchange />} />
-    <Route path="/rates" element={<Rates />} /> 
+    <Route path="/rates" element={<Rates />} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
+    <Route path="/contact" element={<Contact />} />
+    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+    <Route path="/terms-of-service" element={<TermsOfService />} />
+    <Route path="/aml-policy" element={<AMLPolicy />} />
+    <Route path="/cookie-policy" element={<CookiePolicy />} />
     
     <Route element={<ProtectedRoute />}>
       <Route path="/dashboard" element={<DashboardLayout />}>

@@ -45,7 +45,6 @@ export default function Navbar() {
   const navLinks = [
     { label: "Exchange", path: "/exchange" },
     { label: "Gift Cards", path: "/gift-cards" },
-    { label: "Rates", path: "/rates" },
     { label: "About", path: "/about" },
   ];
 
