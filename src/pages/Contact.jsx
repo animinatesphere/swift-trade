@@ -35,7 +35,7 @@ const GLOBAL_CSS = `
 const CHANNELS = [
   {
     title: "Email Support",
-    value: "support@swifttrade.ng",
+    value: "support@swifttradeapp.com",
     desc: "For account, KYC, and transaction questions.",
     icon: (
       <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
@@ -46,7 +46,7 @@ const CHANNELS = [
   },
   {
     title: "WhatsApp",
-    value: "+234 800 000 0000",
+    value: "+234 916 181 4877",
     desc: "Chat with our support team in real time.",
     icon: (
       <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">

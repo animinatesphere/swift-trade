@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import ceoPhoto from "../assets/Gemini_Generated_Image_76mm6576mm6576mm.png";
 
 // ─── TOKENS ───────────────────────────────────────────────
 const C = {
@@ -482,7 +483,7 @@ function CEOFounder() {
             }}
           >
             <img
-              src="/ceo-photo.jpg"
+              src={ceoPhoto}
               alt="Olalekan Samuel Famakinwa, CEO & Founder of Swift Trade"
               style={{
                 width: "100%",
