@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../../api/axios";
+import { useAuth } from "../../context/AuthContext";
 
 const C = {
   green: "#0ECB81",
@@ -1498,6 +1499,7 @@ function StepDone({ amount, bank, refId, onReset }) {
 
 // ─── MAIN COMPONENT ───────────────────────────────────────
 export default function Withdraw() {
+  const { user } = useAuth();
   const [step, setStep] = useState("amount");
   const [amount, setAmount] = useState("");
   const [bank, setBank] = useState(null);
@@ -1643,6 +1645,90 @@ export default function Withdraw() {
             }}
           >
             Retry
+          </button>
+        </div>
+      ) : user?.is_frozen ? (
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 20,
+            padding: 40,
+            color: C.red,
+            textAlign: "center",
+            animation: "fadeUp 0.4s ease"
+          }}
+        >
+          <div
+            style={{
+              width: 88,
+              height: 88,
+              borderRadius: "50%",
+              background: "rgba(246, 70, 93, 0.06)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: `1px solid rgba(246, 70, 93, 0.15)`,
+              boxShadow: "0 8px 32px rgba(246, 70, 93, 0.08)",
+              position: "relative"
+            }}
+          >
+            <div style={{ position: "absolute", inset: -12, borderRadius: "50%", background: "rgba(246, 70, 93, 0.03)", animation: "pulse 2s infinite" }} />
+            <svg
+              width={36}
+              height={36}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ color: C.red }}
+            >
+              <path d="M12 2v20M17 5l-5 5-5-5M17 19l-5-5-5 5M2 12h20M5 7l5 5-5 5M19 7l-5 5 5 5"/>
+            </svg>
+          </div>
+          <div style={{ maxWidth: 420 }}>
+            <h2 style={{ color: "#fff", fontSize: 26, fontWeight: 700, margin: "0 0 12px", fontFamily: "'Outfit',sans-serif", letterSpacing: "-0.5px" }}>
+              Account Frozen
+            </h2>
+            <p style={{ color: C.muted, fontSize: 15, lineHeight: 1.6, margin: 0 }}>
+              Your account has been temporarily restricted from making withdrawals. 
+              {user.frozen_reason && (
+                <span style={{ display: "block", marginTop: 12, padding: "10px 16px", background: "rgba(246, 70, 93, 0.1)", borderRadius: 8, color: "rgba(246, 70, 93, 0.9)", fontSize: 13, border: "1px solid rgba(246, 70, 93, 0.2)" }}>
+                  <strong style={{ fontWeight: 600 }}>Reason:</strong> {user.frozen_reason}
+                </span>
+              )}
+            </p>
+          </div>
+          <button
+            onClick={() => window.location.href = "/dashboard/support"}
+            className="ghost-btn"
+            style={{
+              marginTop: 16,
+              background: "transparent",
+              color: C.text,
+              border: `1px solid ${C.border2}`,
+              padding: "12px 28px",
+              borderRadius: 12,
+              fontSize: 14,
+              cursor: "pointer",
+              fontWeight: 500,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              transition: "all 0.2s"
+            }}
+            onMouseOver={(e) => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = "#000"; e.currentTarget.style.borderColor = "#fff"; }}
+            onMouseOut={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = C.text; e.currentTarget.style.borderColor = C.border2; }}
+          >
+            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Contact Support
           </button>
         </div>
       ) : pinIsSet === false ? (

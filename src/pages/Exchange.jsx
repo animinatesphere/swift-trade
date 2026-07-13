@@ -101,7 +101,7 @@ const ASSETS = [
     bg: "rgba(247,147,26,0.15)",
     rateNGN: 98240000,
     change: +2.4,
-    networks: ["BTC"],
+    networks: ["Bitcoin"],
   },
   {
     id: "ETH",
@@ -147,31 +147,8 @@ const ASSETS = [
     change: +3.1,
     networks: ["BEP20"],
   },
-  {
-    id: "XRP",
-    name: "XRP",
-    symbol: "XRP",
-    icon: "✕",
-    color: "#00AAE4",
-    bg: "rgba(0,170,228,0.15)",
-    rateNGN: 860,
-    change: +0.8,
-    networks: ["XRP"],
-  },
-  {
-    id: "DOGE",
-    name: "Dogecoin",
-    symbol: "DOGE",
-    icon: "Ð",
-    color: "#C2A633",
-    bg: "rgba(194,166,51,0.15)",
-    rateNGN: 262,
-    change: +5.2,
-    networks: ["DOGE"],
-  },
 ];
 
-const SPREAD = 0.04;
 const QUOTE_DURATION = 60;
 
 const RECENT_TRADES = [
@@ -313,7 +290,7 @@ function AssetDropdown({ assets, selected, onSelect, onClose }) {
                   color: "#ccc",
                 }}
               >
-                ₦{a.rateNGN.toLocaleString()}
+                ₦{a.rateNGN.toLocaleString()}/$
               </div>
             </div>
           </div>
@@ -405,6 +382,10 @@ function ExchangeWidget() {
                 rateInfo.user_ngn_usd_rate ||
                 rateInfo.market_ngn_usd_rate ||
                 a.rateNGN,
+              calcRate:
+                rateInfo.user_rate ||
+                rateInfo.market_rate ||
+                a.rateNGN,
             };
           }
           return a;
@@ -429,10 +410,7 @@ function ExchangeWidget() {
     setNetwork(asset.networks[0]);
   }, [asset]);
 
-  const effectiveRate =
-    side === "sell"
-      ? asset.rateNGN * (1 - SPREAD)
-      : asset.rateNGN * (1 + SPREAD);
+  const effectiveRate = asset.calcRate || asset.rateNGN;
 
   const handleCryptoChange = (val) => {
     setCryptoAmount(val);
@@ -1269,13 +1247,13 @@ function MarketSidebar() {
               return {
                 ...a,
                 rateNGN:
-                  rateInfo.user_ngn_usd_rate ||
-                  rateInfo.market_ngn_usd_rate ||
+                  rateInfo.user_rate ||
+                  rateInfo.market_rate ||
                   a.rateNGN,
                 spark: [
                   ...a.spark.slice(1),
-                  rateInfo.user_ngn_usd_rate ||
-                    rateInfo.market_ngn_usd_rate ||
+                  rateInfo.user_rate ||
+                    rateInfo.market_rate ||
                     a.rateNGN,
                 ],
               };

@@ -112,7 +112,7 @@ const COINS = [
     color: "#26A17B",
     bg: "rgba(38,161,123,0.15)",
     rate: 1592,
-    network: "TRC20",
+    network: "ERC20",
   },
   {
     id: "BTC",
@@ -121,7 +121,7 @@ const COINS = [
     color: "#F7931A",
     bg: "rgba(247,147,26,0.15)",
     rate: 98240000,
-    network: "BTC",
+    network: "Bitcoin",
   },
   {
     id: "ETH",
@@ -150,24 +150,15 @@ const COINS = [
     rate: 920000,
     network: "BEP20",
   },
-  {
-    id: "SOL",
-    name: "Solana",
-    icon: "◎",
-    color: "#9945FF",
-    bg: "rgba(153,69,255,0.15)",
-    rate: 218400,
-    network: "SOL",
-  },
 ];
 
-const TICKERS = [
-  { s: "USDT/NGN", p: "₦1,592", c: "-0.3%", up: false },
-  { s: "BTC/NGN", p: "₦98,240,000", c: "+2.4%", up: true },
-  { s: "ETH/NGN", p: "₦3,420,000", c: "+1.8%", up: true },
-  { s: "USDC/NGN", p: "₦1,590", c: "+0.1%", up: true },
-  { s: "BNB/NGN", p: "₦920,000", c: "+3.1%", up: true },
-  { s: "SOL/NGN", p: "₦218,400", c: "-1.2%", up: false },
+// Static USD fallbacks (used before live data loads)
+const TICKERS_FALLBACK = [
+  { s: "USDT/USD", p: "$1.00", c: "-0.3%", up: false },
+  { s: "BTC/USD", p: "$61,650", c: "+2.4%", up: true },
+  { s: "ETH/USD", p: "$2,145", c: "+1.8%", up: true },
+  { s: "USDC/USD", p: "$1.00", c: "+0.1%", up: true },
+  { s: "BNB/USD", p: "$577", c: "+3.1%", up: true },
 ];
 
 // ─── KYC BANNER ───────────────────────────────────────────
@@ -321,8 +312,28 @@ function KYCBanner({ status, rejectionReason }) {
 }
 
 // ─── TICKER ───────────────────────────────────────────────
-function Ticker() {
-  const d = [...TICKERS, ...TICKERS];
+function Ticker({ liveCoins }) {
+  // Build USD price tickers from live marginalized rates
+  // NGN rate (per coin) ÷ NGN/USD rate (NGN per 1 USD) = USD price of coin
+  const buildTickers = () => {
+    const coins = liveCoins && liveCoins.length > 0 ? liveCoins : null;
+    if (!coins) return TICKERS_FALLBACK;
+    return coins.map((c) => {
+      // displayRate = NGN per 1 USD (the NGN/USD exchange rate)
+      // rate = NGN per 1 coin (the user's marginalized rate)
+      const usdPrice = c.displayRate > 0 ? c.rate / c.displayRate : 0;
+      const fmt = usdPrice > 1000
+        ? `$${usdPrice.toLocaleString("en-US", { maximumFractionDigits: 0 })}`
+        : usdPrice > 0.01
+          ? `$${usdPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`
+          : `$${usdPrice.toFixed(6)}`;
+      return { s: `${c.id}/USD`, p: fmt, c: "+0.0%", up: true, live: usdPrice > 0 };
+    });
+  };
+
+  const tickers = buildTickers();
+  const d = [...tickers, ...tickers];
+
   return (
     <div
       style={{
@@ -353,7 +364,7 @@ function Ticker() {
               style={{
                 fontFamily: "'DM Mono',monospace",
                 fontSize: 11,
-                color: "#777",
+                color: "#666",
               }}
             >
               {t.s}
@@ -362,20 +373,24 @@ function Ticker() {
               style={{
                 fontFamily: "'DM Mono',monospace",
                 fontSize: 11,
-                color: "#555",
+                color: t.live ? "#aaa" : "#555",
+                fontWeight: t.live ? 500 : 400,
               }}
             >
               {t.p}
             </span>
-            <span
-              style={{
-                fontSize: 10,
-                fontWeight: 600,
-                color: t.up ? C.green : C.red,
-              }}
-            >
-              {t.c}
-            </span>
+            {t.live && (
+              <span
+                style={{
+                  width: 4,
+                  height: 4,
+                  borderRadius: "50%",
+                  background: C.green,
+                  animation: "pulse 2s infinite",
+                  display: "inline-block",
+                }}
+              />
+            )}
           </div>
         ))}
       </div>
@@ -839,7 +854,7 @@ function RatesPanel({ onTrade, liveCoins, loading }) {
               {c.icon}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 500 }}>{c.id}/NGN</div>
+              <div style={{ fontSize: 13, fontWeight: 500 }}>{c.id}/USD</div>
               <div style={{ fontSize: 10, color: C.muted }}>{c.network}</div>
             </div>
             <div style={{ textAlign: "right" }}>
@@ -850,7 +865,9 @@ function RatesPanel({ onTrade, liveCoins, loading }) {
                   color: "#ccc",
                 }}
               >
-                ₦{c.rate.toLocaleString("en-NG", { maximumFractionDigits: 0 })}
+                {c.displayRate > 0 && c.rate > 0
+                  ? `$${(c.rate / c.displayRate).toLocaleString("en-US", { maximumFractionDigits: c.rate / c.displayRate > 100 ? 0 : 4 })}`
+                  : "—"}
               </div>
               <div style={{ fontSize: 10, color: C.green }}>Trade →</div>
             </div>
@@ -1147,7 +1164,10 @@ export default function DashboardOverview() {
           return {
             ...c,
             rate: r
-              ? parseFloat(r.user_ngn_usd_rate || r.user_rate || 0)
+              ? parseFloat(r.user_rate || r.market_rate || 0)
+              : c.rate,
+            displayRate: r
+              ? parseFloat(r.user_ngn_usd_rate || r.market_ngn_usd_rate || 0)
               : c.rate,
           };
         }),
@@ -1174,7 +1194,7 @@ export default function DashboardOverview() {
       style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, minHeight: 0 }}
     >
       <Topbar user={user} onNewTrade={() => goToTrade()} />
-      <Ticker />
+      <Ticker liveCoins={liveCoins} />
 
       <div
         className="dashboard-content"
