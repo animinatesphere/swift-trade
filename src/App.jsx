@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import CinematicLoader from './components/CinematicLoader'
 import ProtectedRoute from './components/ProtectedRoute'
 import LandingPage from './pages/LandingPage'
@@ -28,6 +28,16 @@ import GiftCardsDashboard from './pages/dashboard/GiftCards'
 import KYC from './pages/dashboard/KYC'
 import Notifications from './pages/dashboard/Notifications'
 
+function ScrollToTop() {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+
+  return null
+}
+
 const App = () => {
   const [showLoader, setShowLoader] = useState(() => {
     return !sessionStorage.getItem('loader-played')
@@ -41,6 +51,7 @@ const App = () => {
   return (
     <>
       {showLoader && <CinematicLoader onComplete={handleLoaderComplete} />}
+      <ScrollToTop />
       <Routes>
     <Route path="/" element={<LandingPage />} />
     <Route path="/register" element={<Auth initialPage="register" />} />
