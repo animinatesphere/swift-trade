@@ -640,15 +640,16 @@ function History({ transactions, loading }) {
           {isEmpty && <EmptyState />}
           {(transactions || []).slice(0, 5).map((t, i) => {
             const isWD = t.type === "withdrawal";
+            const isGC = t.type === "giftcard";
             const cDef = COINS.find((c) => c.id.toLowerCase() === t.coin?.toLowerCase()) || COINS[0];
             const st = statusMeta(t.status);
             return (
               <div key={t.id} className="txn-row"
                 style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr 1.2fr", padding: "12px 18px", borderBottom: `1px solid ${C.border}`, alignItems: "center", cursor: "pointer", animationDelay: `${i * 0.04}s` }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: isWD ? "rgba(246,70,93,0.1)" : cDef.bg, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: isWD ? C.red : cDef.color }}>{isWD ? "↑" : cDef.icon}</div>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: isWD ? "rgba(246,70,93,0.1)" : isGC ? "rgba(245,166,35,0.1)" : cDef.bg, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: isWD ? C.red : isGC ? C.amber : cDef.color }}>{isWD ? "↑" : isGC ? "🎁" : cDef.icon}</div>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 500 }}>{isWD ? "Bank Withdrawal" : `${cDef.id}/NGN`}</div>
+                    <div style={{ fontSize: 13, fontWeight: 500 }}>{isWD ? "Bank Withdrawal" : isGC ? `${t.coin || "Gift Card"} → NGN` : `${cDef.id}/NGN`}</div>
                     <div style={{ fontSize: 10, color: C.muted }}>{t.ref}</div>
                   </div>
                 </div>
@@ -678,6 +679,7 @@ function History({ transactions, loading }) {
         {isEmpty && <EmptyState />}
         {(transactions || []).slice(0, 5).map((t, i) => {
           const isWD = t.type === "withdrawal";
+          const isGC = t.type === "giftcard";
           const cDef = COINS.find((c) => c.id.toLowerCase() === t.coin?.toLowerCase()) || COINS[0];
           const st = statusMeta(t.status);
           return (
@@ -686,9 +688,9 @@ function History({ transactions, loading }) {
               {/* Row 1: coin info + status badge */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: isWD ? "rgba(246,70,93,0.1)" : cDef.bg, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: isWD ? C.red : cDef.color }}>{isWD ? "↑" : cDef.icon}</div>
+                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: isWD ? "rgba(246,70,93,0.1)" : isGC ? "rgba(245,166,35,0.1)" : cDef.bg, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: isWD ? C.red : isGC ? C.amber : cDef.color }}>{isWD ? "↑" : isGC ? "🎁" : cDef.icon}</div>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>{isWD ? "Bank Withdrawal" : `${cDef.id}/NGN`}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>{isWD ? "Bank Withdrawal" : isGC ? `${t.coin || "Gift Card"} → NGN` : `${cDef.id}/NGN`}</div>
                     <div style={{ fontSize: 10, color: C.muted, fontFamily: "'DM Mono',monospace" }}>{t.ref}</div>
                   </div>
                 </div>
