@@ -637,8 +637,9 @@ export default function TransactionHistory() {
                       color:meta.color }}>{meta.icon}</div>
                     <div>
                       <div style={{ fontSize:13,fontWeight:500 }}>
-                        {t.type==="trade"    ? `${t.coin || "Crypto"} \u2192 NGN`
-                         :                     "Bank Withdrawal"}
+                        {t.type==="trade"     ? `${t.coin || "Crypto"} \u2192 NGN`
+                         : t.type==="giftcard" ? `${t.coin || "Gift Card"} \u2192 NGN`
+                         :                      "Bank Withdrawal"}
                       </div>
                       <div style={{ fontFamily:"'DM Mono',monospace",
                         fontSize:10,color:C.muted }}>{t.ref}</div>
