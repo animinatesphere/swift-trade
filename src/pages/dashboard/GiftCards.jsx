@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useOutletContext, Link } from "react-router-dom";
 import logoImg from "../../assets/logo.png";
+import api from "../../api/axios";
 
 // ── Cloudinary config (same as KYC) ─────────────────────────────────────────
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "dbhelafgg";
@@ -1715,12 +1716,8 @@ export default function GiftCardsDashboard() {
   useEffect(() => {
     const fetchGiftCards = async () => {
       try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL || "https://api.swiftradeapp.com/api"}/rates/giftcards`
-        );
-        if (!res.ok) throw new Error("Failed to load cards");
-        const data = await res.json();
-        const grouped = groupGiftCards(data);
+        const res = await api.get("/rates/giftcards");
+        const grouped = groupGiftCards(res.data);
         setBrands(grouped);
       } catch (err) {
         console.error("Error loading gift cards:", err);
@@ -1775,38 +1772,22 @@ export default function GiftCardsDashboard() {
       setUploadProgress(75);
 
       // 2. Submit to backend
-      const token = localStorage.getItem("access") || sessionStorage.getItem("access");
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL || "https://api.swiftradeapp.com/api"}/rates/sell/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({
-            brand: trade.brand.name,
-            country_code: trade.country.code,
-            currency_symbol: trade.country.symbol,
-            denomination: val,
-            rate_applied: trade.country.rate,
-            ngn_payout: ngnOut,
-            image_url: imageUrl,
-            card_code: trade.cardCode,
-          }),
-        }
-      );
-      setUploadProgress(95);
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || "Submission failed. Please try again.");
-      }
-      const data = await res.json();
+      const res = await api.post("/rates/sell/", {
+        brand: trade.brand.name,
+        country_code: trade.country.code,
+        currency_symbol: trade.country.symbol,
+        denomination: val,
+        rate_applied: trade.country.rate,
+        ngn_payout: ngnOut,
+        image_url: imageUrl,
+        card_code: trade.cardCode,
+      });
       setUploadProgress(100);
-      setRefId(data.reference || "GC-" + Math.floor(1000 + Math.random() * 9000));
+      setRefId(res.data.reference || "GC-" + Math.floor(1000 + Math.random() * 9000));
       setStep("done");
     } catch (err) {
-      setSubmitError(err.message || "Something went wrong. Please try again.");
+      const msg = err.response?.data?.detail || err.message || "Something went wrong. Please try again.";
+      setSubmitError(msg);
     } finally {
       setLoading(false);
     }
