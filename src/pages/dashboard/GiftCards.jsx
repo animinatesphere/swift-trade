@@ -247,7 +247,10 @@ function groupGiftCards(flatCards) {
 
     const symbol = CURRENCY_SYMBOLS[currency] || "$";
     const denoms = Array.isArray(c.denominations)
-      ? c.denominations.map(Number).sort((a, b) => a - b)
+      ? c.denominations
+          .map((d) => Number(String(d).replace(/[^0-9.]/g, "")))
+          .filter((d) => !isNaN(d) && d > 0)
+          .sort((a, b) => a - b)
       : [25, 50, 100, 200];
 
     brandsMap[c.brand].countries.push({
@@ -255,7 +258,7 @@ function groupGiftCards(flatCards) {
       flag,
       currency,
       symbol,
-      rate: Number(c.rate_per_dollar),
+      rate: Number(c.rate_per_dollar) || 0,
       denoms: denoms.length > 0 ? denoms : [25, 50, 100, 200],
     });
   });
