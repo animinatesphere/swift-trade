@@ -2,6 +2,36 @@ import React, { useState, useEffect, useRef } from "react";
 import { useOutletContext, Link } from "react-router-dom";
 import logoImg from "../../assets/logo.png";
 
+// ── Cloudinary config (same as KYC) ─────────────────────────────────────────
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "dbhelafgg";
+const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "swiftrade-app";
+
+// ── Upload image to Cloudinary, returns secure_url ───────────────────────────
+function uploadToCloudinary(file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
+    formData.append("folder", "giftcards");
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      try {
+        const res = JSON.parse(xhr.responseText);
+        if (res.secure_url) resolve(res.secure_url);
+        else reject(new Error("Failed to get URL from Cloudinary."));
+      } catch {
+        reject(new Error("Failed to parse Cloudinary response."));
+      }
+    };
+    xhr.onerror = () => reject(new Error("Upload to Cloudinary failed."));
+    xhr.send(formData);
+  });
+}
+
 const C = {
   green: "#0ECB81",
   amber: "#F5A623",
@@ -152,168 +182,84 @@ const CSS = `
   }
 `;
 
-const BRANDS = [
-  {
-    id: "amazon",
-    name: "Amazon",
-    icon: "🛒",
-    countries: [
-      {
-        code: "US",
-        flag: "🇺🇸",
-        currency: "USD",
-        symbol: "$",
-        rate: 1380,
-        denoms: [25, 50, 100, 200],
-      },
-      {
-        code: "UK",
-        flag: "🇬🇧",
-        currency: "GBP",
-        symbol: "£",
-        rate: 1640,
-        denoms: [25, 50, 100],
-      },
-    ],
-    color: "#FF9900",
-    bg: "linear-gradient(135deg,#1a0800,#3d1f00)",
-    textColor: "rgba(255,153,0,0.8)",
-  },
-  {
-    id: "itunes",
-    name: "iTunes",
-    icon: "🎵",
-    countries: [
-      {
-        code: "US",
-        flag: "🇺🇸",
-        currency: "USD",
-        symbol: "$",
-        rate: 1350,
-        denoms: [15, 25, 50, 100],
-      },
-      {
-        code: "UK",
-        flag: "🇬🇧",
-        currency: "GBP",
-        symbol: "£",
-        rate: 1560,
-        denoms: [15, 25, 50],
-      },
-    ],
-    color: "#FC3C44",
-    bg: "linear-gradient(135deg,#1a001a,#330020)",
-    textColor: "rgba(252,60,68,0.8)",
-  },
-  {
-    id: "steam",
-    name: "Steam",
-    icon: "🎮",
-    countries: [
-      {
-        code: "US",
-        flag: "🇺🇸",
-        currency: "USD",
-        symbol: "$",
-        rate: 1300,
-        denoms: [10, 20, 50, 100],
-      },
-    ],
-    color: "#66C0F4",
-    bg: "linear-gradient(135deg,#00101a,#001f33)",
-    textColor: "rgba(102,192,244,0.8)",
-  },
-  {
-    id: "google",
-    name: "Google Play",
-    icon: "▶",
-    countries: [
-      {
-        code: "US",
-        flag: "🇺🇸",
-        currency: "USD",
-        symbol: "$",
-        rate: 1370,
-        denoms: [10, 25, 50, 100],
-      },
-    ],
-    color: "#0ECB81",
-    bg: "linear-gradient(135deg,#001a08,#003318)",
-    textColor: "rgba(14,203,129,0.8)",
-  },
-  {
-    id: "netflix",
-    name: "Netflix",
-    icon: "🎬",
-    countries: [
-      {
-        code: "US",
-        flag: "🇺🇸",
-        currency: "USD",
-        symbol: "$",
-        rate: 1300,
-        denoms: [15, 30, 60, 100],
-      },
-    ],
-    color: "#E50914",
-    bg: "linear-gradient(135deg,#1a0000,#330000)",
-    textColor: "rgba(229,9,20,0.8)",
-  },
-  {
-    id: "xbox",
-    name: "Xbox",
-    icon: "🕹",
-    countries: [
-      {
-        code: "US",
-        flag: "🇺🇸",
-        currency: "USD",
-        symbol: "$",
-        rate: 1280,
-        denoms: [10, 25, 50, 100],
-      },
-    ],
-    color: "#107C10",
-    bg: "linear-gradient(135deg,#001a00,#003300)",
-    textColor: "rgba(16,124,16,0.8)",
-  },
-  {
-    id: "visa",
-    name: "Visa",
-    icon: "💳",
-    countries: [
-      {
-        code: "US",
-        flag: "🇺🇸",
-        currency: "USD",
-        symbol: "$",
-        rate: 1260,
-        denoms: [50, 100, 200, 500],
-      },
-    ],
-    color: "#6B8AFE",
-    bg: "linear-gradient(135deg,#000818,#001433)",
-    textColor: "rgba(107,138,254,0.8)",
-  },
-  {
-    id: "razergold",
-    name: "Razer Gold",
-    icon: "⚡",
-    countries: [
-      {
-        code: "US",
-        flag: "🇺🇸",
-        currency: "USD",
-        symbol: "$",
-        rate: 1250,
-        denoms: [5, 10, 25, 50],
-      },
-    ],
-    color: "#44D62C",
-    bg: "linear-gradient(135deg,#001a00,#002800)",
-    textColor: "rgba(68,214,44,0.8)",
-  },
-];
+// ── BRAND METADATA MAPPINGS ─────────────────────────────────────────────────
+const BRAND_METADATA = {
+  amazon: { icon: "🛒", bg: "linear-gradient(135deg,#1a0800,#3d1f00)", color: "#FF9900", textColor: "rgba(255,153,0,0.8)" },
+  itunes: { icon: "🎵", bg: "linear-gradient(135deg,#1a001a,#330020)", color: "#FC3C44", textColor: "rgba(252,60,68,0.8)" },
+  steam: { icon: "🎮", bg: "linear-gradient(135deg,#00101a,#001f33)", color: "#66C0F4", textColor: "rgba(102,192,244,0.8)" },
+  google: { icon: "▶", bg: "linear-gradient(135deg,#001a08,#003318)", color: "#0ECB81", textColor: "rgba(14,203,129,0.8)" },
+  googleplay: { icon: "▶", bg: "linear-gradient(135deg,#001a08,#003318)", color: "#0ECB81", textColor: "rgba(14,203,129,0.8)" },
+  netflix: { icon: "🎬", bg: "linear-gradient(135deg,#1a0000,#330000)", color: "#E50914", textColor: "rgba(229,9,20,0.8)" },
+  xbox: { icon: "🕹", bg: "linear-gradient(135deg,#001a00,#003300)", color: "#107C10", textColor: "rgba(16,124,16,0.8)" },
+  visa: { icon: "💳", bg: "linear-gradient(135deg,#000818,#001433)", color: "#6B8AFE", textColor: "rgba(107,138,254,0.8)" },
+  razergold: { icon: "⚡", bg: "linear-gradient(135deg,#001a00,#002800)", color: "#44D62C", textColor: "rgba(68,214,44,0.8)" },
+};
+
+const COUNTRY_FLAGS = {
+  US: "🇺🇸",
+  USA: "🇺🇸",
+  UK: "🇬🇧",
+  GB: "🇬🇧",
+  CA: "🇨🇦",
+  CAN: "🇨🇦",
+  EU: "🇪🇺",
+  EUR: "🇪🇺",
+};
+
+const CURRENCY_SYMBOLS = {
+  USD: "$",
+  GBP: "£",
+  CAD: "C$",
+  EUR: "€",
+};
+
+function groupGiftCards(flatCards) {
+  const brandsMap = {};
+  flatCards.forEach((c) => {
+    const brandLower = c.brand.toLowerCase().replace(/\s+/g, "");
+    const meta = BRAND_METADATA[brandLower] || {
+      icon: "💳",
+      bg: c.bg || "linear-gradient(135deg, #1a1a1a, #000000)",
+      color: c.color || "#FFFFFF",
+      textColor: "rgba(255,255,255,0.8)",
+    };
+
+    if (!brandsMap[c.brand]) {
+      brandsMap[c.brand] = {
+        id: brandLower,
+        name: c.brand,
+        icon: meta.icon,
+        color: meta.color,
+        bg: meta.bg,
+        textColor: meta.textColor,
+        countries: [],
+      };
+    }
+
+    const countryCode = c.country.toUpperCase();
+    const flag = COUNTRY_FLAGS[countryCode] || "🌐";
+    // Deduce currency from country code
+    let currency = "USD";
+    if (["UK", "GB"].includes(countryCode)) currency = "GBP";
+    else if (["EU", "EUR"].includes(countryCode)) currency = "EUR";
+    else if (["CA", "CAN"].includes(countryCode)) currency = "CAD";
+
+    const symbol = CURRENCY_SYMBOLS[currency] || "$";
+    const denoms = Array.isArray(c.denominations)
+      ? c.denominations.map(Number).sort((a, b) => a - b)
+      : [25, 50, 100, 200];
+
+    brandsMap[c.brand].countries.push({
+      code: countryCode,
+      flag,
+      currency,
+      symbol,
+      rate: Number(c.rate_per_dollar),
+      denoms: denoms.length > 0 ? denoms : [25, 50, 100, 200],
+    });
+  });
+  return Object.values(brandsMap);
+}
 
 function Mark({ size = 32 }) {
   return (
@@ -702,7 +648,7 @@ function LeftPanel({ trade }) {
   );
 }
 
-function StepBrand({ selected, onSelect }) {
+function StepBrand({ selected, onSelect, brands }) {
   return (
     <div className="step-form">
       <div
@@ -749,7 +695,7 @@ function StepBrand({ selected, onSelect }) {
           gap: 10,
         }}
       >
-        {BRANDS.map((b) => {
+        {brands.map((b) => {
           const isSel = selected?.id === b.id;
           return (
             <button
@@ -1314,7 +1260,7 @@ function StepUpload({ image, setImage, cardCode, setCardCode }) {
   );
 }
 
-function StepReview({ trade, onSubmit, loading }) {
+function StepReview({ trade, onSubmit, loading, uploadProgress, submitError }) {
   const { brand, country, denom, customAmt, ngnOut, image, cardCode } = trade;
   const val = denom || customAmt;
   return (
@@ -1479,6 +1425,21 @@ function StepReview({ trade, onSubmit, loading }) {
           </div>
         ))}
       </div>
+      {submitError && (
+        <div
+          style={{
+            background: "rgba(246,70,93,0.1)",
+            border: "1px solid rgba(246,70,93,0.3)",
+            borderRadius: 10,
+            padding: "11px 14px",
+            marginBottom: 12,
+            fontSize: 13,
+            color: C.red,
+          }}
+        >
+          ⚠ {submitError}
+        </div>
+      )}
       <button
         onClick={onSubmit}
         disabled={loading}
@@ -1497,8 +1458,23 @@ function StepReview({ trade, onSubmit, loading }) {
           alignItems: "center",
           justifyContent: "center",
           gap: 10,
+          position: "relative",
+          overflow: "hidden",
         }}
       >
+        {loading && uploadProgress > 0 && uploadProgress < 100 && (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: `${uploadProgress}%`,
+              background: "rgba(0,0,0,0.15)",
+              transition: "width 0.3s ease",
+            }}
+          />
+        )}
         {loading ? (
           <>
             <div
@@ -1511,7 +1487,11 @@ function StepReview({ trade, onSubmit, loading }) {
                 animation: "spin 0.8s linear infinite",
               }}
             />
-            Submitting...
+            {uploadProgress > 0 && uploadProgress < 75
+              ? `Uploading… ${uploadProgress}%`
+              : uploadProgress >= 75
+                ? "Submitting…"
+                : "Processing…"}
           </>
         ) : (
           "Submit Gift Card ✓"
@@ -1708,6 +1688,8 @@ function StepDone({ trade, refId, onReset }) {
 
 export default function GiftCardsDashboard() {
   const [step, setStep] = useState("brand");
+  const [brands, setBrands] = useState([]);
+  const [loadingBrands, setLoadingBrands] = useState(true);
   const [trade, setTrade] = useState({
     brand: null,
     country: null,
@@ -1717,6 +1699,8 @@ export default function GiftCardsDashboard() {
     cardCode: "",
   });
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [submitError, setSubmitError] = useState("");
   const [refId, setRefId] = useState("");
   const { setIsMobileOpen } = useOutletContext() || {};
 
@@ -1725,6 +1709,26 @@ export default function GiftCardsDashboard() {
     s.textContent = CSS;
     document.head.appendChild(s);
     return () => document.head.removeChild(s);
+  }, []);
+
+  // Fetch gift card rates from backend
+  useEffect(() => {
+    const fetchGiftCards = async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL || "https://api.swiftradeapp.com/api"}/rates/giftcards`
+        );
+        if (!res.ok) throw new Error("Failed to load cards");
+        const data = await res.json();
+        const grouped = groupGiftCards(data);
+        setBrands(grouped);
+      } catch (err) {
+        console.error("Error loading gift cards:", err);
+      } finally {
+        setLoadingBrands(false);
+      }
+    };
+    fetchGiftCards();
   }, []);
 
   const upd = (patch) => setTrade((t) => ({ ...t, ...patch }));
@@ -1758,13 +1762,54 @@ export default function GiftCardsDashboard() {
     if (i > 0) setStep(ORDER[i - 1]);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    setSubmitError("");
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setRefId("GC-" + Math.floor(1000 + Math.random() * 9000));
+    setUploadProgress(0);
+    try {
+      // 1. Upload image to Cloudinary
+      setUploadProgress(5);
+      const imageUrl = await uploadToCloudinary(trade.image.file, (pct) =>
+        setUploadProgress(Math.round(pct * 0.7)) // 0–70%
+      );
+      setUploadProgress(75);
+
+      // 2. Submit to backend
+      const token = localStorage.getItem("access") || sessionStorage.getItem("access");
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || "https://api.swiftradeapp.com/api"}/rates/sell/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            brand: trade.brand.name,
+            country_code: trade.country.code,
+            currency_symbol: trade.country.symbol,
+            denomination: val,
+            rate_applied: trade.country.rate,
+            ngn_payout: ngnOut,
+            image_url: imageUrl,
+            card_code: trade.cardCode,
+          }),
+        }
+      );
+      setUploadProgress(95);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "Submission failed. Please try again.");
+      }
+      const data = await res.json();
+      setUploadProgress(100);
+      setRefId(data.reference || "GC-" + Math.floor(1000 + Math.random() * 9000));
       setStep("done");
-    }, 1600);
+    } catch (err) {
+      setSubmitError(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = () => {
@@ -1892,12 +1937,26 @@ export default function GiftCardsDashboard() {
           <div style={{ maxWidth: 580, margin: "0 auto" }}>
             {step !== "done" && <ProgressBar step={step} />}
 
-            {step === "brand" && (
+            {loadingBrands ? (
+              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 200 }}>
+                <div
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: "50%",
+                    border: "2.5px solid rgba(245,166,35,0.2)",
+                    borderTopColor: C.amber,
+                    animation: "spin 0.8s linear infinite",
+                  }}
+                />
+              </div>
+            ) : step === "brand" ? (
               <StepBrand
+                brands={brands}
                 selected={trade.brand}
                 onSelect={(b) => upd({ brand: b })}
               />
-            )}
+            ) : null}
             {step === "details" && (
               <StepDetails
                 brand={trade.brand}
@@ -1924,6 +1983,8 @@ export default function GiftCardsDashboard() {
                 trade={{ ...trade, ngnOut }}
                 onSubmit={handleSubmit}
                 loading={loading}
+                uploadProgress={uploadProgress}
+                submitError={submitError}
               />
             )}
             {step === "done" && (
