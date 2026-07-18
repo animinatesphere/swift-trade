@@ -176,7 +176,7 @@ const BRANDS = [
   },
   {
     id: "itunes",
-    name: "iTunes",
+    name: "Apple",
     icon: "🎵",
     cardTypes: ["E-code"],
     countries: [
