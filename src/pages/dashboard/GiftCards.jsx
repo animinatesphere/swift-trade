@@ -22,6 +22,7 @@ const CSS = `
   @keyframes fadeUp    { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
   @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
   @keyframes slideIn   { from{opacity:0;transform:translateX(22px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes slideBack { from{opacity:0;transform:translateX(-22px)} to{opacity:1;transform:translateX(0)} }
   @keyframes pulse     { 0%,100%{opacity:1} 50%{opacity:0.3} }
   @keyframes spin      { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
   @keyframes successIn { 0%{transform:scale(0.5);opacity:0} 65%{transform:scale(1.06)} 100%{transform:scale(1);opacity:1} }
@@ -31,7 +32,8 @@ const CSS = `
   @keyframes shimmer   { 0%{transform:translateX(-100%)} 100%{transform:translateX(200%)} }
   @keyframes bounce    { 0%,100%{transform:translateY(0)} 40%{transform:translateY(-8px)} }
 
-  .step-form       { animation:slideIn 0.3s ease; }
+  .step-form       { animation:slideIn 0.32s cubic-bezier(.2,.8,.2,1); }
+  .step-form.back  { animation:slideBack 0.32s cubic-bezier(.2,.8,.2,1); }
   .pri-btn         { transition:all 0.2s; cursor:pointer; }
   .pri-btn:hover:not(:disabled) { background:#0fdf8e !important; transform:translateY(-2px); box-shadow:0 10px 28px rgba(14,203,129,0.32) !important; }
   .pri-btn:disabled { opacity:0.35 !important; cursor:not-allowed !important; }
@@ -45,14 +47,20 @@ const CSS = `
   .denom-btn       { transition:all 0.15s; }
   .denom-btn:hover { border-color:#555 !important; color:#ccc !important; }
   .denom-btn.sel   { background:rgba(14,203,129,0.1) !important; border-color:rgba(14,203,129,0.35) !important; color:#0ECB81 !important; }
-  .country-btn     { transition:all 0.15s; }
-  .country-btn:hover { border-color:#444 !important; }
-  .country-btn.sel { background:rgba(14,203,129,0.08) !important; border-color:rgba(14,203,129,0.3) !important; color:#0ECB81 !important; }
+  .country-card    { transition:all 0.18s; }
+  .country-card:hover { border-color:#444 !important; transform:translateY(-2px); }
+  .country-card.sel { background:rgba(14,203,129,0.08) !important; border-color:rgba(14,203,129,0.35) !important; }
+  .type-btn        { transition:all 0.15s; }
+  .type-btn.sel    { background:rgba(14,203,129,0.1) !important; border-color:rgba(14,203,129,0.35) !important; color:#0ECB81 !important; }
+  .qty-btn         { transition:all 0.15s; cursor:pointer; }
+  .qty-btn:hover:not(:disabled) { border-color:#555 !important; color:#fff !important; }
+  .qty-btn:disabled { opacity:0.3; cursor:not-allowed; }
   .upload-zone     { transition:all 0.2s; }
   .upload-zone:hover { border-color:rgba(14,203,129,0.4) !important; background:rgba(14,203,129,0.03) !important; }
   .upload-zone.drag { border-color:#0ECB81 !important; background:rgba(14,203,129,0.06) !important; }
   .st-input        { transition:border-color 0.2s, box-shadow 0.2s; display:block; }
   .st-input:focus  { border-color:rgba(14,203,129,0.5) !important; box-shadow:0 0 0 3px rgba(14,203,129,0.07) !important; outline:none; }
+  .search-input:focus { border-color:rgba(14,203,129,0.5) !important; box-shadow:0 0 0 3px rgba(14,203,129,0.07) !important; outline:none; }
 
   .giftcards-container {
     display: flex;
@@ -157,23 +165,10 @@ const BRANDS = [
     id: "amazon",
     name: "Amazon",
     icon: "🛒",
+    cardTypes: ["E-code", "Physical"],
     countries: [
-      {
-        code: "US",
-        flag: "🇺🇸",
-        currency: "USD",
-        symbol: "$",
-        rate: 1380,
-        denoms: [25, 50, 100, 200],
-      },
-      {
-        code: "UK",
-        flag: "🇬🇧",
-        currency: "GBP",
-        symbol: "£",
-        rate: 1640,
-        denoms: [25, 50, 100],
-      },
+      { code: "US", flag: "🇺🇸", name: "United States", currency: "USD", symbol: "$", rate: 1380, denoms: [25, 50, 100, 200] },
+      { code: "UK", flag: "🇬🇧", name: "United Kingdom", currency: "GBP", symbol: "£", rate: 1640, denoms: [25, 50, 100] },
     ],
     color: "#FF9900",
     bg: "linear-gradient(135deg,#1a0800,#3d1f00)",
@@ -183,23 +178,10 @@ const BRANDS = [
     id: "itunes",
     name: "iTunes",
     icon: "🎵",
+    cardTypes: ["E-code"],
     countries: [
-      {
-        code: "US",
-        flag: "🇺🇸",
-        currency: "USD",
-        symbol: "$",
-        rate: 1350,
-        denoms: [15, 25, 50, 100],
-      },
-      {
-        code: "UK",
-        flag: "🇬🇧",
-        currency: "GBP",
-        symbol: "£",
-        rate: 1560,
-        denoms: [15, 25, 50],
-      },
+      { code: "US", flag: "🇺🇸", name: "United States", currency: "USD", symbol: "$", rate: 1350, denoms: [15, 25, 50, 100] },
+      { code: "UK", flag: "🇬🇧", name: "United Kingdom", currency: "GBP", symbol: "£", rate: 1560, denoms: [15, 25, 50] },
     ],
     color: "#FC3C44",
     bg: "linear-gradient(135deg,#1a001a,#330020)",
@@ -209,15 +191,9 @@ const BRANDS = [
     id: "steam",
     name: "Steam",
     icon: "🎮",
+    cardTypes: ["E-code"],
     countries: [
-      {
-        code: "US",
-        flag: "🇺🇸",
-        currency: "USD",
-        symbol: "$",
-        rate: 1300,
-        denoms: [10, 20, 50, 100],
-      },
+      { code: "US", flag: "🇺🇸", name: "United States", currency: "USD", symbol: "$", rate: 1300, denoms: [10, 20, 50, 100] },
     ],
     color: "#66C0F4",
     bg: "linear-gradient(135deg,#00101a,#001f33)",
@@ -227,15 +203,9 @@ const BRANDS = [
     id: "google",
     name: "Google Play",
     icon: "▶",
+    cardTypes: ["E-code"],
     countries: [
-      {
-        code: "US",
-        flag: "🇺🇸",
-        currency: "USD",
-        symbol: "$",
-        rate: 1370,
-        denoms: [10, 25, 50, 100],
-      },
+      { code: "US", flag: "🇺🇸", name: "United States", currency: "USD", symbol: "$", rate: 1370, denoms: [10, 25, 50, 100] },
     ],
     color: "#0ECB81",
     bg: "linear-gradient(135deg,#001a08,#003318)",
@@ -245,15 +215,9 @@ const BRANDS = [
     id: "netflix",
     name: "Netflix",
     icon: "🎬",
+    cardTypes: ["E-code"],
     countries: [
-      {
-        code: "US",
-        flag: "🇺🇸",
-        currency: "USD",
-        symbol: "$",
-        rate: 1300,
-        denoms: [15, 30, 60, 100],
-      },
+      { code: "US", flag: "🇺🇸", name: "United States", currency: "USD", symbol: "$", rate: 1300, denoms: [15, 30, 60, 100] },
     ],
     color: "#E50914",
     bg: "linear-gradient(135deg,#1a0000,#330000)",
@@ -263,15 +227,9 @@ const BRANDS = [
     id: "xbox",
     name: "Xbox",
     icon: "🕹",
+    cardTypes: ["E-code"],
     countries: [
-      {
-        code: "US",
-        flag: "🇺🇸",
-        currency: "USD",
-        symbol: "$",
-        rate: 1280,
-        denoms: [10, 25, 50, 100],
-      },
+      { code: "US", flag: "🇺🇸", name: "United States", currency: "USD", symbol: "$", rate: 1280, denoms: [10, 25, 50, 100] },
     ],
     color: "#107C10",
     bg: "linear-gradient(135deg,#001a00,#003300)",
@@ -281,15 +239,9 @@ const BRANDS = [
     id: "visa",
     name: "Visa",
     icon: "💳",
+    cardTypes: ["E-code", "Physical"],
     countries: [
-      {
-        code: "US",
-        flag: "🇺🇸",
-        currency: "USD",
-        symbol: "$",
-        rate: 1260,
-        denoms: [50, 100, 200, 500],
-      },
+      { code: "US", flag: "🇺🇸", name: "United States", currency: "USD", symbol: "$", rate: 1260, denoms: [50, 100, 200, 500] },
     ],
     color: "#6B8AFE",
     bg: "linear-gradient(135deg,#000818,#001433)",
@@ -299,15 +251,9 @@ const BRANDS = [
     id: "razergold",
     name: "Razer Gold",
     icon: "⚡",
+    cardTypes: ["E-code"],
     countries: [
-      {
-        code: "US",
-        flag: "🇺🇸",
-        currency: "USD",
-        symbol: "$",
-        rate: 1250,
-        denoms: [5, 10, 25, 50],
-      },
+      { code: "US", flag: "🇺🇸", name: "United States", currency: "USD", symbol: "$", rate: 1250, denoms: [5, 10, 25, 50] },
     ],
     color: "#44D62C",
     bg: "linear-gradient(135deg,#001a00,#002800)",
@@ -315,121 +261,67 @@ const BRANDS = [
   },
 ];
 
+const STEP_ORDER = ["card", "variant", "details", "review", "upload", "done"];
+const STEP_LABELS = {
+  card: "Select Card",
+  variant: "Select Country",
+  details: "Card Details",
+  review: "Review",
+  upload: "Upload & Submit",
+  done: "Done",
+};
+
 function Mark({ size = 32 }) {
   return (
     <img
       src={logoImg}
       alt="Swift Trade Logo"
-      style={{
-        width: size,
-        height: size,
-        display: "block",
-        objectFit: "contain",
-      }}
+      style={{ width: size, height: size, display: "block", objectFit: "contain" }}
     />
   );
 }
 
-function ProgressBar({ step }) {
-  const steps = ["Select Card", "Details", "Upload", "Confirm"];
-  const MAP = { brand: 0, details: 1, upload: 2, review: 3 };
-  const cur = MAP[step] ?? 0;
+// ─── STEP INDICATOR ─────────────────────────────────────────
+function StepIndicator({ step }) {
+  const idx = STEP_ORDER.indexOf(step);
+  const totalSteps = STEP_ORDER.length; // 6, including the success screen
+  const totalVisible = totalSteps - 1; // segments shown; success screen has its own celebration UI
   return (
-    <div
-      style={{ display: "flex", alignItems: "flex-start", marginBottom: 32 }}
-    >
-      {steps.map((s, i) => (
-        <div
-          key={s}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            flex: i < steps.length - 1 ? 1 : "none",
-          }}
-        >
+    <div style={{ marginBottom: 28 }}>
+      <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+        {STEP_ORDER.slice(0, totalVisible).map((s, i) => (
           <div
+            key={s}
             style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 5,
+              flex: 1,
+              height: 4,
+              borderRadius: 4,
+              background: i <= idx ? C.amber : C.border2,
+              transition: "background 0.4s",
             }}
-          >
-            <div
-              style={{
-                width: 24,
-                height: 24,
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background:
-                  i < cur
-                    ? C.green
-                    : i === cur
-                      ? "rgba(14,203,129,0.12)"
-                      : C.border2,
-                border: i === cur ? `1px solid ${C.green}55` : "none",
-                boxShadow:
-                  i === cur ? "0 0 0 4px rgba(14,203,129,0.06)" : "none",
-                transition: "all 0.3s",
-              }}
-            >
-              {i < cur ? (
-                <svg width={11} height={11} viewBox="0 0 11 11" fill="none">
-                  <path
-                    d="M1.5 5.5l2.5 3L9.5 2"
-                    stroke="#000"
-                    strokeWidth={1.5}
-                    strokeLinecap="round"
-                  />
-                </svg>
-              ) : (
-                <span
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    color: i === cur ? C.green : C.muted,
-                  }}
-                >
-                  {i + 1}
-                </span>
-              )}
-            </div>
-            <span
-              style={{
-                fontSize: 9,
-                letterSpacing: "0.5px",
-                textTransform: "uppercase",
-                color: i <= cur ? C.green : C.muted,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {s}
-            </span>
-          </div>
-          {i < steps.length - 1 && (
-            <div
-              style={{
-                flex: 1,
-                height: 1,
-                margin: "0 10px 16px",
-                background:
-                  i < cur
-                    ? `linear-gradient(90deg,${C.green},rgba(14,203,129,0.3))`
-                    : C.border,
-                transition: "background 0.4s",
-              }}
-            />
-          )}
-        </div>
-      ))}
+          />
+        ))}
+      </div>
+      <div
+        style={{
+          fontSize: 10,
+          color: C.muted,
+          letterSpacing: 2,
+          display: "flex",
+          justifyContent: "space-between",
+        }}
+      >
+        <span>
+          STEP {idx + 1} OF {totalSteps}
+        </span>
+        <span style={{ color: C.amber }}>{STEP_LABELS[step]?.toUpperCase()}</span>
+      </div>
     </div>
   );
 }
 
 function LeftPanel({ trade }) {
-  const { brand, country, denom, ngnOut } = trade;
+  const { brand, country, perValue, quantity, cardType, ngnOut } = trade;
   const showTicket = !!brand;
   return (
     <div className="left-panel">
@@ -449,12 +341,7 @@ function LeftPanel({ trade }) {
       />
       <div
         className="left-panel-logo"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          marginBottom: 32,
-        }}
+        style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32 }}
       >
         <Mark size={32} />
         <div>
@@ -468,27 +355,13 @@ function LeftPanel({ trade }) {
           >
             SWIFT
           </div>
-          <div
-            style={{
-              fontSize: 7,
-              color: C.amber,
-              letterSpacing: 5,
-              marginTop: 1,
-            }}
-          >
+          <div style={{ fontSize: 7, color: C.amber, letterSpacing: 5, marginTop: 1 }}>
             TRADE
           </div>
         </div>
       </div>
       <div className="left-panel-title">
-        <div
-          style={{
-            fontSize: 10,
-            color: C.muted,
-            letterSpacing: 3,
-            marginBottom: 12,
-          }}
-        >
+        <div style={{ fontSize: 10, color: C.muted, letterSpacing: 3, marginBottom: 12 }}>
           GIFT CARDS
         </div>
         <div
@@ -543,7 +416,7 @@ function LeftPanel({ trade }) {
           >
             {brand.name.toUpperCase()}
           </div>
-          {country && denom ? (
+          {country && perValue > 0 ? (
             <>
               <div
                 style={{
@@ -555,30 +428,16 @@ function LeftPanel({ trade }) {
                 }}
               >
                 {country.symbol}
-                {denom}
+                {perValue}
+                {quantity > 1 ? ` × ${quantity}` : ""}
               </div>
-              <div
-                style={{
-                  fontSize: 10,
-                  color: "rgba(255,255,255,0.4)",
-                  marginTop: 3,
-                  letterSpacing: 1,
-                }}
-              >
-                {country.flag} {country.currency} · GIFT CARD
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 3, letterSpacing: 1 }}>
+                {country.flag} {country.currency} · {cardType || "GIFT CARD"}
               </div>
             </>
           ) : (
-            <div
-              style={{
-                fontSize: 11,
-                color: "rgba(255,255,255,0.35)",
-                letterSpacing: 1,
-              }}
-            >
-              {country
-                ? `${country.flag} ${country.currency}`
-                : "Select denomination"}
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", letterSpacing: 1 }}>
+              {country ? `${country.flag} ${country.currency}` : "Select variant"}
             </div>
           )}
         </div>
@@ -607,25 +466,10 @@ function LeftPanel({ trade }) {
             <div style={{ padding: "0 14px" }}>
               {[
                 { label: "Card", val: brand?.name },
-                {
-                  label: "Country",
-                  val: country ? `${country.flag} ${country.code}` : null,
-                },
-                {
-                  label: "Amount",
-                  val: country && denom ? `${country.symbol}${denom}` : null,
-                },
-                {
-                  label: "Rate",
-                  val: country
-                    ? `₦${country.rate.toLocaleString()}/${country.currency}`
-                    : null,
-                },
-                {
-                  label: "You Get",
-                  val: ngnOut > 0 ? `₦${ngnOut.toLocaleString()}` : null,
-                  green: true,
-                },
+                { label: "Country", val: country ? `${country.flag} ${country.code}` : null },
+                { label: "Value", val: country && perValue > 0 ? `${country.symbol}${perValue} × ${quantity}` : null },
+                { label: "Rate", val: country ? `₦${country.rate.toLocaleString()}/${country.currency}` : null },
+                { label: "You Get", val: ngnOut > 0 ? `₦${ngnOut.toLocaleString()}` : null, green: true },
               ].map((r) => (
                 <div
                   key={r.label}
@@ -636,9 +480,7 @@ function LeftPanel({ trade }) {
                     borderBottom: `1px solid ${C.border}`,
                   }}
                 >
-                  <span style={{ fontSize: 11, color: C.muted }}>
-                    {r.label}
-                  </span>
+                  <span style={{ fontSize: 11, color: C.muted }}>{r.label}</span>
                   <span
                     style={{
                       fontFamily: "'DM Mono',monospace",
@@ -667,23 +509,13 @@ function LeftPanel({ trade }) {
           </div>
         )}
       </div>
-      <div
-        style={{
-          marginTop: 20,
-          display: "flex",
-          flexDirection: "column",
-          gap: 8,
-        }}
-      >
+      <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 8 }}>
         {[
           { color: C.amber, text: "5–15 min payout" },
-          { color: C.muted, text: "Submit card image" },
+          { color: C.muted, text: "Submit card image or code" },
           { color: C.green, text: "Best rates guaranteed" },
         ].map((t) => (
-          <div
-            key={t.text}
-            style={{ display: "flex", alignItems: "center", gap: 8 }}
-          >
+          <div key={t.text} style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span
               style={{
                 width: 5,
@@ -702,19 +534,15 @@ function LeftPanel({ trade }) {
   );
 }
 
-function StepBrand({ selected, onSelect }) {
+// ─── STEP 1: SELECT CARD ────────────────────────────────────
+function StepCard({ selected, onSelect }) {
+  const [search, setSearch] = useState("");
+  const filtered = BRANDS.filter((b) =>
+    b.name.toLowerCase().includes(search.toLowerCase()),
+  );
+
   return (
     <div className="step-form">
-      <div
-        style={{
-          fontSize: 10,
-          color: C.muted,
-          letterSpacing: 3,
-          marginBottom: 10,
-        }}
-      >
-        STEP 1
-      </div>
       <h2
         style={{
           fontFamily: "'Bebas Neue',sans-serif",
@@ -730,152 +558,134 @@ function StepBrand({ selected, onSelect }) {
         <br />
         HAVE?
       </h2>
-      <p
-        style={{
-          color: C.muted,
-          fontSize: 14,
-          fontWeight: 300,
-          lineHeight: 1.6,
-          marginBottom: 28,
-        }}
-      >
-        Select the brand of your gift card.
+      <p style={{ color: C.muted, fontSize: 14, fontWeight: 300, lineHeight: 1.6, marginBottom: 20 }}>
+        Search or pick a brand to get started.
       </p>
-      <div
-        className="brand-grid"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4,1fr)",
-          gap: 10,
-        }}
-      >
-        {BRANDS.map((b) => {
-          const isSel = selected?.id === b.id;
-          return (
-            <button
-              key={b.id}
-              className={`brand-card${isSel ? " sel" : ""}`}
-              onClick={() => onSelect(b)}
-              style={{
-                background: b.bg,
-                border: `2px solid ${isSel ? b.color : b.color + "22"}`,
-                borderRadius: 14,
-                padding: "18px 12px",
-                cursor: "pointer",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 8,
-                position: "relative",
-                overflow: "hidden",
-                boxShadow: isSel ? `0 8px 24px ${b.color}33` : "none",
-              }}
-            >
-              <div
-                style={{ position: "absolute", inset: 0, overflow: "hidden" }}
+
+      <div style={{ position: "relative", marginBottom: 22 }}>
+        <svg
+          width={15}
+          height={15}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke={C.muted}
+          strokeWidth={2}
+          strokeLinecap="round"
+          style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }}
+        >
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          className="search-input"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search gift card brands..."
+          style={{
+            width: "100%",
+            boxSizing: "border-box",
+            background: C.card2,
+            border: `1px solid ${C.border2}`,
+            borderRadius: 12,
+            padding: "13px 14px 13px 40px",
+            color: "#fff",
+            fontSize: 14,
+            fontFamily: "'Outfit',sans-serif",
+            transition: "border-color 0.2s, box-shadow 0.2s",
+          }}
+        />
+      </div>
+
+      {filtered.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "40px 0", color: C.muted, fontSize: 13 }}>
+          No brands match &ldquo;{search}&rdquo;
+        </div>
+      ) : (
+        <div
+          className="brand-grid"
+          style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}
+        >
+          {filtered.map((b) => {
+            const isSel = selected?.id === b.id;
+            return (
+              <button
+                key={b.id}
+                className={`brand-card${isSel ? " sel" : ""}`}
+                onClick={() => onSelect(b)}
+                style={{
+                  background: b.bg,
+                  border: `2px solid ${isSel ? b.color : b.color + "22"}`,
+                  borderRadius: 14,
+                  padding: "20px 12px",
+                  cursor: "pointer",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 8,
+                  position: "relative",
+                  overflow: "hidden",
+                  boxShadow: isSel ? `0 8px 24px ${b.color}33` : "none",
+                }}
               >
-                <div
+                <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: "-100%",
+                      width: "60%",
+                      height: "100%",
+                      background: `linear-gradient(105deg,transparent,${b.color}12,transparent)`,
+                      animation: isSel ? "shimmer 2s ease-in-out infinite" : "none",
+                    }}
+                  />
+                </div>
+                {isSel && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 8,
+                      right: 8,
+                      width: 18,
+                      height: 18,
+                      borderRadius: "50%",
+                      background: b.color,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      animation: "popIn 0.2s ease",
+                    }}
+                  >
+                    <svg width={9} height={9} viewBox="0 0 9 9" fill="none">
+                      <path d="M1.5 4.5l2 2.5L7.5 2" stroke="#000" strokeWidth={1.3} strokeLinecap="round" />
+                    </svg>
+                  </div>
+                )}
+                <span style={{ fontSize: 26 }}>{b.icon}</span>
+                <span
                   style={{
-                    position: "absolute",
-                    top: 0,
-                    left: "-100%",
-                    width: "60%",
-                    height: "100%",
-                    background: `linear-gradient(105deg,transparent,${b.color}12,transparent)`,
-                    animation: isSel
-                      ? "shimmer 2s ease-in-out infinite"
-                      : "none",
-                  }}
-                />
-              </div>
-              {isSel && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 8,
-                    right: 8,
-                    width: 18,
-                    height: 18,
-                    borderRadius: "50%",
-                    background: b.color,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    animation: "popIn 0.2s ease",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.85)",
+                    textAlign: "center",
+                    lineHeight: 1.3,
                   }}
                 >
-                  <svg width={9} height={9} viewBox="0 0 9 9" fill="none">
-                    <path
-                      d="M1.5 4.5l2 2.5L7.5 2"
-                      stroke="#000"
-                      strokeWidth={1.3}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </div>
-              )}
-              <span style={{ fontSize: 26 }}>{b.icon}</span>
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: "rgba(255,255,255,0.85)",
-                  textAlign: "center",
-                  lineHeight: 1.3,
-                }}
-              >
-                {b.name}
-              </span>
-              <span
-                style={{
-                  fontSize: 9,
-                  color: b.textColor,
-                  fontFamily: "'DM Mono',monospace",
-                }}
-              >
-                ₦{b.countries[0].rate.toLocaleString()}/$
-              </span>
-            </button>
-          );
-        })}
-      </div>
+                  {b.name}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
-function StepDetails({
-  brand,
-  country,
-  setCountry,
-  denom,
-  setDenom,
-  customAmt,
-  setCustomAmt,
-}) {
-  const numAmt = parseFloat(customAmt) || 0;
-  const ngnOut =
-    denom > 0 && country
-      ? denom * country.rate
-      : numAmt > 0 && country
-        ? numAmt * country.rate
-        : 0;
 
-  const handleAmtChange = (e) => {
-    const v = e.target.value.replace(/[^0-9.]/g, "");
-    setCustomAmt(v);
-  };
-
+// ─── STEP 2: SELECT VARIANT ─────────────────────────────────
+function StepVariant({ brand, selected, onSelect }) {
   return (
     <div className="step-form">
-      <div
-        style={{
-          fontSize: 10,
-          color: C.muted,
-          letterSpacing: 3,
-          marginBottom: 10,
-        }}
-      >
-        STEP 2
-      </div>
       <h2
         style={{
           fontFamily: "'Bebas Neue',sans-serif",
@@ -887,147 +697,247 @@ function StepDetails({
       >
         <span style={{ color: brand.color }}>{brand.name}</span>
         <br />
-        CARD DETAILS
+        WHICH COUNTRY?
       </h2>
-      <p
+      <p style={{ color: C.muted, fontSize: 14, fontWeight: 300, lineHeight: 1.6, marginBottom: 24 }}>
+        Only supported card variants are shown below.
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {brand.countries.map((ct) => {
+          const isSel = selected?.code === ct.code;
+          return (
+            <button
+              key={ct.code}
+              className={`country-card${isSel ? " sel" : ""}`}
+              onClick={() => onSelect(ct)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                padding: "16px 18px",
+                borderRadius: 14,
+                background: isSel ? "rgba(14,203,129,0.06)" : C.card,
+                border: `1px solid ${isSel ? "rgba(14,203,129,0.35)" : C.border}`,
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              <span style={{ fontSize: 28 }}>{ct.flag}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>{ct.name}</div>
+                <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{ct.currency}</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div
+                  style={{
+                    fontFamily: "'DM Mono',monospace",
+                    fontSize: 14,
+                    color: isSel ? C.green : "#ccc",
+                    fontWeight: 600,
+                  }}
+                >
+                  ₦{ct.rate.toLocaleString()}
+                </div>
+                <div style={{ fontSize: 10, color: C.muted }}>per {ct.currency}</div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── STEP 3: CARD DETAILS ───────────────────────────────────
+function StepDetails({
+  brand,
+  country,
+  denom,
+  setDenom,
+  customAmt,
+  setCustomAmt,
+  quantity,
+  setQuantity,
+  cardType,
+  setCardType,
+  perValue,
+  ngnOut,
+}) {
+  const handleAmtChange = (e) => {
+    const v = e.target.value.replace(/[^0-9.]/g, "");
+    setCustomAmt(v);
+  };
+
+  return (
+    <div className="step-form">
+      <h2
         style={{
-          color: C.muted,
-          fontSize: 14,
-          fontWeight: 300,
-          lineHeight: 1.6,
+          fontFamily: "'Bebas Neue',sans-serif",
+          fontSize: 42,
+          letterSpacing: 1,
+          lineHeight: 0.9,
+          marginBottom: 8,
+        }}
+      >
+        CARD
+        <br />
+        <span style={{ color: C.amber }}>DETAILS</span>
+      </h2>
+      <p style={{ color: C.muted, fontSize: 14, fontWeight: 300, lineHeight: 1.6, marginBottom: 20 }}>
+        Enter the value of your {brand.name} {country.code} card.
+      </p>
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          background: "rgba(14,203,129,0.06)",
+          border: "1px solid rgba(14,203,129,0.18)",
+          borderRadius: 12,
+          padding: "12px 16px",
           marginBottom: 24,
         }}
       >
-        Select the country and denomination of your card.
-      </p>
+        <span style={{ fontSize: 12, color: C.muted }}>Current rate</span>
+        <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 14, color: C.green, fontWeight: 600 }}>
+          ₦{country.rate.toLocaleString()} / {country.currency}
+        </span>
+      </div>
 
-      {brand.countries.length > 1 && (
-        <div style={{ marginBottom: 20 }}>
-          <div
+      <div style={{ marginBottom: 22 }}>
+        <div style={{ fontSize: 10, color: C.muted, letterSpacing: 2, marginBottom: 10 }}>
+          CARD VALUE
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 16 }}>
+          {country.denoms.map((d) => (
+            <button
+              key={d}
+              className={`denom-btn${denom === d ? " sel" : ""}`}
+              onClick={() => setDenom(d)}
+              style={{
+                padding: "14px 8px",
+                borderRadius: 10,
+                cursor: "pointer",
+                background: denom === d ? "rgba(14,203,129,0.1)" : C.card2,
+                border: `1px solid ${denom === d ? "rgba(14,203,129,0.35)" : C.border2}`,
+                color: denom === d ? C.green : "#aaa",
+                fontFamily: "'DM Mono',monospace",
+                fontSize: 16,
+                fontWeight: 500,
+              }}
+            >
+              {country.symbol}
+              {d}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ fontSize: 10, color: C.muted, letterSpacing: 2, marginBottom: 8 }}>
+          OR ENTER CUSTOM AMOUNT
+        </div>
+        <div className="custom-amt-wrapper">
+          <span className="custom-amt-symbol">{country.symbol}</span>
+          <input
+            className="custom-amt-input"
+            type="text"
+            inputMode="decimal"
+            value={customAmt}
+            onChange={handleAmtChange}
+            placeholder="0"
+          />
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 22 }}>
+        <div style={{ fontSize: 10, color: C.muted, letterSpacing: 2, marginBottom: 10 }}>
+          QUANTITY
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <button
+            className="qty-btn"
+            disabled={quantity <= 1}
+            onClick={() => setQuantity(Math.max(1, quantity - 1))}
             style={{
-              fontSize: 10,
-              color: C.muted,
-              letterSpacing: 2,
-              marginBottom: 10,
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              background: C.card2,
+              border: `1px solid ${C.border2}`,
+              color: "#ccc",
+              fontSize: 18,
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            COUNTRY
+            −
+          </button>
+          <div
+            style={{
+              minWidth: 48,
+              textAlign: "center",
+              fontFamily: "'DM Mono',monospace",
+              fontSize: 20,
+              fontWeight: 600,
+              color: "#fff",
+            }}
+          >
+            {quantity}
+          </div>
+          <button
+            className="qty-btn"
+            disabled={quantity >= 10}
+            onClick={() => setQuantity(Math.min(10, quantity + 1))}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              background: C.card2,
+              border: `1px solid ${C.border2}`,
+              color: "#ccc",
+              fontSize: 18,
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            +
+          </button>
+          <span style={{ fontSize: 12, color: C.muted }}>
+            {quantity > 1 ? `${quantity} cards of the same value` : "How many cards?"}
+          </span>
+        </div>
+      </div>
+
+      {brand.cardTypes.length > 1 && (
+        <div style={{ marginBottom: 22 }}>
+          <div style={{ fontSize: 10, color: C.muted, letterSpacing: 2, marginBottom: 10 }}>
+            CARD TYPE
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            {brand.countries.map((ct) => (
+            {brand.cardTypes.map((ty) => (
               <button
-                key={ct.code}
-                className={`country-btn${country?.code === ct.code ? " sel" : ""}`}
-                onClick={() => {
-                  setCountry(ct);
-                  setDenom(0);
-                  setCustomAmt("");
-                }}
+                key={ty}
+                className={`type-btn${cardType === ty ? " sel" : ""}`}
+                onClick={() => setCardType(ty)}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "10px 16px",
+                  flex: 1,
+                  padding: "12px",
                   borderRadius: 10,
-                  background:
-                    country?.code === ct.code
-                      ? "rgba(14,203,129,0.08)"
-                      : C.card2,
-                  border: `1px solid ${country?.code === ct.code ? "rgba(14,203,129,0.3)" : C.border2}`,
-                  color: country?.code === ct.code ? C.green : "#aaa",
+                  background: cardType === ty ? "rgba(14,203,129,0.1)" : C.card2,
+                  border: `1px solid ${cardType === ty ? "rgba(14,203,129,0.35)" : C.border2}`,
+                  color: cardType === ty ? C.green : "#aaa",
                   fontSize: 13,
-                  fontWeight: 500,
-                  cursor: "pointer",
+                  fontWeight: 600,
                   fontFamily: "'Outfit',sans-serif",
                 }}
               >
-                <span style={{ fontSize: 16 }}>{ct.flag}</span>
-                <span>
-                  {ct.code} · {ct.currency}
-                </span>
+                {ty}
               </button>
             ))}
-          </div>
-        </div>
-      )}
-
-      {country && (
-        <div style={{ marginBottom: 20 }}>
-          <div
-            style={{
-              fontSize: 10,
-              color: C.muted,
-              letterSpacing: 2,
-              marginBottom: 10,
-            }}
-          >
-            DENOMINATION
-          </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4,1fr)",
-              gap: 8,
-              marginBottom: 16,
-            }}
-          >
-            {country.denoms.map((d) => (
-              <button
-                key={d}
-                className={`denom-btn${denom === d ? " sel" : ""}`}
-                onClick={() => {
-                  setDenom(d);
-                }}
-                style={{
-                  padding: "14px 8px",
-                  borderRadius: 10,
-                  cursor: "pointer",
-                  background: denom === d ? "rgba(14,203,129,0.1)" : C.card2,
-                  border: `1px solid ${denom === d ? "rgba(14,203,129,0.35)" : C.border2}`,
-                  color: denom === d ? C.green : "#aaa",
-                  fontFamily: "'DM Mono',monospace",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 4,
-                }}
-              >
-                <span style={{ fontSize: 16, fontWeight: 500 }}>
-                  {country.symbol}
-                  {d}
-                </span>
-                <span
-                  style={{
-                    fontSize: 10,
-                    color: denom === d ? C.green : C.muted,
-                  }}
-                >
-                  ₦{(d * country.rate).toLocaleString()}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          <div
-            style={{
-              fontSize: 10,
-              color: C.muted,
-              letterSpacing: 2,
-              marginBottom: 8,
-            }}
-          >
-            OR ENTER CUSTOM AMOUNT
-          </div>
-          <div className="custom-amt-wrapper">
-            <span className="custom-amt-symbol">{country.symbol}</span>
-            <input
-              className="custom-amt-input"
-              type="text"
-              inputMode="decimal"
-              value={customAmt}
-              onChange={handleAmtChange}
-              placeholder="0"
-            />
           </div>
         </div>
       )}
@@ -1039,29 +949,21 @@ function StepDetails({
             border: "1px solid rgba(245,166,35,0.15)",
             borderRadius: 12,
             padding: "14px 18px",
-            marginBottom: 20,
           }}
         >
           {[
             ["Rate", `₦${country.rate.toLocaleString()} / ${country.currency}`],
-            ["Card Value", `${country.symbol}${denom || customAmt}`],
-            ["You Receive", `₦${ngnOut.toLocaleString()}`],
+            ["Card Value", `${country.symbol}${perValue}${quantity > 1 ? ` × ${quantity}` : ""}`],
+            ["Estimated Payout", `₦${ngnOut.toLocaleString()}`],
           ].map(([k, v]) => (
-            <div
-              key={k}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginBottom: 6,
-              }}
-            >
+            <div key={k} style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
               <span style={{ fontSize: 12, color: C.muted }}>{k}</span>
               <span
                 style={{
                   fontFamily: "'DM Mono',monospace",
                   fontSize: 13,
-                  color: k === "You Receive" ? C.amber : "#bbb",
-                  fontWeight: k === "You Receive" ? 600 : 400,
+                  color: k === "Estimated Payout" ? C.amber : "#bbb",
+                  fontWeight: k === "Estimated Payout" ? 600 : 400,
                 }}
               >
                 {v}
@@ -1074,272 +976,24 @@ function StepDetails({
   );
 }
 
-function StepUpload({ image, setImage, cardCode, setCardCode }) {
-  const [drag, setDrag] = useState(false);
-  const inputRef = useRef(null);
-
-  const handleFile = (file) => {
-    if (!file || !file.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = (e) =>
-      setImage({ file, preview: e.target.result, name: file.name });
-    reader.readAsDataURL(file);
-  };
-
-  const onDrop = (e) => {
-    e.preventDefault();
-    setDrag(false);
-    handleFile(e.dataTransfer.files[0]);
-  };
-  // me sjjsj
+// ─── STEP 4: REVIEW SUMMARY ──────────────────────────────────
+function StepReview({ trade }) {
+  const { brand, country, perValue, quantity, cardType, ngnOut, fee } = trade;
+  const total = ngnOut - fee;
   return (
     <div className="step-form">
-      <div
-        style={{
-          fontSize: 10,
-          color: C.muted,
-          letterSpacing: 3,
-          marginBottom: 10,
-        }}
-      >
-        STEP 3
-      </div>
       <h2
         style={{
           fontFamily: "'Bebas Neue',sans-serif",
           fontSize: 42,
           letterSpacing: 1,
           lineHeight: 0.9,
-          marginBottom: 8,
+          marginBottom: 24,
         }}
       >
-        UPLOAD YOUR
+        REVIEW
         <br />
-        <span style={{ color: C.amber }}>CARD IMAGE</span>
-      </h2>
-      <p
-        style={{
-          color: C.muted,
-          fontSize: 14,
-          fontWeight: 300,
-          lineHeight: 1.6,
-          marginBottom: 24,
-        }}
-      >
-        Take a clear photo of the card showing the code and denomination.
-      </p>
-
-      {!image ? (
-        <div
-          className={`upload-zone${drag ? " drag" : ""}`}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDrag(true);
-          }}
-          onDragLeave={() => setDrag(false)}
-          onDrop={onDrop}
-          onClick={() => inputRef.current?.click()}
-          style={{
-            border: `2px dashed ${drag ? "rgba(14,203,129,0.6)" : C.border2}`,
-            borderRadius: 14,
-            padding: "52px 24px",
-            textAlign: "center",
-            cursor: "pointer",
-            marginBottom: 20,
-            background: drag ? "rgba(14,203,129,0.04)" : "transparent",
-          }}
-        >
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            style={{ display: "none" }}
-            onChange={(e) => handleFile(e.target.files[0])}
-          />
-          <div
-            style={{
-              fontSize: 40,
-              marginBottom: 14,
-              animation: "bounce 2s ease-in-out infinite",
-            }}
-          >
-            📸
-          </div>
-          <div
-            style={{
-              fontSize: 15,
-              fontWeight: 500,
-              marginBottom: 6,
-              color: "#ccc",
-            }}
-          >
-            {drag ? "Drop it here!" : "Tap to upload card image"}
-          </div>
-          <div style={{ fontSize: 12, color: C.muted }}>
-            JPG, PNG or HEIC · Max 10MB
-          </div>
-        </div>
-      ) : (
-        <div
-          style={{
-            position: "relative",
-            marginBottom: 20,
-            borderRadius: 14,
-            overflow: "hidden",
-            border: `1px solid rgba(14,203,129,0.25)`,
-          }}
-        >
-          <img
-            src={image.preview}
-            alt="Card"
-            style={{
-              width: "100%",
-              maxHeight: 220,
-              objectFit: "cover",
-              display: "block",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "linear-gradient(transparent 60%,rgba(0,0,0,0.8))",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              bottom: 12,
-              left: 16,
-              right: 16,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 500, color: "#fff" }}>
-                {image.name}
-              </div>
-              <div style={{ fontSize: 10, color: C.green, marginTop: 2 }}>
-                ✓ Image uploaded
-              </div>
-            </div>
-            <button
-              onClick={() => setImage(null)}
-              style={{
-                background: "rgba(246,70,93,0.15)",
-                border: "1px solid rgba(246,70,93,0.3)",
-                color: C.red,
-                fontSize: 11,
-                padding: "5px 12px",
-                borderRadius: 8,
-                cursor: "pointer",
-                fontFamily: "'Outfit',sans-serif",
-                fontWeight: 500,
-              }}
-            >
-              Remove
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div style={{ marginBottom: 20 }}>
-        <div
-          style={{
-            fontSize: 10,
-            color: C.muted,
-            letterSpacing: 2,
-            marginBottom: 8,
-          }}
-        >
-          CARD CODE <span style={{ color: C.muted2 }}>(OPTIONAL)</span>
-        </div>
-        <input
-          className="st-input"
-          value={cardCode}
-          onChange={(e) => setCardCode(e.target.value.toUpperCase())}
-          placeholder="XXXX-XXXX-XXXX-XXXX"
-          style={{
-            width: "100%",
-            boxSizing: "border-box",
-            background: C.card2,
-            border: `1px solid ${C.border2}`,
-            borderRadius: 10,
-            padding: "12px 14px",
-            color: "#fff",
-            fontFamily: "'DM Mono',monospace",
-            fontSize: 15,
-            letterSpacing: 2,
-          }}
-        />
-        <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>
-          Including the code speeds up verification.
-        </div>
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          gap: 8,
-          alignItems: "flex-start",
-          background: "rgba(245,166,35,0.05)",
-          border: "1px solid rgba(245,166,35,0.12)",
-          borderRadius: 10,
-          padding: "11px 14px",
-        }}
-      >
-        <svg
-          width={14}
-          height={14}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke={C.amber}
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ flexShrink: 0, marginTop: 1 }}
-        >
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="8" x2="12" y2="12" />
-          <line x1="12" y1="16" x2="12.01" y2="16" />
-        </svg>
-        <span style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
-          Make sure the card code and amount are clearly visible. Blurry images
-          may delay verification.
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function StepReview({ trade, onSubmit, loading }) {
-  const { brand, country, denom, customAmt, ngnOut, image, cardCode } = trade;
-  const val = denom || customAmt;
-  return (
-    <div className="step-form">
-      <div
-        style={{
-          fontSize: 10,
-          color: C.muted,
-          letterSpacing: 3,
-          marginBottom: 10,
-        }}
-      >
-        STEP 4
-      </div>
-      <h2
-        style={{
-          fontFamily: "'Bebas Neue',sans-serif",
-          fontSize: 42,
-          letterSpacing: 1,
-          lineHeight: 0.9,
-          marginBottom: 24,
-        }}
-      >
-        CONFIRM &<br />
-        <span style={{ color: C.amber }}>SUBMIT</span>
+        <span style={{ color: C.amber }}>YOUR TRADE</span>
       </h2>
       <div
         style={{
@@ -1369,57 +1023,24 @@ function StepReview({ trade, onSubmit, loading }) {
         />
         <span style={{ fontSize: 32, flexShrink: 0 }}>{brand.icon}</span>
         <div style={{ flex: 1 }}>
-          <div
-            style={{
-              fontFamily: "'Bebas Neue',sans-serif",
-              fontSize: 18,
-              letterSpacing: 1,
-              marginBottom: 4,
-            }}
-          >
+          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 1, marginBottom: 4 }}>
             {brand.name}
           </div>
-          <div
-            style={{
-              fontFamily: "'DM Mono',monospace",
-              fontSize: 22,
-              color: "#fff",
-              fontWeight: 500,
-            }}
-          >
+          <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 22, color: "#fff", fontWeight: 500 }}>
             {country.symbol}
-            {val}
+            {perValue}
+            {quantity > 1 ? ` × ${quantity}` : ""}
           </div>
-          <div
-            style={{
-              fontSize: 10,
-              color: "rgba(255,255,255,0.4)",
-              marginTop: 2,
-            }}
-          >
-            {country.flag} {country.code} Gift Card
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
+            {country.flag} {country.code} · {cardType}
           </div>
         </div>
         <div style={{ textAlign: "right" }}>
-          <div
-            style={{
-              fontSize: 10,
-              color: C.amber,
-              letterSpacing: 2,
-              marginBottom: 4,
-            }}
-          >
+          <div style={{ fontSize: 10, color: C.amber, letterSpacing: 2, marginBottom: 4 }}>
             YOU RECEIVE
           </div>
-          <div
-            style={{
-              fontFamily: "'Bebas Neue',sans-serif",
-              fontSize: 28,
-              color: C.amber,
-              letterSpacing: 1,
-            }}
-          >
-            ₦{ngnOut.toLocaleString()}
+          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, color: C.amber, letterSpacing: 1 }}>
+            ₦{total.toLocaleString()}
           </div>
         </div>
       </div>
@@ -1429,17 +1050,16 @@ function StepReview({ trade, onSubmit, loading }) {
           border: `1px solid ${C.border}`,
           borderRadius: 12,
           overflow: "hidden",
-          marginBottom: 16,
         }}
       >
         {[
           ["Brand", brand.name],
-          ["Country", `${country.flag} ${country.code}`],
-          ["Amount", `${country.symbol}${val}`],
-          ["Rate", `₦${country.rate.toLocaleString()} / ${country.currency}`],
-          ["You Receive", `₦${ngnOut.toLocaleString()}`],
-          ["Card Code", cardCode || "Not provided"],
-          ["Image", image ? `✓ ${image.name}` : "Not uploaded"],
+          ["Country / Currency", `${country.flag} ${country.name} · ${country.currency}`],
+          ["Card Value", `${country.symbol}${perValue} × ${quantity}`],
+          ["Card Type", cardType],
+          ["Exchange Rate", `₦${country.rate.toLocaleString()} / ${country.currency}`],
+          ["Processing Fee", fee > 0 ? `₦${fee.toLocaleString()}` : "Free"],
+          ["Total You Receive", `₦${total.toLocaleString()}`],
         ].map(([k, v]) => (
           <div
             key={k}
@@ -1449,29 +1069,16 @@ function StepReview({ trade, onSubmit, loading }) {
               alignItems: "center",
               padding: "11px 16px",
               borderBottom: `1px solid ${C.border}`,
-              background:
-                k === "You Receive" ? "rgba(245,166,35,0.04)" : "transparent",
+              background: k === "Total You Receive" ? "rgba(245,166,35,0.04)" : "transparent",
             }}
           >
-            <span
-              style={{
-                fontSize: 12,
-                color: k === "You Receive" ? C.amber : C.muted,
-              }}
-            >
-              {k}
-            </span>
+            <span style={{ fontSize: 12, color: k === "Total You Receive" ? C.amber : C.muted }}>{k}</span>
             <span
               style={{
                 fontFamily: "'DM Mono',monospace",
                 fontSize: 12,
-                color:
-                  k === "You Receive"
-                    ? C.amber
-                    : k === "Image" && image
-                      ? C.green
-                      : "#ccc",
-                fontWeight: k === "You Receive" ? 600 : 400,
+                color: k === "Total You Receive" ? C.amber : "#ccc",
+                fontWeight: k === "Total You Receive" ? 600 : 400,
               }}
             >
               {v}
@@ -1479,14 +1086,228 @@ function StepReview({ trade, onSubmit, loading }) {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ─── STEP 5: UPLOAD & SUBMIT ─────────────────────────────────
+function StepUpload({ image, setImage, cardCode, setCardCode, notes, setNotes, onSubmit, loading }) {
+  const [drag, setDrag] = useState(false);
+  const inputRef = useRef(null);
+
+  const handleFile = (file) => {
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (e) => setImage({ file, preview: e.target.result, name: file.name });
+    reader.readAsDataURL(file);
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    setDrag(false);
+    handleFile(e.dataTransfer.files[0]);
+  };
+
+  return (
+    <div className="step-form">
+      <h2
+        style={{
+          fontFamily: "'Bebas Neue',sans-serif",
+          fontSize: 42,
+          letterSpacing: 1,
+          lineHeight: 0.9,
+          marginBottom: 8,
+        }}
+      >
+        UPLOAD &
+        <br />
+        <span style={{ color: C.amber }}>SUBMIT</span>
+      </h2>
+      <p style={{ color: C.muted, fontSize: 14, fontWeight: 300, lineHeight: 1.6, marginBottom: 24 }}>
+        Take a clear photo of the card showing the code and denomination, or type the code directly.
+      </p>
+
+      {!image ? (
+        <div
+          className={`upload-zone${drag ? " drag" : ""}`}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDrag(true);
+          }}
+          onDragLeave={() => setDrag(false)}
+          onDrop={onDrop}
+          onClick={() => inputRef.current?.click()}
+          style={{
+            border: `2px dashed ${drag ? "rgba(14,203,129,0.6)" : C.border2}`,
+            borderRadius: 14,
+            padding: "52px 24px",
+            textAlign: "center",
+            cursor: "pointer",
+            marginBottom: 20,
+            background: drag ? "rgba(14,203,129,0.04)" : "transparent",
+          }}
+        >
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={(e) => handleFile(e.target.files[0])}
+          />
+          <div style={{ fontSize: 40, marginBottom: 14, animation: "bounce 2s ease-in-out infinite" }}>
+            📸
+          </div>
+          <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 6, color: "#ccc" }}>
+            {drag ? "Drop it here!" : "Tap to upload card image"}
+          </div>
+          <div style={{ fontSize: 12, color: C.muted }}>JPG, PNG or HEIC · Max 10MB</div>
+        </div>
+      ) : (
+        <div
+          style={{
+            position: "relative",
+            marginBottom: 20,
+            borderRadius: 14,
+            overflow: "hidden",
+            border: `1px solid rgba(14,203,129,0.25)`,
+          }}
+        >
+          <img
+            src={image.preview}
+            alt="Card"
+            style={{ width: "100%", maxHeight: 220, objectFit: "cover", display: "block" }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "linear-gradient(transparent 60%,rgba(0,0,0,0.8))",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: 12,
+              left: 16,
+              right: 16,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 500, color: "#fff" }}>{image.name}</div>
+              <div style={{ fontSize: 10, color: C.green, marginTop: 2 }}>✓ Image uploaded</div>
+            </div>
+            <button
+              onClick={() => setImage(null)}
+              style={{
+                background: "rgba(246,70,93,0.15)",
+                border: "1px solid rgba(246,70,93,0.3)",
+                color: C.red,
+                fontSize: 11,
+                padding: "5px 12px",
+                borderRadius: 8,
+                cursor: "pointer",
+                fontFamily: "'Outfit',sans-serif",
+                fontWeight: 500,
+              }}
+            >
+              Remove
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div style={{ marginBottom: 18 }}>
+        <div style={{ fontSize: 10, color: C.muted, letterSpacing: 2, marginBottom: 8 }}>
+          CARD CODE {!image && <span style={{ color: C.amber }}>(REQUIRED IF NO IMAGE)</span>}
+        </div>
+        <input
+          className="st-input"
+          value={cardCode}
+          onChange={(e) => setCardCode(e.target.value.toUpperCase())}
+          placeholder="XXXX-XXXX-XXXX-XXXX"
+          style={{
+            width: "100%",
+            boxSizing: "border-box",
+            background: C.card2,
+            border: `1px solid ${C.border2}`,
+            borderRadius: 10,
+            padding: "12px 14px",
+            color: "#fff",
+            fontFamily: "'DM Mono',monospace",
+            fontSize: 15,
+            letterSpacing: 2,
+          }}
+        />
+      </div>
+
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 10, color: C.muted, letterSpacing: 2, marginBottom: 8 }}>
+          NOTES <span style={{ color: C.muted2 }}>(OPTIONAL)</span>
+        </div>
+        <textarea
+          className="st-input"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Anything we should know about this card?"
+          rows={3}
+          style={{
+            width: "100%",
+            boxSizing: "border-box",
+            background: C.card2,
+            border: `1px solid ${C.border2}`,
+            borderRadius: 10,
+            padding: "12px 14px",
+            color: "#fff",
+            fontFamily: "'Outfit',sans-serif",
+            fontSize: 13,
+            resize: "vertical",
+          }}
+        />
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          alignItems: "flex-start",
+          background: "rgba(245,166,35,0.05)",
+          border: "1px solid rgba(245,166,35,0.12)",
+          borderRadius: 10,
+          padding: "11px 14px",
+          marginBottom: 24,
+        }}
+      >
+        <svg
+          width={14}
+          height={14}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke={C.amber}
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ flexShrink: 0, marginTop: 1 }}
+        >
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        <span style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+          Make sure the card code and amount are clearly visible. Blurry images may delay verification.
+        </span>
+      </div>
+
       <button
         onClick={onSubmit}
-        disabled={loading}
+        disabled={loading || (!image && !cardCode.trim())}
         className="pri-btn"
         style={{
           width: "100%",
-          background: C.amber,
-          color: "#000",
+          background: loading || (!image && !cardCode.trim()) ? C.border : C.amber,
+          color: loading || (!image && !cardCode.trim()) ? C.muted : "#000",
           fontWeight: 700,
           fontSize: 15,
           padding: "15px",
@@ -1514,27 +1335,19 @@ function StepReview({ trade, onSubmit, loading }) {
             Submitting...
           </>
         ) : (
-          "Submit Gift Card ✓"
+          "Submit Transaction ✓"
         )}
       </button>
     </div>
   );
 }
 
+// ─── STEP 6: SUCCESS ──────────────────────────────────────────
 function StepDone({ trade, refId, onReset }) {
+  const total = trade.ngnOut - trade.fee;
   return (
-    <div
-      className="step-form"
-      style={{ textAlign: "center", padding: "16px 0" }}
-    >
-      <div
-        style={{
-          position: "relative",
-          width: 96,
-          height: 96,
-          margin: "0 auto 24px",
-        }}
-      >
+    <div className="step-form" style={{ textAlign: "center", padding: "16px 0" }}>
+      <div style={{ position: "relative", width: 96, height: 96, margin: "0 auto 24px" }}>
         <div
           style={{
             position: "absolute",
@@ -1575,10 +1388,7 @@ function StepDone({ trade, refId, onReset }) {
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeDasharray={70}
-              style={{
-                animation: "checkDraw 0.5s 0.3s ease forwards",
-                strokeDashoffset: 70,
-              }}
+              style={{ animation: "checkDraw 0.5s 0.3s ease forwards", strokeDashoffset: 70 }}
             />
           </svg>
         </div>
@@ -1598,7 +1408,7 @@ function StepDone({ trade, refId, onReset }) {
           marginBottom: 16,
         }}
       >
-        CARD SUBMITTED
+        PENDING VERIFICATION
       </div>
       <h2
         style={{
@@ -1613,21 +1423,12 @@ function StepDone({ trade, refId, onReset }) {
         <br />
         <span style={{ color: C.amber }}>VERIFYING NOW.</span>
       </h2>
-      <p
-        style={{
-          color: C.muted,
-          fontSize: 14,
-          lineHeight: 1.7,
-          maxWidth: 340,
-          margin: "0 auto 24px",
-        }}
-      >
+      <p style={{ color: C.muted, fontSize: 14, lineHeight: 1.7, maxWidth: 340, margin: "0 auto 24px" }}>
         Your {trade.brand.name} {trade.country.symbol}
-        {trade.denom || trade.customAmt} card is being verified. Once approved,{" "}
-        <span style={{ color: C.amber, fontWeight: 600 }}>
-          ₦{trade.ngnOut.toLocaleString()}
-        </span>{" "}
-        will be credited within 5–15 minutes.
+        {trade.perValue}
+        {trade.quantity > 1 ? ` × ${trade.quantity}` : ""} card is being verified. Once approved,{" "}
+        <span style={{ color: C.amber, fontWeight: 600 }}>₦{total.toLocaleString()}</span> will be
+        credited within 5–15 minutes.
       </p>
       <div
         style={{
@@ -1639,32 +1440,55 @@ function StepDone({ trade, refId, onReset }) {
           textAlign: "left",
         }}
       >
-        <div
-          style={{
-            fontSize: 9,
-            color: C.muted,
-            letterSpacing: 2,
-            marginBottom: 8,
-          }}
-        >
-          REFERENCE ID
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <div style={{ fontSize: 9, color: C.muted, letterSpacing: 2, marginBottom: 8 }}>
+              TRANSACTION ID
+            </div>
+            <div
+              style={{
+                fontFamily: "'DM Mono',monospace",
+                fontSize: 20,
+                color: C.amber,
+                fontWeight: 500,
+                marginBottom: 4,
+              }}
+            >
+              {refId}
+            </div>
+          </div>
+          <div
+            style={{
+              fontSize: 9,
+              color: C.amber,
+              background: "rgba(245,166,35,0.1)",
+              border: "1px solid rgba(245,166,35,0.25)",
+              borderRadius: 100,
+              padding: "4px 10px",
+              letterSpacing: 1,
+              whiteSpace: "nowrap",
+              marginTop: 2,
+            }}
+          >
+            PENDING
+          </div>
         </div>
         <div
           style={{
-            fontFamily: "'DM Mono',monospace",
-            fontSize: 20,
-            color: C.amber,
-            fontWeight: 500,
-            marginBottom: 4,
+            display: "flex",
+            justifyContent: "space-between",
+            marginTop: 12,
+            paddingTop: 12,
+            borderTop: `1px solid ${C.border}`,
           }}
         >
-          {refId}
-        </div>
-        <div style={{ fontSize: 11, color: C.muted }}>
-          Use this to follow up with support if needed
+          <span style={{ fontSize: 11, color: C.muted }}>Est. processing time</span>
+          <span style={{ fontSize: 11, color: "#ccc", fontFamily: "'DM Mono',monospace" }}>
+            5–15 minutes
+          </span>
         </div>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
         <button
           onClick={onReset}
           style={{
@@ -1682,7 +1506,7 @@ function StepDone({ trade, refId, onReset }) {
           Sell Another
         </button>
         <Link
-          to="/dashboard"
+          to="/dashboard/txn"
           className="ghost-btn"
           style={{
             background: "transparent",
@@ -1699,22 +1523,39 @@ function StepDone({ trade, refId, onReset }) {
             textDecoration: "none",
           }}
         >
-          Dashboard →
+          Track Transaction
         </Link>
       </div>
+      <Link
+        to="/dashboard"
+        style={{
+          display: "block",
+          textAlign: "center",
+          color: C.muted,
+          fontSize: 13,
+          textDecoration: "none",
+          padding: "8px",
+        }}
+      >
+        ← Return to Dashboard
+      </Link>
     </div>
   );
 }
 
 export default function GiftCardsDashboard() {
-  const [step, setStep] = useState("brand");
+  const [step, setStep] = useState("card");
+  const [dir, setDir] = useState("fwd");
   const [trade, setTrade] = useState({
     brand: null,
     country: null,
     denom: 0,
     customAmt: "",
+    quantity: 1,
+    cardType: "E-code",
     image: null,
     cardCode: "",
+    notes: "",
   });
   const [loading, setLoading] = useState(false);
   const [refId, setRefId] = useState("");
@@ -1729,69 +1570,87 @@ export default function GiftCardsDashboard() {
 
   const upd = (patch) => setTrade((t) => ({ ...t, ...patch }));
 
+  // Reset dependent fields only when the brand actually changes
   useEffect(() => {
-    if (trade.brand)
-      upd({ country: trade.brand.countries[0], denom: 0, customAmt: "" });
+    if (!trade.brand) return;
+    const supportsCurrentType = trade.brand.cardTypes.includes(trade.cardType);
+    upd({
+      country: trade.brand.countries[0],
+      denom: 0,
+      customAmt: "",
+      cardType: supportsCurrentType ? trade.cardType : trade.brand.cardTypes[0],
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trade.brand?.id]);
 
-  const val = trade.denom > 0 ? trade.denom : parseFloat(trade.customAmt) || 0;
-  const ngnOut = trade.country && val > 0 ? val * trade.country.rate : 0;
-  const ORDER = ["brand", "details", "upload", "review", "done"];
+  const perValue = trade.denom > 0 ? trade.denom : parseFloat(trade.customAmt) || 0;
+  const totalValue = perValue * trade.quantity;
+  const ngnOut = trade.country && totalValue > 0 ? totalValue * trade.country.rate : 0;
+  const fee = 0;
+
+  const ORDER = STEP_ORDER;
 
   const canNext = () => {
-    if (step === "brand") return !!trade.brand;
-    if (step === "details")
-      return (
-        !!trade.country && (trade.denom > 0 || parseFloat(trade.customAmt) > 0)
-      );
-    if (step === "upload") return !!trade.image;
+    if (step === "card") return !!trade.brand;
+    if (step === "variant") return !!trade.country;
+    if (step === "details") return perValue > 0 && trade.quantity >= 1;
     if (step === "review") return true;
     return false;
   };
 
+  const goTo = (target, direction) => {
+    setDir(direction);
+    setStep(target);
+  };
+
   const next = () => {
     const i = ORDER.indexOf(step);
-    if (i < ORDER.length - 1) setStep(ORDER[i + 1]);
+    if (i < ORDER.length - 1) goTo(ORDER[i + 1], "fwd");
   };
   const back = () => {
     const i = ORDER.indexOf(step);
-    if (i > 0) setStep(ORDER[i - 1]);
+    if (i > 0) goTo(ORDER[i - 1], "back");
+  };
+
+  // Auto-advance for the single-tap selection steps
+  const selectBrand = (b) => {
+    upd({ brand: b });
+    setTimeout(() => goTo("variant", "fwd"), 220);
+  };
+  const selectVariant = (ct) => {
+    upd({ country: ct, denom: 0, customAmt: "" });
+    setTimeout(() => goTo("details", "fwd"), 220);
   };
 
   const handleSubmit = () => {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      setRefId("GC-" + Math.floor(1000 + Math.random() * 9000));
-      setStep("done");
+      setRefId("GC-" + Math.floor(100000 + Math.random() * 900000));
+      goTo("done", "fwd");
     }, 1600);
   };
 
   const handleReset = () => {
-    setStep("brand");
+    setStep("card");
     setTrade({
       brand: null,
       country: null,
       denom: 0,
       customAmt: "",
+      quantity: 1,
+      cardType: "E-code",
       image: null,
       cardCode: "",
+      notes: "",
     });
     setRefId("");
   };
 
   return (
     <div className="giftcards-container">
-      <LeftPanel trade={{ ...trade, ngnOut }} />
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          minHeight: 0,
-          minWidth: 0,
-        }}
-      >
+      <LeftPanel trade={{ ...trade, perValue, ngnOut: ngnOut - fee }} />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, minWidth: 0 }}>
         <div
           className="giftcards-topbar"
           style={{
@@ -1807,7 +1666,7 @@ export default function GiftCardsDashboard() {
           }}
         >
           <div>
-            {step !== "brand" && step !== "done" && (
+            {step !== "card" && step !== "done" && (
               <button
                 className="back-btn"
                 onClick={back}
@@ -1824,15 +1683,7 @@ export default function GiftCardsDashboard() {
                   fontFamily: "'Outfit',sans-serif",
                 }}
               >
-                <svg
-                  width={14}
-                  height={14}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                >
+                <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
                   <path d="M19 12H5M12 5l-7 7 7 7" />
                 </svg>
                 Back
@@ -1842,23 +1693,10 @@ export default function GiftCardsDashboard() {
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button
               onClick={() => setIsMobileOpen?.(true)}
-              style={{
-                display: "none",
-                background: "none",
-                border: "none",
-                color: "#fff",
-                cursor: "pointer",
-              }}
+              style={{ display: "none", background: "none", border: "none", color: "#fff", cursor: "pointer" }}
               className="mobile-toggle"
             >
-              <svg
-                width={20}
-                height={20}
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
+              <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                 <line x1="3" y1="12" x2="21" y2="12" />
                 <line x1="3" y1="6" x2="21" y2="6" />
                 <line x1="3" y1="18" x2="21" y2="18" />
@@ -1875,13 +1713,7 @@ export default function GiftCardsDashboard() {
                   display: "inline-block",
                 }}
               />
-              <span
-                style={{
-                  fontFamily: "'DM Mono',monospace",
-                  fontSize: 9,
-                  color: C.amber,
-                }}
-              >
+              <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, color: C.amber }}>
                 BEST RATES
               </span>
             </div>
@@ -1890,58 +1722,73 @@ export default function GiftCardsDashboard() {
 
         <div className="form-area">
           <div style={{ maxWidth: 580, margin: "0 auto" }}>
-            {step !== "done" && <ProgressBar step={step} />}
+            {step !== "done" && <StepIndicator step={step} />}
 
-            {step === "brand" && (
-              <StepBrand
-                selected={trade.brand}
-                onSelect={(b) => upd({ brand: b })}
-              />
-            )}
-            {step === "details" && (
-              <StepDetails
-                brand={trade.brand}
-                country={trade.country}
-                setCountry={(ct) =>
-                  upd({ country: ct, denom: 0, customAmt: "" })
-                }
-                denom={trade.denom}
-                setDenom={(d) => upd({ denom: d, customAmt: "" })}
-                customAmt={trade.customAmt}
-                setCustomAmt={(v) => upd({ customAmt: v, denom: 0 })}
-              />
-            )}
-            {step === "upload" && (
-              <StepUpload
-                image={trade.image}
-                setImage={(img) => upd({ image: img })}
-                cardCode={trade.cardCode}
-                setCardCode={(v) => upd({ cardCode: v })}
-              />
-            )}
-            {step === "review" && (
-              <StepReview
-                trade={{ ...trade, ngnOut }}
-                onSubmit={handleSubmit}
-                loading={loading}
-              />
-            )}
-            {step === "done" && (
-              <StepDone
-                trade={{ ...trade, ngnOut }}
-                refId={refId}
-                onReset={handleReset}
-              />
-            )}
+            <div key={step} className={`step-form${dir === "back" ? " back" : ""}`} style={{ animation: "none" }}>
+              {step === "card" && <StepCard selected={trade.brand} onSelect={selectBrand} />}
+              {step === "variant" && (
+                <StepVariant brand={trade.brand} selected={trade.country} onSelect={selectVariant} />
+              )}
+              {step === "details" && (
+                <StepDetails
+                  brand={trade.brand}
+                  country={trade.country}
+                  denom={trade.denom}
+                  setDenom={(d) => upd({ denom: d, customAmt: "" })}
+                  customAmt={trade.customAmt}
+                  setCustomAmt={(v) => upd({ customAmt: v, denom: 0 })}
+                  quantity={trade.quantity}
+                  setQuantity={(q) => upd({ quantity: q })}
+                  cardType={trade.cardType}
+                  setCardType={(t) => upd({ cardType: t })}
+                  perValue={perValue}
+                  ngnOut={ngnOut}
+                />
+              )}
+              {step === "review" && <StepReview trade={{ ...trade, perValue, ngnOut, fee }} />}
+              {step === "upload" && (
+                <StepUpload
+                  image={trade.image}
+                  setImage={(img) => upd({ image: img })}
+                  cardCode={trade.cardCode}
+                  setCardCode={(v) => upd({ cardCode: v })}
+                  notes={trade.notes}
+                  setNotes={(v) => upd({ notes: v })}
+                  onSubmit={handleSubmit}
+                  loading={loading}
+                />
+              )}
+              {step === "done" && (
+                <StepDone trade={{ ...trade, perValue, ngnOut, fee }} refId={refId} onReset={handleReset} />
+              )}
+            </div>
 
-            {step !== "review" && step !== "done" && (
-              <div style={{ marginTop: 24 }}>
+            {(step === "details" || step === "review") && (
+              <div style={{ marginTop: 24, display: "flex", gap: 10 }}>
+                <button
+                  onClick={back}
+                  className="ghost-btn"
+                  style={{
+                    flex: "0 0 110px",
+                    background: "transparent",
+                    border: `1px solid ${C.border2}`,
+                    color: C.muted,
+                    fontWeight: 600,
+                    fontSize: 14,
+                    padding: "15px",
+                    borderRadius: 12,
+                    cursor: "pointer",
+                    fontFamily: "'Outfit',sans-serif",
+                  }}
+                >
+                  ← Back
+                </button>
                 <button
                   disabled={!canNext()}
                   onClick={next}
                   className="pri-btn"
                   style={{
-                    width: "100%",
+                    flex: 1,
                     background: canNext() ? C.amber : C.border,
                     color: canNext() ? "#000" : C.muted,
                     fontWeight: 700,
