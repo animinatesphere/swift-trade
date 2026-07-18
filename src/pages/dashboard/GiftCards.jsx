@@ -264,33 +264,70 @@ function groupGiftCards(flatCards) {
       };
     }
 
-    const countryCode = c.country.toUpperCase();
-    const flag = COUNTRY_FLAGS[countryCode] || "🌐";
-    const name = COUNTRY_NAMES[countryCode] || countryCode;
-    // Deduce currency from country code
+    // Normalize aliases (US/USA, UK/GB, CA/CAN, EU/EUR) to one canonical
+    // code so the backend's inconsistent labeling doesn't produce duplicate
+    // variants for the same real-world currency.
+    const rawCode = c.country.toUpperCase();
+    const canonicalCode =
+      rawCode === "USA" ? "US" : rawCode === "GB" ? "UK" : rawCode === "CAN" ? "CA" : rawCode === "EUR" ? "EU" : rawCode;
+    const flag = COUNTRY_FLAGS[canonicalCode] || "🌐";
+    const name = COUNTRY_NAMES[canonicalCode] || canonicalCode;
     let currency = "USD";
-    if (["UK", "GB"].includes(countryCode)) currency = "GBP";
-    else if (["EU", "EUR"].includes(countryCode)) currency = "EUR";
-    else if (["CA", "CAN"].includes(countryCode)) currency = "CAD";
+    if (canonicalCode === "UK") currency = "GBP";
+    else if (canonicalCode === "EU") currency = "EUR";
+    else if (canonicalCode === "CA") currency = "CAD";
 
     const symbol = CURRENCY_SYMBOLS[currency] || "$";
     const denoms = Array.isArray(c.denominations)
       ? c.denominations
           .map((d) => Number(String(d).replace(/[^0-9.]/g, "")))
           .filter((d) => !isNaN(d) && d > 0)
-          .sort((a, b) => a - b)
-      : [25, 50, 100, 200];
+      : [];
 
-    brandsMap[c.brand].countries.push({
-      code: countryCode,
-      flag,
-      name,
-      currency,
-      symbol,
-      rate: Number(c.rate_per_dollar) || 0,
-      denoms: denoms.length > 0 ? denoms : [25, 50, 100, 200],
-    });
+    const countries = brandsMap[c.brand].countries;
+    const existing = countries.find((ct) => ct.currency === currency);
+    if (existing) {
+      // Same brand + same real currency listed twice by the backend (e.g.
+      // "US" and "USA") — merge into one variant instead of showing both.
+      existing.denoms = Array.from(new Set([...existing.denoms, ...denoms])).sort((a, b) => a - b);
+      if (c.popular && !existing._popular) {
+        existing.rate = Number(c.rate_per_dollar) || existing.rate;
+        existing._popular = true;
+      }
+    } else {
+      countries.push({
+        code: canonicalCode,
+        flag,
+        name,
+        currency,
+        symbol,
+        rate: Number(c.rate_per_dollar) || 0,
+        denoms: denoms.length > 0 ? denoms : [25, 50, 100, 200],
+        _popular: !!c.popular,
+      });
+    }
   });
+
+  // We only trade USD, GBP and CAD. The backend doesn't have live CAD rates
+  // yet, so surface it as a disabled "Coming Soon" variant instead of
+  // guessing a payout rate — wire in the real rate once it exists upstream.
+  Object.values(brandsMap).forEach((b) => {
+    const hasCad = b.countries.some((ct) => ct.currency === "CAD");
+    const usdEntry = b.countries.find((ct) => ct.currency === "USD");
+    if (!hasCad && usdEntry) {
+      b.countries.push({
+        code: "CA",
+        flag: COUNTRY_FLAGS.CA,
+        name: COUNTRY_NAMES.CA,
+        currency: "CAD",
+        symbol: CURRENCY_SYMBOLS.CAD,
+        rate: 0,
+        denoms: usdEntry.denoms,
+        comingSoon: true,
+      });
+    }
+  });
+
   return Object.values(brandsMap);
 }
 
@@ -749,11 +786,13 @@ function StepVariant({ brand, selected, onSelect }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {brand.countries.map((ct) => {
           const isSel = selected?.code === ct.code;
+          const disabled = !!ct.comingSoon;
           return (
             <button
               key={ct.code}
               className={`country-card${isSel ? " sel" : ""}`}
-              onClick={() => onSelect(ct)}
+              onClick={() => !disabled && onSelect(ct)}
+              disabled={disabled}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -762,27 +801,49 @@ function StepVariant({ brand, selected, onSelect }) {
                 borderRadius: 14,
                 background: isSel ? "rgba(14,203,129,0.06)" : C.card,
                 border: `1px solid ${isSel ? "rgba(14,203,129,0.35)" : C.border}`,
-                cursor: "pointer",
+                cursor: disabled ? "not-allowed" : "pointer",
                 textAlign: "left",
+                opacity: disabled ? 0.5 : 1,
               }}
             >
-              <span style={{ fontSize: 28 }}>{ct.flag}</span>
+              <span style={{ fontSize: 28, filter: disabled ? "grayscale(1)" : "none" }}>
+                {ct.flag}
+              </span>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>{ct.name}</div>
                 <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{ct.currency}</div>
               </div>
               <div style={{ textAlign: "right" }}>
-                <div
-                  style={{
-                    fontFamily: "'DM Mono',monospace",
-                    fontSize: 14,
-                    color: isSel ? C.green : "#ccc",
-                    fontWeight: 600,
-                  }}
-                >
-                  ₦{ct.rate.toLocaleString()}
-                </div>
-                <div style={{ fontSize: 10, color: C.muted }}>per {ct.currency}</div>
+                {disabled ? (
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      letterSpacing: 1,
+                      color: C.muted,
+                      background: C.card2,
+                      border: `1px solid ${C.border2}`,
+                      borderRadius: 100,
+                      padding: "4px 10px",
+                    }}
+                  >
+                    COMING SOON
+                  </span>
+                ) : (
+                  <>
+                    <div
+                      style={{
+                        fontFamily: "'DM Mono',monospace",
+                        fontSize: 14,
+                        color: isSel ? C.green : "#ccc",
+                        fontWeight: 600,
+                      }}
+                    >
+                      ₦{ct.rate.toLocaleString()}
+                    </div>
+                    <div style={{ fontSize: 10, color: C.muted }}>per {ct.currency}</div>
+                  </>
+                )}
               </div>
             </button>
           );
