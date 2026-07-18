@@ -168,9 +168,9 @@ function fmtDate(str) {
 function fmtNGN(n) { return "\u20a6"+Number(n).toLocaleString("en-NG",{maximumFractionDigits:0}); }
 
 function statusLabel(t) {
-  if (t.type === "withdrawal") {
+  if (t.type === "withdrawal" || t.type === "giftcard") {
     if (t.status === "pending") return "Pending Review";
-    if (t.status === "failed" || t.status === "reversed") return "Rejected";
+    if (t.status === "failed" || t.status === "reversed" || t.status === "rejected") return "Rejected";
   }
   return (STATUS_META[t.status] || STATUS_META.pending).label;
 }
@@ -217,6 +217,8 @@ function DetailPanel({ txn, onClose }) {
     timeline.forEach((t,i)=>{ if(i>1) t.done=false; });
     timeline[2] = isWD
       ? { label:"Withdrawal rejected", sub:"Funds refunded to your wallet balance", done:true, failed:true }
+      : isGC
+      ? { label:"Gift Card rejected", sub:"Contact support with your reference ID", done:true, failed:true }
       : { label:"Transaction failed", sub:"Contact support with your reference ID", done:true, failed:true };
     timeline.splice(3);
   }
@@ -635,8 +637,9 @@ export default function TransactionHistory() {
                       color:meta.color }}>{meta.icon}</div>
                     <div>
                       <div style={{ fontSize:13,fontWeight:500 }}>
-                        {t.type==="trade"    ? `${t.coin || "Crypto"} \u2192 NGN`
-                         :                     "Bank Withdrawal"}
+                        {t.type==="trade"     ? `${t.coin || "Crypto"} \u2192 NGN`
+                         : t.type==="giftcard" ? `${t.coin || "Gift Card"} \u2192 NGN`
+                         :                      "Bank Withdrawal"}
                       </div>
                       <div style={{ fontFamily:"'DM Mono',monospace",
                         fontSize:10,color:C.muted }}>{t.ref}</div>

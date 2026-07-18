@@ -1,6 +1,37 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useOutletContext, Link } from "react-router-dom";
 import logoImg from "../../assets/logo.png";
+import api from "../../api/axios";
+
+// ── Cloudinary config (same as KYC) ─────────────────────────────────────────
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "dbhelafgg";
+const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "swiftrade-app";
+
+// ── Upload image to Cloudinary, returns secure_url ───────────────────────────
+function uploadToCloudinary(file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
+    formData.append("folder", "giftcards");
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      try {
+        const res = JSON.parse(xhr.responseText);
+        if (res.secure_url) resolve(res.secure_url);
+        else reject(new Error("Failed to get URL from Cloudinary."));
+      } catch {
+        reject(new Error("Failed to parse Cloudinary response."));
+      }
+    };
+    xhr.onerror = () => reject(new Error("Upload to Cloudinary failed."));
+    xhr.send(formData);
+  });
+}
 
 const C = {
   green: "#0ECB81",
@@ -160,116 +191,108 @@ const CSS = `
   }
 `;
 
-const BRANDS = [
-  {
-    id: "amazon",
-    name: "Amazon",
-    icon: "🛒",
-    cardTypes: ["E-code", "Physical"],
-    countries: [
-      { code: "US", flag: "🇺🇸", name: "United States", currency: "USD", symbol: "$", rate: 1380, denoms: [25, 50, 100, 200] },
-      { code: "UK", flag: "🇬🇧", name: "United Kingdom", currency: "GBP", symbol: "£", rate: 1640, denoms: [25, 50, 100] },
-    ],
-    color: "#FF9900",
-    bg: "linear-gradient(135deg,#1a0800,#3d1f00)",
-    textColor: "rgba(255,153,0,0.8)",
-  },
-  {
-    id: "itunes",
-    name: "Apple",
-    icon: "🎵",
-    cardTypes: ["E-code"],
-    countries: [
-      { code: "US", flag: "🇺🇸", name: "United States", currency: "USD", symbol: "$", rate: 1350, denoms: [15, 25, 50, 100] },
-      { code: "UK", flag: "🇬🇧", name: "United Kingdom", currency: "GBP", symbol: "£", rate: 1560, denoms: [15, 25, 50] },
-    ],
-    color: "#FC3C44",
-    bg: "linear-gradient(135deg,#1a001a,#330020)",
-    textColor: "rgba(252,60,68,0.8)",
-  },
-  {
-    id: "steam",
-    name: "Steam",
-    icon: "🎮",
-    cardTypes: ["E-code"],
-    countries: [
-      { code: "US", flag: "🇺🇸", name: "United States", currency: "USD", symbol: "$", rate: 1300, denoms: [10, 20, 50, 100] },
-    ],
-    color: "#66C0F4",
-    bg: "linear-gradient(135deg,#00101a,#001f33)",
-    textColor: "rgba(102,192,244,0.8)",
-  },
-  {
-    id: "google",
-    name: "Google Play",
-    icon: "▶",
-    cardTypes: ["E-code"],
-    countries: [
-      { code: "US", flag: "🇺🇸", name: "United States", currency: "USD", symbol: "$", rate: 1370, denoms: [10, 25, 50, 100] },
-    ],
-    color: "#0ECB81",
-    bg: "linear-gradient(135deg,#001a08,#003318)",
-    textColor: "rgba(14,203,129,0.8)",
-  },
-  {
-    id: "netflix",
-    name: "Netflix",
-    icon: "🎬",
-    cardTypes: ["E-code"],
-    countries: [
-      { code: "US", flag: "🇺🇸", name: "United States", currency: "USD", symbol: "$", rate: 1300, denoms: [15, 30, 60, 100] },
-    ],
-    color: "#E50914",
-    bg: "linear-gradient(135deg,#1a0000,#330000)",
-    textColor: "rgba(229,9,20,0.8)",
-  },
-  {
-    id: "xbox",
-    name: "Xbox",
-    icon: "🕹",
-    cardTypes: ["E-code"],
-    countries: [
-      { code: "US", flag: "🇺🇸", name: "United States", currency: "USD", symbol: "$", rate: 1280, denoms: [10, 25, 50, 100] },
-    ],
-    color: "#107C10",
-    bg: "linear-gradient(135deg,#001a00,#003300)",
-    textColor: "rgba(16,124,16,0.8)",
-  },
-  {
-    id: "visa",
-    name: "Visa",
-    icon: "💳",
-    cardTypes: ["E-code", "Physical"],
-    countries: [
-      { code: "US", flag: "🇺🇸", name: "United States", currency: "USD", symbol: "$", rate: 1260, denoms: [50, 100, 200, 500] },
-    ],
-    color: "#6B8AFE",
-    bg: "linear-gradient(135deg,#000818,#001433)",
-    textColor: "rgba(107,138,254,0.8)",
-  },
-  {
-    id: "razergold",
-    name: "Razer Gold",
-    icon: "⚡",
-    cardTypes: ["E-code"],
-    countries: [
-      { code: "US", flag: "🇺🇸", name: "United States", currency: "USD", symbol: "$", rate: 1250, denoms: [5, 10, 25, 50] },
-    ],
-    color: "#44D62C",
-    bg: "linear-gradient(135deg,#001a00,#002800)",
-    textColor: "rgba(68,214,44,0.8)",
-  },
-];
-
-const STEP_ORDER = ["card", "variant", "details", "review", "upload", "done"];
-const STEP_LABELS = {
-  card: "Select Card",
-  variant: "Select Country",
-  details: "Card Details",
-  review: "Review",
-  upload: "Upload & Submit",
-  done: "Done",
+// ── BRAND METADATA MAPPINGS ─────────────────────────────────────────────────
+const BRAND_METADATA = {
+  amazon: { icon: "🛒", bg: "linear-gradient(135deg,#1a0800,#3d1f00)", color: "#FF9900", textColor: "rgba(255,153,0,0.8)" },
+  itunes: { icon: "🎵", bg: "linear-gradient(135deg,#1a001a,#330020)", color: "#FC3C44", textColor: "rgba(252,60,68,0.8)" },
+  steam: { icon: "🎮", bg: "linear-gradient(135deg,#00101a,#001f33)", color: "#66C0F4", textColor: "rgba(102,192,244,0.8)" },
+  google: { icon: "▶", bg: "linear-gradient(135deg,#001a08,#003318)", color: "#0ECB81", textColor: "rgba(14,203,129,0.8)" },
+  googleplay: { icon: "▶", bg: "linear-gradient(135deg,#001a08,#003318)", color: "#0ECB81", textColor: "rgba(14,203,129,0.8)" },
+  netflix: { icon: "🎬", bg: "linear-gradient(135deg,#1a0000,#330000)", color: "#E50914", textColor: "rgba(229,9,20,0.8)" },
+  xbox: { icon: "🕹", bg: "linear-gradient(135deg,#001a00,#003300)", color: "#107C10", textColor: "rgba(16,124,16,0.8)" },
+  visa: { icon: "💳", bg: "linear-gradient(135deg,#000818,#001433)", color: "#6B8AFE", textColor: "rgba(107,138,254,0.8)" },
+  razergold: { icon: "⚡", bg: "linear-gradient(135deg,#001a00,#002800)", color: "#44D62C", textColor: "rgba(68,214,44,0.8)" },
 };
+
+// Display-name overrides applied on top of whatever the backend calls a brand
+const BRAND_NAME_OVERRIDES = {
+  itunes: "Apple",
+};
+
+const COUNTRY_FLAGS = {
+  US: "🇺🇸",
+  USA: "🇺🇸",
+  UK: "🇬🇧",
+  GB: "🇬🇧",
+  CA: "🇨🇦",
+  CAN: "🇨🇦",
+  EU: "🇪🇺",
+  EUR: "🇪🇺",
+};
+
+const COUNTRY_NAMES = {
+  US: "United States",
+  USA: "United States",
+  UK: "United Kingdom",
+  GB: "United Kingdom",
+  CA: "Canada",
+  CAN: "Canada",
+  EU: "Eurozone",
+  EUR: "Eurozone",
+};
+
+const CURRENCY_SYMBOLS = {
+  USD: "$",
+  GBP: "£",
+  CAD: "C$",
+  EUR: "€",
+};
+
+const CARD_TYPES = ["E-code", "Physical"];
+
+function groupGiftCards(flatCards) {
+  const brandsMap = {};
+  flatCards.forEach((c) => {
+    const brandLower = c.brand.toLowerCase().replace(/\s+/g, "");
+    const meta = BRAND_METADATA[brandLower] || {
+      icon: "💳",
+      bg: c.bg || "linear-gradient(135deg, #1a1a1a, #000000)",
+      color: c.color || "#FFFFFF",
+      textColor: "rgba(255,255,255,0.8)",
+    };
+    const displayName = BRAND_NAME_OVERRIDES[brandLower] || c.brand;
+
+    if (!brandsMap[c.brand]) {
+      brandsMap[c.brand] = {
+        id: brandLower,
+        name: displayName,
+        icon: meta.icon,
+        color: meta.color,
+        bg: meta.bg,
+        textColor: meta.textColor,
+        countries: [],
+      };
+    }
+
+    const countryCode = c.country.toUpperCase();
+    const flag = COUNTRY_FLAGS[countryCode] || "🌐";
+    const name = COUNTRY_NAMES[countryCode] || countryCode;
+    // Deduce currency from country code
+    let currency = "USD";
+    if (["UK", "GB"].includes(countryCode)) currency = "GBP";
+    else if (["EU", "EUR"].includes(countryCode)) currency = "EUR";
+    else if (["CA", "CAN"].includes(countryCode)) currency = "CAD";
+
+    const symbol = CURRENCY_SYMBOLS[currency] || "$";
+    const denoms = Array.isArray(c.denominations)
+      ? c.denominations
+          .map((d) => Number(String(d).replace(/[^0-9.]/g, "")))
+          .filter((d) => !isNaN(d) && d > 0)
+          .sort((a, b) => a - b)
+      : [25, 50, 100, 200];
+
+    brandsMap[c.brand].countries.push({
+      code: countryCode,
+      flag,
+      name,
+      currency,
+      symbol,
+      rate: Number(c.rate_per_dollar) || 0,
+      denoms: denoms.length > 0 ? denoms : [25, 50, 100, 200],
+    });
+  });
+  return Object.values(brandsMap);
+}
 
 function Mark({ size = 32 }) {
   return (
@@ -282,6 +305,16 @@ function Mark({ size = 32 }) {
 }
 
 // ─── STEP INDICATOR ─────────────────────────────────────────
+const STEP_ORDER = ["card", "variant", "details", "review", "upload", "done"];
+const STEP_LABELS = {
+  card: "Select Card",
+  variant: "Select Country",
+  details: "Card Details",
+  review: "Review",
+  upload: "Upload & Submit",
+  done: "Done",
+};
+
 function StepIndicator({ step }) {
   const idx = STEP_ORDER.indexOf(step);
   const totalSteps = STEP_ORDER.length; // 6, including the success screen
@@ -535,11 +568,9 @@ function LeftPanel({ trade }) {
 }
 
 // ─── STEP 1: SELECT CARD ────────────────────────────────────
-function StepCard({ selected, onSelect }) {
+function StepCard({ selected, onSelect, brands, loading }) {
   const [search, setSearch] = useState("");
-  const filtered = BRANDS.filter((b) =>
-    b.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = brands.filter((b) => b.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="step-form">
@@ -596,9 +627,22 @@ function StepCard({ selected, onSelect }) {
         />
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div style={{ display: "flex", justifyContent: "center", padding: "60px 0" }}>
+          <div
+            style={{
+              width: 24,
+              height: 24,
+              borderRadius: "50%",
+              border: "2.5px solid rgba(245,166,35,0.2)",
+              borderTopColor: C.amber,
+              animation: "spin 0.8s linear infinite",
+            }}
+          />
+        </div>
+      ) : filtered.length === 0 ? (
         <div style={{ textAlign: "center", padding: "40px 0", color: C.muted, fontSize: 13 }}>
-          No brands match &ldquo;{search}&rdquo;
+          {brands.length === 0 ? "No gift cards available right now." : `No brands match "${search}"`}
         </div>
       ) : (
         <div
@@ -912,35 +956,33 @@ function StepDetails({
         </div>
       </div>
 
-      {brand.cardTypes.length > 1 && (
-        <div style={{ marginBottom: 22 }}>
-          <div style={{ fontSize: 10, color: C.muted, letterSpacing: 2, marginBottom: 10 }}>
-            CARD TYPE
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            {brand.cardTypes.map((ty) => (
-              <button
-                key={ty}
-                className={`type-btn${cardType === ty ? " sel" : ""}`}
-                onClick={() => setCardType(ty)}
-                style={{
-                  flex: 1,
-                  padding: "12px",
-                  borderRadius: 10,
-                  background: cardType === ty ? "rgba(14,203,129,0.1)" : C.card2,
-                  border: `1px solid ${cardType === ty ? "rgba(14,203,129,0.35)" : C.border2}`,
-                  color: cardType === ty ? C.green : "#aaa",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  fontFamily: "'Outfit',sans-serif",
-                }}
-              >
-                {ty}
-              </button>
-            ))}
-          </div>
+      <div style={{ marginBottom: 22 }}>
+        <div style={{ fontSize: 10, color: C.muted, letterSpacing: 2, marginBottom: 10 }}>
+          CARD TYPE
         </div>
-      )}
+        <div style={{ display: "flex", gap: 8 }}>
+          {CARD_TYPES.map((ty) => (
+            <button
+              key={ty}
+              className={`type-btn${cardType === ty ? " sel" : ""}`}
+              onClick={() => setCardType(ty)}
+              style={{
+                flex: 1,
+                padding: "12px",
+                borderRadius: 10,
+                background: cardType === ty ? "rgba(14,203,129,0.1)" : C.card2,
+                border: `1px solid ${cardType === ty ? "rgba(14,203,129,0.35)" : C.border2}`,
+                color: cardType === ty ? C.green : "#aaa",
+                fontSize: 13,
+                fontWeight: 600,
+                fontFamily: "'Outfit',sans-serif",
+              }}
+            >
+              {ty}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {ngnOut > 0 && (
         <div
@@ -1091,7 +1133,18 @@ function StepReview({ trade }) {
 }
 
 // ─── STEP 5: UPLOAD & SUBMIT ─────────────────────────────────
-function StepUpload({ image, setImage, cardCode, setCardCode, notes, setNotes, onSubmit, loading }) {
+function StepUpload({
+  image,
+  setImage,
+  cardCode,
+  setCardCode,
+  notes,
+  setNotes,
+  onSubmit,
+  loading,
+  uploadProgress,
+  submitError,
+}) {
   const [drag, setDrag] = useState(false);
   const inputRef = useRef(null);
 
@@ -1107,6 +1160,8 @@ function StepUpload({ image, setImage, cardCode, setCardCode, notes, setNotes, o
     setDrag(false);
     handleFile(e.dataTransfer.files[0]);
   };
+
+  const canSubmit = !loading && (!!image || !!cardCode.trim());
 
   return (
     <div className="step-form">
@@ -1277,7 +1332,7 @@ function StepUpload({ image, setImage, cardCode, setCardCode, notes, setNotes, o
           border: "1px solid rgba(245,166,35,0.12)",
           borderRadius: 10,
           padding: "11px 14px",
-          marginBottom: 24,
+          marginBottom: 20,
         }}
       >
         <svg
@@ -1300,14 +1355,30 @@ function StepUpload({ image, setImage, cardCode, setCardCode, notes, setNotes, o
         </span>
       </div>
 
+      {submitError && (
+        <div
+          style={{
+            background: "rgba(246,70,93,0.1)",
+            border: "1px solid rgba(246,70,93,0.3)",
+            borderRadius: 10,
+            padding: "11px 14px",
+            marginBottom: 16,
+            fontSize: 13,
+            color: C.red,
+          }}
+        >
+          ⚠ {submitError}
+        </div>
+      )}
+
       <button
         onClick={onSubmit}
-        disabled={loading || (!image && !cardCode.trim())}
+        disabled={!canSubmit}
         className="pri-btn"
         style={{
           width: "100%",
-          background: loading || (!image && !cardCode.trim()) ? C.border : C.amber,
-          color: loading || (!image && !cardCode.trim()) ? C.muted : "#000",
+          background: canSubmit ? C.amber : C.border,
+          color: canSubmit ? "#000" : C.muted,
           fontWeight: 700,
           fontSize: 15,
           padding: "15px",
@@ -1318,8 +1389,23 @@ function StepUpload({ image, setImage, cardCode, setCardCode, notes, setNotes, o
           alignItems: "center",
           justifyContent: "center",
           gap: 10,
+          position: "relative",
+          overflow: "hidden",
         }}
       >
+        {loading && uploadProgress > 0 && uploadProgress < 100 && (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: `${uploadProgress}%`,
+              background: "rgba(0,0,0,0.15)",
+              transition: "width 0.3s ease",
+            }}
+          />
+        )}
         {loading ? (
           <>
             <div
@@ -1332,7 +1418,11 @@ function StepUpload({ image, setImage, cardCode, setCardCode, notes, setNotes, o
                 animation: "spin 0.8s linear infinite",
               }}
             />
-            Submitting...
+            {uploadProgress > 0 && uploadProgress < 75
+              ? `Uploading… ${uploadProgress}%`
+              : uploadProgress >= 75
+                ? "Submitting…"
+                : "Processing…"}
           </>
         ) : (
           "Submit Transaction ✓"
@@ -1546,6 +1636,8 @@ function StepDone({ trade, refId, onReset }) {
 export default function GiftCardsDashboard() {
   const [step, setStep] = useState("card");
   const [dir, setDir] = useState("fwd");
+  const [brands, setBrands] = useState([]);
+  const [loadingBrands, setLoadingBrands] = useState(true);
   const [trade, setTrade] = useState({
     brand: null,
     country: null,
@@ -1558,6 +1650,8 @@ export default function GiftCardsDashboard() {
     notes: "",
   });
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [submitError, setSubmitError] = useState("");
   const [refId, setRefId] = useState("");
   const { setIsMobileOpen } = useOutletContext() || {};
 
@@ -1568,18 +1662,27 @@ export default function GiftCardsDashboard() {
     return () => document.head.removeChild(s);
   }, []);
 
+  // Fetch gift card rates/brands from backend
+  useEffect(() => {
+    const fetchGiftCards = async () => {
+      try {
+        const res = await api.get("/rates/giftcards");
+        setBrands(groupGiftCards(res.data));
+      } catch (err) {
+        console.error("Error loading gift cards:", err);
+      } finally {
+        setLoadingBrands(false);
+      }
+    };
+    fetchGiftCards();
+  }, []);
+
   const upd = (patch) => setTrade((t) => ({ ...t, ...patch }));
 
   // Reset dependent fields only when the brand actually changes
   useEffect(() => {
     if (!trade.brand) return;
-    const supportsCurrentType = trade.brand.cardTypes.includes(trade.cardType);
-    upd({
-      country: trade.brand.countries[0],
-      denom: 0,
-      customAmt: "",
-      cardType: supportsCurrentType ? trade.cardType : trade.brand.cardTypes[0],
-    });
+    upd({ country: trade.brand.countries[0], denom: 0, customAmt: "" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trade.brand?.id]);
 
@@ -1622,13 +1725,42 @@ export default function GiftCardsDashboard() {
     setTimeout(() => goTo("details", "fwd"), 220);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    setSubmitError("");
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setRefId("GC-" + Math.floor(100000 + Math.random() * 900000));
+    setUploadProgress(0);
+    try {
+      let imageUrl = "";
+      if (trade.image) {
+        setUploadProgress(5);
+        imageUrl = await uploadToCloudinary(trade.image.file, (pct) =>
+          setUploadProgress(Math.round(pct * 0.7)), // 0–70%
+        );
+      }
+      setUploadProgress(75);
+
+      const res = await api.post("/rates/sell/", {
+        brand: trade.brand.name,
+        country_code: trade.country.code,
+        currency_symbol: trade.country.symbol,
+        denomination: totalValue,
+        quantity: trade.quantity,
+        card_type: trade.cardType,
+        rate_applied: trade.country.rate,
+        ngn_payout: ngnOut,
+        image_url: imageUrl,
+        card_code: trade.cardCode,
+        notes: trade.notes,
+      });
+      setUploadProgress(100);
+      setRefId(res.data.reference || "GC-" + Math.floor(100000 + Math.random() * 900000));
       goTo("done", "fwd");
-    }, 1600);
+    } catch (err) {
+      const msg = err.response?.data?.detail || err.message || "Something went wrong. Please try again.";
+      setSubmitError(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = () => {
@@ -1644,6 +1776,7 @@ export default function GiftCardsDashboard() {
       cardCode: "",
       notes: "",
     });
+    setSubmitError("");
     setRefId("");
   };
 
@@ -1725,7 +1858,9 @@ export default function GiftCardsDashboard() {
             {step !== "done" && <StepIndicator step={step} />}
 
             <div key={step} className={`step-form${dir === "back" ? " back" : ""}`} style={{ animation: "none" }}>
-              {step === "card" && <StepCard selected={trade.brand} onSelect={selectBrand} />}
+              {step === "card" && (
+                <StepCard selected={trade.brand} onSelect={selectBrand} brands={brands} loading={loadingBrands} />
+              )}
               {step === "variant" && (
                 <StepVariant brand={trade.brand} selected={trade.country} onSelect={selectVariant} />
               )}
@@ -1756,6 +1891,8 @@ export default function GiftCardsDashboard() {
                   setNotes={(v) => upd({ notes: v })}
                   onSubmit={handleSubmit}
                   loading={loading}
+                  uploadProgress={uploadProgress}
+                  submitError={submitError}
                 />
               )}
               {step === "done" && (
