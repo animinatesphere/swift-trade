@@ -206,7 +206,7 @@ const BRAND_METADATA = {
 
 // Display-name overrides applied on top of whatever the backend calls a brand
 const BRAND_NAME_OVERRIDES = {
-  itunes: "Apple",
+  itunes: "Apple Itunes",
 };
 
 const COUNTRY_FLAGS = {
